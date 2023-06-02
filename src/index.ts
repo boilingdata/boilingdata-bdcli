@@ -3,11 +3,11 @@ import * as util from "util";
 import * as cmd from "commander";
 import { getApiKey, getIdToken } from "./utils/auth_utils";
 import { getReqHeaders } from "./utils/http_utils";
+import { version } from "./VERSION"; // yarn prebuild
 
-// import diagnosticsChannel from "diagnostics_channel";
-// diagnosticsChannel.channel("undici:request:create").subscribe((request) => {
-//   console.log(request); // e.g. 'bar: bar\r\nhello: world\r\n'
-// });
+// // NOTE: If you want to see debug logs for HTTP requests
+// import { channel } from "diagnostics_channel";
+// channel("undici:request:create").subscribe(console.log);
 
 const apiUrl = "https://ijdz5e8kp9.execute-api.eu-west-1.amazonaws.com/dev/data-sets/test";
 
@@ -16,7 +16,7 @@ program
   .option("-v, --verbose", "more logging", false)
   .option("-c, --catalog <catalog>", "catalog name", "default")
   .option("-d, --dataset <dataset>", "dataset name")
-  .version("0.0.1")
+  .version(version)
   .parse(process.argv);
 
 const options = program.opts();
