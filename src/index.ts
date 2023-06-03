@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import * as cmd from "commander";
 import { version } from "./VERSION.js"; // yarn prebuild
 
