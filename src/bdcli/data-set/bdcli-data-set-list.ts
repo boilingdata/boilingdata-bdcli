@@ -1,24 +1,31 @@
 /// <reference lib="dom" />
-import * as util from "util";
+import { getLogger } from "../../utils/logger_util.js";
 import { Command } from "commander";
-import { dataSetsUrl, getReqHeaders } from "../../utils/http_utils";
-import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util";
+import { dataSetsUrl, getReqHeaders } from "../../utils/http_util.js";
+import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
+import { addGlobalOptions } from "../../utils/options_util.js";
 // import { channel } from "node:diagnostics_channel";
 
-async function list(): Promise<void> {
-  updateSpinnerText("Listing data-sets ");
+const logger = getLogger("bdcli-data-set");
+
+async function list(_options: any, cmd: Command): Promise<void> {
   try {
-    const headers = await getReqHeaders();
-    const url = dataSetsUrl + "test";
+    logger.debug(cmd.optsWithGlobals());
     // channel("undici:request:create").subscribe(console.log);
-    const res = await fetch(url, { method: "GET", headers });
+    updateSpinnerText("Listing data-sets ");
+    const res = await fetch(dataSetsUrl + "test", { method: "GET", headers: await getReqHeaders() });
     spinnerSuccess();
-    console.log(util.inspect({ status: res.status, statusText: res.statusText }, false, 20, true));
+    logger.info({ status: res.status, statusText: res.statusText });
   } catch (err: any) {
     spinnerError(err?.message);
   }
 }
 
-const program = new Command("bdcli data-set list").option("-a, --all", "list all data sets", true).action(list);
+const program = new Command("bdcli data-set list")
+  .option("-a, --all", "list all data sets", true)
+  .option("-s, --data-source", "List data sets from this data source", "default")
+  .action(list);
+
+addGlobalOptions(program, logger);
 
 (async () => await program.parseAsync(process.argv))();

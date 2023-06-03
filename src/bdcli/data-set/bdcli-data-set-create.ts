@@ -1,24 +1,29 @@
 /// <reference lib="dom" />
-import * as util from "util";
+import { getLogger } from "../../utils/logger_util.js";
 import { Command } from "commander";
-import { dataSetsUrl, getReqHeaders } from "../../utils/http_utils";
-import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util";
-//import { channel } from "node:diagnostics_channel";
+import { dataSetsUrl, getReqHeaders } from "../../utils/http_util.js";
+import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
+import { addGlobalOptions } from "../../utils/options_util.js";
+// import { channel } from "node:diagnostics_channel";
 
-async function create(): Promise<void> {
-  updateSpinnerText("Creating data-set ");
+const logger = getLogger("bdcli-data-source");
+
+async function create(...args: any): Promise<void> {
   try {
-    const headers = await getReqHeaders();
-    const body = JSON.stringify({ testing: true });
+    logger.debug({ args: args[0] });
     //channel("undici:request:create").subscribe(console.log);
-    const res = await fetch(dataSetsUrl + "test", { method: "PUT", headers, body });
+    updateSpinnerText("Creating data-set ");
+    const body = JSON.stringify({ testing: true });
+    const res = await fetch(dataSetsUrl + "test", { method: "PUT", headers: await getReqHeaders(), body });
     spinnerSuccess();
-    console.log(util.inspect({ status: res.status, statusText: res.statusText }, false, 20, true));
+    logger.info({ status: res.status, statusText: res.statusText });
   } catch (err: any) {
     spinnerError(err?.message);
   }
 }
 
 const program = new Command("bdcli data-set create").action(async () => await create());
+
+addGlobalOptions(program, logger);
 
 (async () => await program.parseAsync())();

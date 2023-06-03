@@ -1,3 +1,4 @@
 src/VERSION.ts
 dist/
 node_modules/
+*.log
