@@ -18,7 +18,7 @@ async function list(): Promise<void> {
     console.log(util.inspect({ status: res.status, statusText: res.statusText }, false, 20, true));
     spinnerSuccess();
   } catch (err: any) {
-    spinnerError(err);
+    spinnerError(err?.message);
   }
 }
 
