@@ -1,6 +1,6 @@
 {
   "name": "bdcli",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "BoilingData command-line client",
   "exports": "./dist/index.js",
   "engines": {
