@@ -13,7 +13,7 @@
   "scripts": {
     "release": "standard-version",
     "prebuild": "rm -rf dist/ && echo \"export const version = \\\"$(git describe --tags)\\\";\" > src/VERSION.ts",
-    "build": "tsc && chmod 755 dist/index.js && ln -s dist/index.js bdcli",
+    "build": "tsc && chmod 755 dist/index.js && ln -fs dist/index.js bdcli",
     "prettier": "prettier --check 'src/**/*.{js,ts}'",
     "prettier:fix": "prettier --write 'src/**/*.{js,ts}'",
     "lint": "yarn prettier && eslint \"./src/**/*.ts\"",
