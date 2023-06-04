@@ -7,7 +7,7 @@ import { addGlobalOptions } from "../../utils/options_util.js";
 import { getIdToken } from "../../utils/auth_util.js";
 // import { channel } from "node:diagnostics_channel";
 
-const logger = getLogger("bdcli-data-source");
+const logger = getLogger("bdcli-data-set");
 
 async function create(...args: any): Promise<void> {
   try {
