@@ -19,6 +19,7 @@ export function getApiKey(): Promise<string> {
 export function getIdToken(): Promise<string> {
   return new Promise((resolve, reject) => {
     //if (jwtToken != undefined) resolve(jwtToken);
+    if (!Username || !Password) throw new Error("Set BD_USERNAME and BD_PASSWORD envs");
     const loginDetails = { Username, Password };
     const userData = { Username, Pool };
     const cognitoUser = new id.CognitoUser(userData);

@@ -1,10 +1,9 @@
-import { getApiKey, getIdToken } from "./auth_util.js";
+import { getApiKey } from "./auth_util.js";
 
 export const baseApiUrl = "https://ijdz5e8kp9.execute-api.eu-west-1.amazonaws.com/dev/";
 export const dataSetsUrl = baseApiUrl + "data-sets/";
 
-export async function getReqHeaders(): Promise<{ [k: string]: string }> {
-  const token = await getIdToken();
+export async function getReqHeaders(token: string): Promise<{ [k: string]: string }> {
   const apikey = await getApiKey();
   return {
     Authorization: token,
