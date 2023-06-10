@@ -1,10 +1,15 @@
 import * as util from "node:util";
 import * as winston from "winston";
 
-export type TLogLevel = "error" | "warn" | "info" | "debug";
+export enum ELogLevel {
+  "ERROR" = "error",
+  "WARN" = "warn",
+  "INFO" = "info",
+  "DEBUG" = "debug",
+}
 
 export interface ILogger {
-  setLogLevel: (level: TLogLevel) => void;
+  setLogLevel: (level: ELogLevel) => void;
   error: (...args: any) => void;
   warn: (...args: any) => void;
   info: (...args: any) => void;
@@ -44,6 +49,6 @@ export function getLogger(service: string): ILogger {
     warn: logger.warn.bind(logger),
     info: logger.info.bind(logger),
     debug: logger.debug.bind(logger),
-    setLogLevel: (level: TLogLevel) => (logger.level = level),
+    setLogLevel: (level: ELogLevel) => (logger.level = level),
   };
 }

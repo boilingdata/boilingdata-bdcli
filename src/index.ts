@@ -5,10 +5,10 @@ import { version } from "./VERSION.js"; // yarn prebuild
 const program = new cmd.Command("bdcli");
 
 program
-  .executableDir("bdcli")
+  .executableDir("bdcli/commands")
   .version(version)
   .allowExcessArguments(false)
-  .command("data-set", "Manage data sets")
+  .command("setup", "Setup configuration")
   .command("data-source", "Manage data sources");
 
 program.parse(process.argv);
