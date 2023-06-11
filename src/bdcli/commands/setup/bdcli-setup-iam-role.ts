@@ -7,6 +7,7 @@ import { getIdToken } from "../../utils/auth_util.js";
 import { BDIamRole } from "../../../core/aws/iam_roles.js";
 import { BDAccount } from "../../../core/boilingdata/config.js";
 import { BDDataSetConfig } from "../../../core/boilingdata/dataset.js";
+import { BDIntegration } from "../../../core/bdIntegration.js";
 
 const logger = getLogger("bdcli-setup-iam-role");
 
@@ -18,23 +19,27 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
     const token = await getIdToken();
     spinnerSuccess();
 
-    updateSpinnerText(`Creating IAM Role "${options?.name}"`);
     const region = options.region ?? process.env["AWS_REGION"];
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
-    const bdconf = new BDAccount({ logger, authToken: token });
-    const role = new BDIamRole({
+    const bdAccount = new BDAccount({ logger, authToken: token });
+    const bdDataSets = new BDDataSetConfig({ logger });
+    const bdRole = new BDIamRole({
       ...options,
       logger,
       iamClient: new iam.IAMClient({ region }),
-      datasets: new BDDataSetConfig({ logger }).readConfig(options.config),
-      assumeAwsAccount: bdconf.getAssumeAwsAccount(),
-      assumeCondExternalId: bdconf.getExtId(),
+      datasets: await bdDataSets.readConfig(options.config),
+      uniqNamePart: await bdDataSets.getUniqueNamePart(),
+      assumeAwsAccount: await bdAccount.getAssumeAwsAccount(),
+      assumeCondExternalId: await bdAccount.getExtId(),
     });
-    await role.createRoleIfNotExists();
+    const bdAccess = new BDIntegration({ logger, bdAccount, bdRole, bdDataSets });
+    const policyDocument = bdAccess.getPolicyDocument();
+    updateSpinnerText("Creating IAM Role");
+    const iamRoleArn = await bdRole.upsertRole(policyDocument);
     spinnerSuccess();
 
-    updateSpinnerText(`Registering IAM Role "${options?.name}"`);
-    await bdconf.setIamRole();
+    updateSpinnerText("Registering IAM Role");
+    await bdAccount.setIamRole(iamRoleArn);
     spinnerSuccess();
   } catch (err: any) {
     spinnerError(err?.message);
@@ -42,7 +47,7 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
 }
 
 const program = new cmd.Command("bdcli setup iam-role")
-  .addOption(new cmd.Option("-c, --config <filepath>", "IAM Role conf").makeOptionMandatory())
+  .addOption(new cmd.Option("-c, --config <filepath>", "Data access conf").makeOptionMandatory())
   .addOption(new cmd.Option("-r, --region <region>", "AWS region"))
   .action(async (options, command) => await iamrole(options, command));
 

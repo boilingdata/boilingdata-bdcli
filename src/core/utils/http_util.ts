@@ -1,7 +1,8 @@
 import { getApiKey } from "../../bdcli/utils/auth_util.js";
 
-export const baseApiUrl = "https://ijdz5e8kp9.execute-api.eu-west-1.amazonaws.com/dev/";
+export const baseApiUrl = "https://8br5emv4u6.execute-api.eu-west-1.amazonaws.com/dev/";
 export const dataSetsUrl = baseApiUrl + "data-sets/";
+export const accountUrl = baseApiUrl + "account/";
 
 export async function getReqHeaders(token: string): Promise<{ [k: string]: string }> {
   const apikey = await getApiKey();
