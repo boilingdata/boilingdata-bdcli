@@ -1,4 +1,5 @@
 import * as iam from "@aws-sdk/client-iam";
+import * as sts from "@aws-sdk/client-sts";
 import * as cmd from "commander";
 import { getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
@@ -27,15 +28,16 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
       ...options,
       logger,
       iamClient: new iam.IAMClient({ region }),
+      stsClient: new sts.STSClient({ region }),
       datasets: await bdDataSets.readConfig(options.config),
       uniqNamePart: await bdDataSets.getUniqueNamePart(),
       assumeAwsAccount: await bdAccount.getAssumeAwsAccount(),
       assumeCondExternalId: await bdAccount.getExtId(),
     });
-    const bdAccess = new BDIntegration({ logger, bdAccount, bdRole, bdDataSets });
-    const policyDocument = bdAccess.getPolicyDocument();
+    const bdIntegration = new BDIntegration({ logger, bdAccount, bdRole, bdDataSets });
+    const policyDocument = await bdIntegration.getPolicyDocument();
     updateSpinnerText("Creating IAM Role");
-    const iamRoleArn = await bdRole.upsertRole(policyDocument);
+    const iamRoleArn = await bdRole.upsertRole(JSON.stringify(policyDocument));
     spinnerSuccess();
 
     updateSpinnerText("Registering IAM Role");

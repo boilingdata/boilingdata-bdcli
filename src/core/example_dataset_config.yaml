@@ -1,0 +1,15 @@
+datasets:
+  - name: demo
+    type: s3
+    bucket: boilingdata-demo
+    permissions:
+      - read
+    sessionStype: sts
+  - name: nyc
+    type: s3
+    bucket: isecurefi-dev-test
+    prefix: nyc-tlc/trip_data/
+    permissions:
+      - read
+      - write
+    sessionStype: assume_role

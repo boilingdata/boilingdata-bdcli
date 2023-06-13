@@ -7,6 +7,7 @@ import {
   DeletePolicyVersionCommand,
   GetRoleCommand,
   IAMClient,
+  ListPoliciesCommand,
   ListPolicyVersionsCommand,
 } from "@aws-sdk/client-iam";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
@@ -30,7 +31,7 @@ const roleParams: IBDIamRole = {
 };
 
 const dummyRole = {
-  Path: "dummyPath",
+  Path: "/boilingdata/",
   RoleName: "dummyRoleName",
   RoleId: "dummyRoleId",
   Arn: "dummyArn",
@@ -47,17 +48,17 @@ describe("iamRole", () => {
 
   it("getIamRoleName", async () => {
     const role = new BDIamRole(roleParams);
-    expect(role.iamRoleName).toEqual("bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-218be713a48db5a");
+    expect(role.iamRoleName).toEqual("bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-11843e6abe8afd6");
   });
 
   it("getIamRoleName with own prefix", async () => {
     const role = new BDIamRole({ ...roleParams, roleNamePrefix: "myPrefix" });
-    expect(role.iamRoleName).toEqual("myPrefix-ue1-boilingdata-demo-isecurefi-dev-and--c68f31eec7fe616");
+    expect(role.iamRoleName).toEqual("myPrefix-ue1-boilingdata-demo-isecurefi-dev-and--1232b7ccb3bac8a");
   });
 
   it("getIamRoleName with own path and prefix", async () => {
-    const role = new BDIamRole({ ...roleParams, roleNamePrefix: "myPrefix", path: "bd-service/demo/" });
-    expect(role.iamRoleName).toEqual("myPrefix-ue1-boilingdata-demo-isecurefi-dev-and--f3c25e2288110d4");
+    const role = new BDIamRole({ ...roleParams, roleNamePrefix: "myPrefix", path: "/bd-service/demo/" });
+    expect(role.iamRoleName).toEqual("myPrefix-ue1-boilingdata-demo-isecurefi-dev-and--2cca7b8bb91fa2f");
   });
 
   it("getRole", async () => {
@@ -66,8 +67,21 @@ describe("iamRole", () => {
     expect(await role.getRole()).toEqual(dummyRole);
   });
 
-  it("createRole - role and policy already exists", async () => {
+  it("createRole - a role and policy already exists", async () => {
     stsMock.on(GetCallerIdentityCommand).resolves({ Account: "123123123123" });
+    iamMock.on(ListPoliciesCommand).resolves({
+      Policies: [
+        {
+          PolicyName: "bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-acff8dae429911f",
+          Arn:
+            "arn:aws:iam::123123123123:policy/" +
+            "boilingdata/bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-acff8dae429911f",
+          Path: "/boilingdata/",
+          DefaultVersionId: "v123",
+          AttachmentCount: 1,
+        },
+      ],
+    });
     iamMock.on(ListPolicyVersionsCommand).resolves({ Versions: [{ VersionId: "dummyVersion" }] });
     iamMock.on(CreatePolicyVersionCommand).resolves({ PolicyVersion: { VersionId: "dummyVersionX" } });
     iamMock.on(GetRoleCommand).resolves({ Role: dummyRole });
@@ -79,6 +93,7 @@ describe("iamRole", () => {
   it("createRole - role already exists, no policy", async () => {
     stsMock.on(GetCallerIdentityCommand).resolves({ Account: "123123123123" });
     iamMock.on(ListPolicyVersionsCommand).resolves({ Versions: [] });
+    iamMock.on(ListPoliciesCommand).resolves({ Policies: [] });
     iamMock.on(CreatePolicyCommand).resolves({
       Policy: {
         Arn:
@@ -94,13 +109,41 @@ describe("iamRole", () => {
 
   it("createRole - role already exists, 5 policy versions already", async () => {
     stsMock.on(GetCallerIdentityCommand).resolves({ Account: "123123123123" });
+    iamMock.on(ListPoliciesCommand).resolves({
+      Policies: [
+        {
+          PolicyName: "bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-acff8dae429911f",
+          Arn:
+            "arn:aws:iam::123123123123:policy/" +
+            "boilingdata/bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-acff8dae429911f",
+          Path: "/boilingdata/",
+          DefaultVersionId: "v100",
+          AttachmentCount: 1,
+        },
+      ],
+    });
     iamMock.on(ListPolicyVersionsCommand).resolves({
       Versions: [
-        { VersionId: "dummyVersion1" },
-        { VersionId: "dummyVersion2" },
-        { VersionId: "dummyVersion3" },
-        { VersionId: "dummyVersion4" },
-        { VersionId: "dummyVersion5" },
+        {
+          VersionId: "v5",
+          IsDefaultVersion: true,
+        },
+        {
+          VersionId: "v4",
+          IsDefaultVersion: false,
+        },
+        {
+          VersionId: "v3",
+          IsDefaultVersion: false,
+        },
+        {
+          VersionId: "v2",
+          IsDefaultVersion: false,
+        },
+        {
+          VersionId: "v1",
+          IsDefaultVersion: false,
+        },
       ],
     });
     iamMock.on(DeletePolicyVersionCommand).resolves({});
@@ -113,6 +156,7 @@ describe("iamRole", () => {
 
   it("createRole - does not yet exist", async () => {
     stsMock.on(GetCallerIdentityCommand).resolves({ Account: "123123123123" });
+    iamMock.on(ListPoliciesCommand).resolves({ Policies: [] });
     iamMock.on(CreatePolicyCommand).resolves({
       Policy: {
         Arn:

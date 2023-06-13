@@ -4,13 +4,12 @@ import { BDIntegration } from "./bdIntegration.js";
 import { BDAccount } from "./boilingdata/config.js";
 import { BDDataSetConfig } from "./boilingdata/dataset.js";
 import { IAMClient } from "@aws-sdk/client-iam";
-import { STSClient } from "@aws-sdk/client-sts";
+import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { mockClient } from "aws-sdk-client-mock";
 
 const iamMock = mockClient(IAMClient);
 const stsMock = mockClient(STSClient);
 iamMock.resolves({});
-stsMock.resolves({});
 
 const accountLogger = getLogger("bd-account");
 const dssLogger = getLogger("bd-datasets");
@@ -29,6 +28,7 @@ const bdDataSets = new BDDataSetConfig({ logger: dssLogger });
 
 describe("BDIntegration", () => {
   it("BDIntegration", async () => {
+    bdDataSets.readConfig("./example_dataset_config.yaml");
     const assumeCondExternalId = await bdAccount.getExtId();
     const assumeAwsAccount = await bdAccount.getAssumeAwsAccount();
     const uniqNamePart = await bdDataSets.getUniqueNamePart();
@@ -42,7 +42,51 @@ describe("BDIntegration", () => {
       assumeCondExternalId,
     });
     const bdIntegration = new BDIntegration({ logger: accessLogger, bdAccount, bdDataSets, bdRole });
-    const res = bdIntegration.getPolicyDocument();
-    expect(res).toEqual({});
+    stsMock.on(GetCallerIdentityCommand).resolves({ Account: "123123123123" });
+    const res = await bdIntegration.getPolicyDocument();
+    expect(res).toMatchInlineSnapshot(`
+      {
+        "Statement": [
+          {
+            "Action": [
+              "s3:GetObject",
+            ],
+            "Effect": "Allow",
+            "Resource": [
+              "arn:aws:s3:::boilingdata-demo",
+            ],
+          },
+          {
+            "Action": [
+              "s3:PutObject",
+              "s3:GetObject",
+            ],
+            "Effect": "Allow",
+            "Resource": [
+              "arn:aws:s3:::isecurefi-dev-test",
+              "arn:aws:s3:::isecurefi-dev-test/nyc-tlc/trip_data/*",
+            ],
+          },
+          {
+            "Action": [
+              "s3:ListBucket",
+              "s3:GetBucketLocation",
+              "s3:GetBucketRequestPayment",
+            ],
+            "Effect": "Allow",
+            "Resource": [
+              "arn:aws:s3:::boilingdata-demo",
+              "arn:aws:s3:::isecurefi-dev-test",
+            ],
+          },
+          {
+            "Action": "s3:ListAllMyBuckets",
+            "Effect": "Allow",
+            "Resource": "*",
+          },
+        ],
+        "Version": "2012-10-17",
+      }
+    `);
   });
 });

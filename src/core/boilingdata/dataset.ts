@@ -11,15 +11,15 @@ export interface IBDDataSetConfig {
 
 export class BDDataSetConfig {
   private logger: ILogger;
-  private dataSetsConfig?: IDataSets;
+  private _dataSetsConfig?: IDataSets;
 
   constructor(private params: IBDDataSetConfig) {
     this.logger = this.params.logger;
   }
 
   public async getUniqueNamePart(): Promise<string> {
-    if (!this.dataSetsConfig) throw new Error("Set data-set config first");
-    const uniqName = this.dataSetsConfig.datasets.map(dataset => dataset.bucket).join("-");
+    if (!this._dataSetsConfig) throw new Error("Set data-set config first");
+    const uniqName = this._dataSetsConfig.datasets.map(dataset => dataset.bucket).join("-");
     this.logger.debug({ uniqName });
     return uniqName;
   }
@@ -35,17 +35,22 @@ export class BDDataSetConfig {
   }
 
   public async readConfig(filename: string): Promise<IDataSets> {
-    if (this.dataSetsConfig) return this.dataSetsConfig;
+    if (this._dataSetsConfig) return this._dataSetsConfig;
     const dataSetConfig = <object>yaml.load(await fs.readFile(filename, "utf8"));
     this.logger.debug({ dataSetConfig });
     if (!this.isDataSetsConfig(dataSetConfig)) throw new Error("datasets config not validated");
-    this.dataSetsConfig = {
+    this._dataSetsConfig = {
       datasets: dataSetConfig.datasets.map(dataset => ({
         ...dataset,
         type: dataset.type ?? EDataSetType.S3,
         permissions: dataset.permissions ?? [EPermission.READ],
       })),
     };
-    return this.dataSetsConfig;
+    return this._dataSetsConfig;
+  }
+
+  public get dataSetConfig(): IDataSets {
+    if (!this._dataSetsConfig) throw new Error("datasets config file not read yet, please call readConfig()");
+    return this._dataSetsConfig;
   }
 }
