@@ -1,3 +1,4 @@
+import { getIdToken } from "../bdcli/utils/auth_util.js";
 import { ELogLevel, getLogger } from "../bdcli/utils/logger_util.js";
 import { BDIamRole } from "./aws/iam_roles.js";
 import { BDIntegration } from "./bdIntegration.js";
@@ -15,7 +16,7 @@ const accountLogger = getLogger("bd-account");
 const dssLogger = getLogger("bd-datasets");
 const roleLogger = getLogger("bd-role");
 const accessLogger = getLogger("bd-access");
-// accountLogger.setLogLevel(ELogLevel.DEBUG);
+accountLogger.setLogLevel(ELogLevel.DEBUG);
 // dssLogger.setLogLevel(ELogLevel.DEBUG);
 // roleLogger.setLogLevel(ELogLevel.DEBUG);
 accessLogger.setLogLevel(ELogLevel.DEBUG);
@@ -23,13 +24,18 @@ accessLogger.setLogLevel(ELogLevel.DEBUG);
 const region = "eu-west-1";
 const iamClient = new IAMClient({ region });
 const stsClient = new STSClient({ region });
-const bdAccount = new BDAccount({ logger: accountLogger, authToken: "dummy" });
 const bdDataSets = new BDDataSetConfig({ logger: dssLogger });
+let bdAccount: BDAccount;
 
 describe("BDIntegration", () => {
+  beforeAll(async () => {
+    const authToken = await getIdToken();
+    bdAccount = new BDAccount({ logger: accountLogger, authToken });
+  });
+
   it("BDIntegration", async () => {
     bdDataSets.readConfig("./example_dataset_config.yaml");
-    const assumeCondExternalId = await bdAccount.getExtId();
+    const assumeCondExternalId = await bdAccount.getExtId(); // FIXME: This calls real API
     const assumeAwsAccount = await bdAccount.getAssumeAwsAccount();
     const uniqNamePart = await bdDataSets.getUniqueNamePart();
     const bdRole = new BDIamRole({

@@ -1,5 +1,5 @@
 import { ILogger } from "../../bdcli/utils/logger_util.js";
-import { accountUrl, getReqHeaders } from "../utils/http_util.js";
+import { accountUrl, getReqHeaders } from "./boilingdata_api.js";
 // import { channel } from "node:diagnostics_channel";
 
 export interface IBDConfig {
