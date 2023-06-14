@@ -1,6 +1,6 @@
 import { ILogger } from "../bdcli/utils/logger_util.js";
 import { BDIamRole } from "./aws/iam_roles.js";
-import { BDAccount } from "./boilingdata/config.js";
+import { BDAccount } from "./boilingdata/account.js";
 import { EPermission, IDataSet } from "./boilingdata/dataset.interface.js";
 import { BDDataSetConfig } from "./boilingdata/dataset.js";
 

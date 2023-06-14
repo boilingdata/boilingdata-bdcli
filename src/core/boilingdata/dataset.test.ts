@@ -1,7 +1,8 @@
-import { getLogger } from "../../bdcli/utils/logger_util.js";
+import { ELogLevel, getLogger } from "../../bdcli/utils/logger_util.js";
 import { BDDataSetConfig } from "./dataset.js";
 
 const logger = getLogger("data-set-config");
+logger.setLogLevel(ELogLevel.DEBUG);
 
 const exampleConfig = {
   datasets: [

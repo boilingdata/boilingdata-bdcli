@@ -1,7 +1,7 @@
 import { ELogLevel, getLogger } from "../bdcli/utils/logger_util.js";
 import { BDIamRole } from "./aws/iam_roles.js";
 import { BDIntegration } from "./bdIntegration.js";
-import { BDAccount } from "./boilingdata/config.js";
+import { BDAccount } from "./boilingdata/account.js";
 import { BDDataSetConfig } from "./boilingdata/dataset.js";
 import { IAMClient } from "@aws-sdk/client-iam";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";

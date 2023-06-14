@@ -2,11 +2,11 @@ import * as iam from "@aws-sdk/client-iam";
 import * as sts from "@aws-sdk/client-sts";
 import * as cmd from "commander";
 import { getLogger } from "../../utils/logger_util.js";
-import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
+import { spinnerError, spinnerSuccess, spinnerWarn, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
 import { getIdToken } from "../../utils/auth_util.js";
 import { BDIamRole } from "../../../core/aws/iam_roles.js";
-import { BDAccount } from "../../../core/boilingdata/config.js";
+import { BDAccount } from "../../../core/boilingdata/account.js";
 import { BDDataSetConfig } from "../../../core/boilingdata/dataset.js";
 import { BDIntegration } from "../../../core/bdIntegration.js";
 
@@ -16,10 +16,17 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
   try {
     logger.debug({ options });
 
+    if (options.delete) {
+      updateSpinnerText("Not implemented yet. Please delete the IAM Role from AWS Console");
+      spinnerWarn("Not implemented yet. Please delete the IAM Role from AWS Console");
+      return;
+    }
+
     updateSpinnerText("Authenticating");
     const token = await getIdToken();
     spinnerSuccess();
 
+    updateSpinnerText("Creating IAM Role");
     const region = options.region ?? process.env["AWS_REGION"];
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdAccount = new BDAccount({ logger, authToken: token });
@@ -36,7 +43,6 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
     });
     const bdIntegration = new BDIntegration({ logger, bdAccount, bdRole, bdDataSets });
     const policyDocument = await bdIntegration.getPolicyDocument();
-    updateSpinnerText("Creating IAM Role");
     const iamRoleArn = await bdRole.upsertRole(JSON.stringify(policyDocument));
     spinnerSuccess();
 
@@ -51,6 +57,7 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
 const program = new cmd.Command("bdcli setup iam-role")
   .addOption(new cmd.Option("-c, --config <filepath>", "Data access conf").makeOptionMandatory())
   .addOption(new cmd.Option("-r, --region <region>", "AWS region"))
+  .addOption(new cmd.Option("--delete", "Delete the IAM role"))
   .action(async (options, command) => await iamrole(options, command));
 
 addGlobalOptions(program, logger);

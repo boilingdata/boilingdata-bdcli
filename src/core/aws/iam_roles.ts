@@ -117,8 +117,8 @@ export class BDIamRole {
   private async _createRole(): Promise<iam.Role> {
     this.logger.debug({ _createRole: { roleName: this.iamRoleName } });
     try {
-      const commandParams = {
-        Path: this.params.path,
+      const commandParams: iam.CreateRoleRequest = {
+        Path: this.path,
         RoleName: this.iamRoleName,
         AssumeRolePolicyDocument: JSON.stringify(this.getAssumeRolePolicyDocument()),
         Tags: [...this.boilingDataTags, ...(this.params.tags ?? [])],
@@ -181,12 +181,12 @@ export class BDIamRole {
     const resp = await this.iamClient.send(new iam.CreatePolicyVersionCommand({ PolicyArn, PolicyDocument }));
     this.logger.debug({ upsertBdAccessPolicy: { VersionId: resp?.PolicyVersion?.VersionId } });
     if (!resp?.PolicyVersion?.VersionId) throw new Error("Policy version creation failed");
-    const commandParams = { PolicyArn, VersionId: resp?.PolicyVersion?.VersionId };
+    const commandParams: iam.SetDefaultPolicyVersionRequest = { PolicyArn, VersionId: resp?.PolicyVersion?.VersionId };
     await this.iamClient.send(new iam.SetDefaultPolicyVersionCommand(commandParams));
   }
 
   private async _createPolicy(PolicyDocument: string): Promise<void> {
-    const commandParams = {
+    const commandParams: iam.CreatePolicyRequest = {
       Path: this.path,
       PolicyName: this.iamManagedPolicyName,
       Description: "Access Policy for BoilingData",
@@ -215,22 +215,20 @@ export class BDIamRole {
   }
 
   public async upsertRole(policyDocument: string): Promise<string> {
+    let arn: string;
     try {
       const resp = await this.getRole();
-      // type check
       if (!resp.Arn) throw new Error("Could not find role ARN");
-      await this.upsertBdAccessPolicy(policyDocument);
-      await this._attachRolePolicy();
-      return resp.Arn;
+      arn = resp.Arn;
     } catch (err: any) {
       if (err?.message != "Getting IAM Role failed") throw err;
       const resp = await this._createRole();
-      // type check
       if (!resp.Arn) throw new Error("Could not find role ARN after create role");
-      await this.upsertBdAccessPolicy(policyDocument);
-      await this._attachRolePolicy();
-      return resp.Arn;
+      arn = resp.Arn;
     }
+    await this.upsertBdAccessPolicy(policyDocument);
+    await this._attachRolePolicy();
+    return arn;
   }
 
   public async getRole(): Promise<iam.Role> {
@@ -240,7 +238,7 @@ export class BDIamRole {
       this.logger.debug({ getRole: { role: resp.Role } });
       return resp.Role;
     } catch (err) {
-      this.logger.error(err);
+      this.logger.debug({ getRole: err });
       throw new Error("Getting IAM Role failed");
     }
   }
