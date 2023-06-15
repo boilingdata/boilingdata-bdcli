@@ -1,6 +1,6 @@
 import * as id from "amazon-cognito-identity-js";
 import { getCredentials } from "./config_util.js";
-import { Pool } from "../../core/boilingdata/boilingdata_api.js";
+import { Pool } from "../../integration/boilingdata/boilingdata_api.js";
 
 // NOTE: "accesstoken" does not work, it has to be "idtoken".
 // TODO: Cache the id token to home folder

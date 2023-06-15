@@ -5,10 +5,10 @@ import { getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerSuccess, spinnerWarn, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
 import { getIdToken } from "../../utils/auth_util.js";
-import { BDIamRole } from "../../../core/aws/iam_roles.js";
-import { BDAccount } from "../../../core/boilingdata/account.js";
-import { BDDataSetConfig } from "../../../core/boilingdata/dataset.js";
-import { BDIntegration } from "../../../core/bdIntegration.js";
+import { BDIamRole } from "../../../integration/aws/iam_roles.js";
+import { BDAccount } from "../../../integration/boilingdata/account.js";
+import { BDDataSetConfig } from "../../../integration/boilingdata/dataset.js";
+import { BDIntegration } from "../../../integration/bdIntegration.js";
 
 const logger = getLogger("bdcli-setup-iam-role");
 

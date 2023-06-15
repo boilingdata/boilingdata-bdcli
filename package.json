@@ -12,7 +12,7 @@
   "private": true,
   "scripts": {
     "release": "standard-version",
-    "prebuild": "rm -rf dist/ && echo \"export const version = \\\"$(git describe --tags)\\\";\" > src/VERSION.ts && ts-interface-builder src/core/boilingdata/dataset.interface.ts ",
+    "prebuild": "rm -rf dist/ && echo \"export const version = \\\"$(git describe --tags)\\\";\" > src/VERSION.ts && ts-interface-builder src/integration/boilingdata/dataset.interface.ts ",
     "build": "tsc && chmod 755 dist/index.js && ln -fs dist/index.js bdcli",
     "prettier": "prettier --check 'src/**/*.{js,ts}'",
     "prettier:fix": "prettier --write 'src/**/*.{js,ts}'",

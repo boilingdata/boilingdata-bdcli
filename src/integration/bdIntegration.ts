@@ -1,7 +1,7 @@
 import { ILogger } from "../bdcli/utils/logger_util.js";
 import { BDIamRole } from "./aws/iam_roles.js";
 import { BDAccount } from "./boilingdata/account.js";
-import { EPermission, IDataSet } from "./boilingdata/dataset.interface.js";
+import { EGrant, IDataSet } from "./boilingdata/dataset.interface.js";
 import { BDDataSetConfig } from "./boilingdata/dataset.js";
 
 const RO_ACTIONS = ["s3:GetObject"];
@@ -66,13 +66,13 @@ export class BDIntegration {
   private getGroupedBuckets(): IGroupedDataSets {
     const dataSetConfig = this.bdDatasets.dataSetConfig;
     const readOnly = dataSetConfig.datasets.filter(
-      dataset => !dataset.permissions?.includes(EPermission.WRITE) && dataset.permissions?.includes(EPermission.READ),
+      dataset => !dataset.permissions?.includes(EGrant.WRITE) && dataset.permissions?.includes(EGrant.READ),
     );
     const readWrite = dataSetConfig.datasets.filter(
-      dataset => dataset.permissions?.includes(EPermission.WRITE) && dataset.permissions?.includes(EPermission.READ),
+      dataset => dataset.permissions?.includes(EGrant.WRITE) && dataset.permissions?.includes(EGrant.READ),
     );
     const writeOnly = dataSetConfig.datasets.filter(
-      dataset => dataset.permissions?.includes(EPermission.WRITE) && !dataset.permissions?.includes(EPermission.READ),
+      dataset => dataset.permissions?.includes(EGrant.WRITE) && !dataset.permissions?.includes(EGrant.READ),
     );
     return { readOnly, readWrite, writeOnly };
   }

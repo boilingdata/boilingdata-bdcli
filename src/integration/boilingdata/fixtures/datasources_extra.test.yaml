@@ -2,15 +2,17 @@ dataSources:
   - name: demo
     type: s3
     sessionType: assumeRole
-    accessPoliy:
+    accessPolicy:
       - id: bd-demo-policy
         bucket: boilingdata-demo
         prefix: demo.parquet
+        testing: hello
         permissions:
           - read
       - id: nyc-policy
         bucket: isecurefi-dev-test
         prefix: nyc-tlc/trip_data/
+        some_more_keys: 1
         permissions:
           - read
           - write
@@ -23,7 +25,7 @@ dataSources:
         filetype: parquet
   - name: logs
     type: s3
-    accessPoliy:
+    accessPolicy:
       - id: logs-policy
         bucket: logs-bucket
     dataSets:
