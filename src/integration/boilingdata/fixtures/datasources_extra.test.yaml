@@ -4,30 +4,30 @@ dataSources:
     sessionType: assumeRole
     accessPolicy:
       - id: bd-demo-policy
-        bucket: boilingdata-demo
-        prefix: demo.parquet
-        testing: hello
+        badKey: yesTrue
+        urlPrefix: s3://boilingdata-demo/demo
         permissions:
           - read
       - id: nyc-policy
-        bucket: isecurefi-dev-test
-        prefix: nyc-tlc/trip_data/
-        some_more_keys: 1
+        dummy: hereAndThere
+        urlPrefix: s3://isecurefi-dev-test/nyc-tlc/
         permissions:
           - read
           - write
     dataSets:
       - name: demo
-        url: s3://boilingdata-demo/demo.parquet
+        urlPrefix: s3://boilingdata-demo/demo.parquet
+      - name: demo2
+        urlPrefix: s3://boilingdata-demo/demo2.parquet
       - name: nyc
-        url: s3://isecurefi-dev-test/nyc-tlc/trip_data/
+        urlPrefix: s3://isecurefi-dev-test/nyc-tlc/trip_data/
         layout: hive
         filetype: parquet
   - name: logs
     type: s3
     accessPolicy:
       - id: logs-policy
-        bucket: logs-bucket
+        urlPrefix: s3://logs-bucket/
     dataSets:
       - name: s3AccessLogs
-        url: s3://logs-bucket/s3_access/
+        urlPrefix: s3://logs-bucket/s3_access/

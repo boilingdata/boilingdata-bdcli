@@ -1,7 +1,7 @@
 import { ILogger } from "../bdcli/utils/logger_util.js";
 import { BDIamRole } from "./aws/iam_roles.js";
 import { BDAccount } from "./boilingdata/account.js";
-import { EGrant, IDataSet } from "./boilingdata/dataset.interface.js";
+import { G_WRITE, G_READ, IStatementExt } from "./boilingdata/dataset.interface.js";
 import { BDDataSetConfig } from "./boilingdata/dataset.js";
 
 const RO_ACTIONS = ["s3:GetObject"];
@@ -16,10 +16,10 @@ export interface IBDIntegration {
   bdDataSets: BDDataSetConfig;
 }
 
-interface IGroupedDataSets {
-  readOnly: IDataSet[];
-  readWrite: IDataSet[];
-  writeOnly: IDataSet[];
+interface IGroupedDataSources {
+  readOnly: IStatementExt[];
+  readWrite: IStatementExt[];
+  writeOnly: IStatementExt[];
 }
 
 export class BDIntegration {
@@ -36,44 +36,48 @@ export class BDIntegration {
     // this.logger.debug({ account: this.bdAccount, role: this.bdRole, datasets: this.bdDatasets });
   }
 
-  private async mapDatasetsToUniqBuckets(datasets: IDataSet[]): Promise<string[]> {
-    const uniqBuckets = [...new Set(datasets.map(dataset => dataset.bucket))];
-    return uniqBuckets.map(bucket => [`arn:aws:s3:::${bucket}`]).flat();
+  private mapDatasetsToUniqBuckets(statements: IStatementExt[]): string[] {
+    const uniqBuckets = [...new Set(statements.map(policy => policy.bucket))];
+    return uniqBuckets.map(bucket => `arn:aws:s3:::${bucket}`);
   }
 
-  private async mapDatasetsToS3Resource(datasets: IDataSet[]): Promise<string[]> {
-    return datasets
-      .map(dataset => [
-        `arn:aws:s3:::${dataset.bucket}`,
-        dataset.prefix ? `arn:aws:s3:::${dataset.bucket}/${dataset.prefix}*` : "",
-      ])
-      .flat()
-      .filter(d => d != "");
+  private mapAccessPolicyToS3Resource(statements: IStatementExt[]): string[] {
+    return statements.map(stmt => `arn:aws:s3:::${stmt.bucket}/${stmt.prefix}*`);
   }
 
-  private async getStatement(
-    datasets: IDataSet[],
+  private getStatement(
+    datasets: IStatementExt[],
     actions: string[],
-    func: (datasets: IDataSet[]) => Promise<string[]>,
-  ): Promise<any> {
-    return {
-      Effect: "Allow",
-      Action: actions,
-      Resource: await func(datasets),
-    };
+    func: (datasets: IStatementExt[]) => string[],
+  ): any {
+    return { Effect: "Allow", Action: actions, Resource: func(datasets) };
   }
 
-  private getGroupedBuckets(): IGroupedDataSets {
-    const dataSetConfig = this.bdDatasets.dataSetConfig;
-    const readOnly = dataSetConfig.datasets.filter(
-      dataset => !dataset.permissions?.includes(EGrant.WRITE) && dataset.permissions?.includes(EGrant.READ),
-    );
-    const readWrite = dataSetConfig.datasets.filter(
-      dataset => dataset.permissions?.includes(EGrant.WRITE) && dataset.permissions?.includes(EGrant.READ),
-    );
-    const writeOnly = dataSetConfig.datasets.filter(
-      dataset => dataset.permissions?.includes(EGrant.WRITE) && !dataset.permissions?.includes(EGrant.READ),
-    );
+  public getGroupedBuckets(): IGroupedDataSources {
+    const dataSourcesConfig = this.bdDatasets.dataSourcesConfig;
+    const allPolicies = dataSourcesConfig.dataSources.map(d => d.accessPolicy).flat();
+    const readOnly = allPolicies
+      .filter(policy => !policy.permissions?.includes(G_WRITE) && policy.permissions?.includes(G_READ))
+      .map(policy => ({
+        ...policy,
+        bucket: new URL(policy.urlPrefix).host,
+        prefix: new URL(policy.urlPrefix).pathname.substring(1),
+      }));
+    const readWrite = allPolicies
+      .filter(policy => policy.permissions?.includes(G_WRITE) && policy.permissions?.includes(G_READ))
+      .map(policy => ({
+        ...policy,
+        bucket: new URL(policy.urlPrefix).host,
+        prefix: new URL(policy.urlPrefix).pathname.substring(1),
+      }));
+    const writeOnly = allPolicies
+      .filter(policy => policy.permissions?.includes(G_WRITE) && !policy.permissions?.includes(G_READ))
+      .map(policy => ({
+        ...policy,
+        bucket: new URL(policy.urlPrefix).host,
+        prefix: new URL(policy.urlPrefix).pathname.substring(1),
+      }));
+
     return { readOnly, readWrite, writeOnly };
   }
 
@@ -81,10 +85,10 @@ export class BDIntegration {
     const grouped = this.getGroupedBuckets();
     const allDatasets = [...grouped.readOnly, ...grouped.readWrite, ...grouped.writeOnly];
     const Statement = [];
-    Statement.push(await this.getStatement(grouped.readOnly, RO_ACTIONS, this.mapDatasetsToS3Resource.bind(this)));
-    Statement.push(await this.getStatement(grouped.readWrite, RW_ACTIONS, this.mapDatasetsToS3Resource.bind(this)));
-    Statement.push(await this.getStatement(grouped.writeOnly, WO_ACTIONS, this.mapDatasetsToS3Resource.bind(this)));
-    Statement.push(await this.getStatement(allDatasets, BUCKET_ACTIONS, this.mapDatasetsToUniqBuckets.bind(this)));
+    Statement.push(this.getStatement(grouped.readOnly, RO_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
+    Statement.push(this.getStatement(grouped.readWrite, RW_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
+    Statement.push(this.getStatement(grouped.writeOnly, WO_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
+    Statement.push(this.getStatement(allDatasets, BUCKET_ACTIONS, this.mapDatasetsToUniqBuckets.bind(this)));
     Statement.push({
       Effect: "Allow",
       Action: "s3:ListAllMyBuckets",

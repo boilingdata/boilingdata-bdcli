@@ -33,7 +33,53 @@ describe("BDIntegration", () => {
     bdAccount = new BDAccount({ logger: accountLogger, authToken });
   });
 
-  it("BDIntegration", async () => {
+  it("getGroupedBuckets", async () => {
+    bdDataSets.readConfig("./example_dataset_config.yaml");
+    const assumeCondExternalId = await bdAccount.getExtId(); // FIXME: This calls real API
+    const assumeAwsAccount = await bdAccount.getAssumeAwsAccount();
+    const uniqNamePart = await bdDataSets.getUniqueNamePart();
+    const bdRole = new BDIamRole({
+      logger: roleLogger,
+      region,
+      iamClient,
+      stsClient,
+      uniqNamePart,
+      assumeAwsAccount,
+      assumeCondExternalId,
+    });
+    const bdIntegration = new BDIntegration({ logger: accessLogger, bdAccount, bdDataSets, bdRole });
+    stsMock.on(GetCallerIdentityCommand).resolves({ Account: "123123123123" });
+    expect(bdIntegration.getGroupedBuckets()).toMatchInlineSnapshot(`
+      {
+        "readOnly": [
+          {
+            "bucket": "boilingdata-demo",
+            "id": "bd-demo-policy",
+            "permissions": [
+              "read",
+            ],
+            "prefix": "demo",
+            "urlPrefix": "s3://boilingdata-demo/demo",
+          },
+        ],
+        "readWrite": [
+          {
+            "bucket": "isecurefi-dev-test",
+            "id": "nyc-policy",
+            "permissions": [
+              "read",
+              "write",
+            ],
+            "prefix": "nyc-tlc/",
+            "urlPrefix": "s3://isecurefi-dev-test/nyc-tlc/",
+          },
+        ],
+        "writeOnly": [],
+      }
+    `);
+  });
+
+  it("PolicyDocument", async () => {
     bdDataSets.readConfig("./example_dataset_config.yaml");
     const assumeCondExternalId = await bdAccount.getExtId(); // FIXME: This calls real API
     const assumeAwsAccount = await bdAccount.getAssumeAwsAccount();
@@ -59,7 +105,7 @@ describe("BDIntegration", () => {
             ],
             "Effect": "Allow",
             "Resource": [
-              "arn:aws:s3:::boilingdata-demo",
+              "arn:aws:s3:::boilingdata-demo/demo*",
             ],
           },
           {
@@ -69,8 +115,7 @@ describe("BDIntegration", () => {
             ],
             "Effect": "Allow",
             "Resource": [
-              "arn:aws:s3:::isecurefi-dev-test",
-              "arn:aws:s3:::isecurefi-dev-test/nyc-tlc/trip_data/*",
+              "arn:aws:s3:::isecurefi-dev-test/nyc-tlc/*",
             ],
           },
           {

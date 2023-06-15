@@ -39,7 +39,6 @@ export class BDAccount {
     if (this.accountDetails) return;
     //channel("undici:request:create").subscribe(console.log);
     const res = await fetch(accountUrl, { method: "GET", headers: await getReqHeaders(this.token) });
-    this.logger.debug({ res });
     const body = await res.json();
     this.logger.debug({ getExtId: { body } });
     if (!body.ResponseCode || !body.ResponseText) {

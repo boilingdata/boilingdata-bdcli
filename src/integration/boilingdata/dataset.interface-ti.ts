@@ -18,15 +18,18 @@ export const UFileType = t.union(t.lit("parquet"), t.lit("json"), t.lit("csv"));
 
 export const IStatement = t.iface([], {
   "id": "string",
-  "bucket": "string",
-  "prefix": t.opt("string"),
+  "urlPrefix": "string",
   "permissions": t.opt(t.array("UGrant")),
+});
+
+export const IStatementExt = t.iface(["IStatement"], {
+  "bucket": "string",
+  "prefix": "string",
 });
 
 export const IDataSet = t.iface([], {
   "name": "string",
-  "url": "string",
-  "folder": t.opt("boolean"),
+  "urlPrefix": "string",
   "layout": t.opt("ULayout"),
   "filetype": t.opt("UFileType"),
 });
@@ -50,6 +53,7 @@ const exportedTypeSuite: t.ITypeSuite = {
   ULayout,
   UFileType,
   IStatement,
+  IStatementExt,
   IDataSet,
   IDataSource,
   IDataSources,

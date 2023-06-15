@@ -20,7 +20,7 @@ export class BDDataSetConfig {
   public async getUniqueNamePart(): Promise<string> {
     if (!this._dataSourcesConfig) throw new Error("Set datasources config first");
     const uniqName = this._dataSourcesConfig.dataSources
-      .map(src => src.dataSets.map(dataset => dataset.url))
+      .map(src => src.dataSets.map(dataset => new URL(dataset.urlPrefix).host))
       .flat()
       .join("-");
     this.logger.debug({ uniqName });
@@ -50,7 +50,7 @@ export class BDDataSetConfig {
     return this._dataSourcesConfig;
   }
 
-  public get dataSetConfig(): IDataSources {
+  public get dataSourcesConfig(): IDataSources {
     if (!this._dataSourcesConfig) throw new Error("datasets config file not read yet, please call readConfig()");
     return this._dataSourcesConfig;
   }
