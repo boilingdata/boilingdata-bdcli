@@ -21,7 +21,7 @@
   "author": "Dan Forsberg <dan@boilingdata.com>",
   "type": "module",
   "license": "MIT",
-  "private": true,
+  "private": false,
   "scripts": {
     "release": "standard-version",
     "prebuild": "yarn install --frozen-lockfile && rm -rf dist/ && echo \"/* istanbul ignore file */\nexport const version = \\\"$(git describe --tags)\\\";\" > src/VERSION.ts && ts-interface-builder src/integration/boilingdata/dataset.interface.ts ",
