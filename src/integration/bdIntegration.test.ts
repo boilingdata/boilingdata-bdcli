@@ -79,7 +79,7 @@ describe("BDIntegration", () => {
     `);
   });
 
-  it("PolicyDocument", async () => {
+  it.skip("PolicyDocument", async () => {
     bdDataSets.readConfig("./example_dataset_config.yaml");
     const assumeCondExternalId = await bdAccount.getExtId(); // FIXME: This calls real API
     const assumeAwsAccount = await bdAccount.getAssumeAwsAccount();
