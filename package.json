@@ -2,10 +2,14 @@
   "name": "@boilingdata/boilingdata-bdcli",
   "version": "0.0.9",
   "description": "BoilingData command-line client - bdcli",
-  "exports": "./dist/index.js",
-  "main": "dist/cjs/index.js",
-  "types": "dist/cjs/index.d.ts",
+  "exports": {
+    "import": "./dist/esm/index.js",
+    "require": "./dist/cjs/index.js"
+  },
+  "main": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
   "module": "dist/esm/index.js",
+  "preferGlobal": true,
   "bin": {
     "bdcli": "./dist/esm/index.js"
   },
