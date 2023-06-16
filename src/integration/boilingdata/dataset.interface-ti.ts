@@ -43,6 +43,8 @@ export const IDataSource = t.iface([], {
 });
 
 export const IDataSources = t.iface([], {
+  "version": t.opt(t.union("string", "number")),
+  "uniqNamePart": "string",
   "dataSources": t.array("IDataSource"),
 });
 

@@ -1,3 +1,5 @@
+version: 1.0
+uniqNamePart: demo2
 dataSources:
   - name: demo
     type: s3

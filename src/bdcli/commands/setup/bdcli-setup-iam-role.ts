@@ -1,7 +1,7 @@
 import * as iam from "@aws-sdk/client-iam";
 import * as sts from "@aws-sdk/client-sts";
 import * as cmd from "commander";
-import { getLogger } from "../../utils/logger_util.js";
+import { ELogLevel, getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerSuccess, spinnerWarn, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
 import { getIdToken } from "../../utils/auth_util.js";
@@ -11,6 +11,7 @@ import { BDDataSetConfig } from "../../../integration/boilingdata/dataset.js";
 import { BDIntegration } from "../../../integration/bdIntegration.js";
 
 const logger = getLogger("bdcli-setup-iam-role");
+logger.setLogLevel(ELogLevel.WARN);
 
 async function iamrole(options: any, _command: cmd.Command): Promise<void> {
   try {

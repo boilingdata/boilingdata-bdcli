@@ -19,10 +19,7 @@ export class BDDataSetConfig {
 
   public async getUniqueNamePart(): Promise<string> {
     if (!this._dataSourcesConfig) throw new Error("Set datasources config first");
-    const uniqName = this._dataSourcesConfig.dataSources
-      .map(src => src.dataSets.map(dataset => new URL(dataset.urlPrefix).host))
-      .flat()
-      .join("-");
+    const uniqName = this._dataSourcesConfig.uniqNamePart;
     this.logger.debug({ uniqName });
     return uniqName;
   }
@@ -38,13 +35,21 @@ export class BDDataSetConfig {
     }
   }
 
+  public hasValidUrlPrefixes(_dataSourcesConfig: IDataSources): boolean {
+    // TOOD: Validate URL prefixes.
+    return true;
+  }
+
   public async readConfig(filename: string): Promise<IDataSources> {
     if (this._dataSourcesConfig) return this._dataSourcesConfig;
     const dataSourcesConfig = <object>yaml.load(await fs.readFile(filename, "utf8"));
     this.logger.debug({ dataSourcesConfig });
-    // all required keys?
+    // all required keys and values?
     if (!this.isDataSetsConfig(dataSourcesConfig)) throw new Error("datasources config schema not validated");
-    // valid enum types?
+    // valid urlPrefixes?
+    if (!this.hasValidUrlPrefixes(dataSourcesConfig)) {
+      throw new Error("datasources config URL prefixes mismatch between policy and data sets");
+    }
 
     this._dataSourcesConfig = dataSourcesConfig;
     return this._dataSourcesConfig;

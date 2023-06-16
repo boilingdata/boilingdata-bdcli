@@ -26,11 +26,14 @@ export class BDAccount {
   public async setIamRole(IamRoleArn: string): Promise<void> {
     // channel("undici:request:create").subscribe(console.log);
     const body = JSON.stringify({ IamRoleArn });
+    this.logger.debug({ body });
     const res = await fetch(accountUrl + "/iamrole", { method: "PUT", headers: await getReqHeaders(this.token), body });
+    const respBody = await res.json();
+    this.logger.info("\n" + JSON.stringify(respBody));
     if (res.status != 200 && res.status != 201) {
-      this.logger.debug({ status: res.status, statusText: res.statusText });
+      this.logger.error({ status: res.status, statusText: res.statusText, respBody });
       throw new Error(
-        `Failed to configure IAM Role (${IamRoleArn}) into BoilingData - ${res.status} ${res.statusText}`,
+        `Failed to configure IAM Role (${IamRoleArn}) into BoilingData - ${res.status} ${res.statusText}: ${respBody?.ResponseText}; ${respBody?.RequestId}`,
       );
     }
   }

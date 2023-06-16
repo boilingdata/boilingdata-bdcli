@@ -1,3 +1,5 @@
+version: 1.0
+uniqNamePart: bd-demo-iam-role
 dataSources:
   - name: demo
     type: s3
