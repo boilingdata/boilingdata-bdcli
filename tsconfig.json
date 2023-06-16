@@ -3,7 +3,7 @@
   "include": ["./src/**/*"],
   "compilerOptions": {
     // Disabled because of https://github.com/Microsoft/TypeScript/issues/29172
-    "outDir": "dist",
+    "outDir": "dist/esm",
     "module": "node16",
     "moduleResolution": "node16",
     "moduleDetection": "force",
