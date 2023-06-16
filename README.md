@@ -79,7 +79,7 @@ Data Sources (sandboxes) can be defined in a yaml file. Currently, only S3 is su
 
 ```shell
 version: 1.0
-uniqNamePart: myBdIamRoleOptionalParam                         # opt. deterministic uniq role name
+uniqNamePart: myBdIamRoleOptionalParam                         # opt. deterministic uniq role id
 dataSources:                                                   # list
   - name: demo
     type: s3                                                   # "s3"
