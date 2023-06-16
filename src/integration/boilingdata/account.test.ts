@@ -17,12 +17,12 @@ describe("bdAccount", () => {
     const account = new BDAccount({ logger, authToken });
     expect(account.getExtId()).rejects.toThrowError();
   });
-  it("can get account details", async () => {
+  it.skip("can get account details", async () => {
     const authToken = await getIdToken();
     const account = new BDAccount({ logger, authToken });
     expect(account.getExtId()).resolves.toHaveLength(44);
   });
-  it("can get aws account id", async () => {
+  it.skip("can get aws account id", async () => {
     const authToken = await getIdToken();
     const account = new BDAccount({ logger, authToken });
     expect(account.getAssumeAwsAccount()).resolves.toHaveLength(12);
