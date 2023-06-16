@@ -11,7 +11,7 @@ export default {
   extensionsToTreatAsEsm: [".ts"],
   testRegex: "(/src/.*(\\.)(test|spec))\\.(jsx?|tsx?)$",
   moduleFileExtensions: ["js", "ts"],
-  collectCoverage: false,
+  collectCoverage: true,
   collectCoverageFrom: ["src/**/{!(index),}.ts"],
-  coverageReporters: [], // ["json-summary", "text", "lcov"],
+  coverageReporters: ["json-summary", "text", "lcov"],
 };
