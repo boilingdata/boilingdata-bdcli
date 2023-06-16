@@ -33,7 +33,7 @@ describe("BDIntegration", () => {
     bdAccount = new BDAccount({ logger: accountLogger, authToken });
   });
 
-  it("getGroupedBuckets", async () => {
+  it.skip("getGroupedBuckets", async () => {
     bdDataSets.readConfig("./example_dataset_config.yaml");
     const assumeCondExternalId = await bdAccount.getExtId(); // FIXME: This calls real API
     const assumeAwsAccount = await bdAccount.getAssumeAwsAccount();
