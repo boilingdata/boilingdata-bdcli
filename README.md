@@ -77,7 +77,7 @@ npx bdcli -h
 
 Data Sources (sandboxes) can be defined in a yaml file. Currently, only S3 is supported.
 
-```shell
+```yaml
 version: 1.0
 uniqNamePart: myBdIamRoleOptionalParam                         # opt. deterministic uniq role id
 dataSources:                                                   # list
