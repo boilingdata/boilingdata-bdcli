@@ -9,18 +9,31 @@ npm install -g boilingdata/boilingdata-bdcli
 Register at [app.boiilngdata.com](https://app.boilingdata.com) and create an IAM Role assumable by BoilingData.
 
 ```shell
-bdcli setup account --email myEmail@something.com --password 'mySuperSecretPw' --create-config-only
-echo "version: 1.0
+% bdcli setup account \
+  --email myBoilingRegisteredEmail@something.com \
+  --password 'mySuperSecretPw' \
+  --create-config-only
+
+% echo "version: 1.0
 dataSources:
   - name: demo
     type: s3
     accessPolicy:
-      - id: bd-demo-policy
-        urlPrefix: s3://boilingdata-demo/demo
+      - id: bd-test-policy
+        urlPrefix: s3://my-bucket/and/prefix
 " > dataset_config.yaml
-bdcli setup iam-role -c dataset_config.yaml --region eu-west-1 --create-role-only
-echo "Now you can verify the generated IAM role"
-bdcli setup iam-role -c dataset_config.yaml --region eu-west-1
+
+% bdcli setup iam-role -c dataset_config.yaml --region eu-west-1 --create-role-only
+✔ Authenticating: success
+✔ Creating IAM Role: arn:aws:iam::123123123123:role/boilingdata/bd-ew1-demo-0ccb08a39c45a24
+
+% echo "Now you can verify the generated IAM role"
+Now you can verify the generated IAM role
+
+% AWS_REGION=eu-west-1 bdcli setup iam-role -c dataset_config.yaml
+✔ Authenticating: success
+✔ Creating IAM Role: arn:aws:iam::123123123123:role/boilingdata/bd-ew1-demo-0ccb08a39c45a24
+✔ Registering IAM Role: arn:aws:iam::123123123123:role/boilingdata/bd-ew1-demo-0ccb08a39c45a24
 ```
 
 ## Introduction
