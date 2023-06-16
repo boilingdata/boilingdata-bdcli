@@ -73,17 +73,6 @@ yarn install boilingdata/boilingdata-bdcli
 npx bdcli -h
 ```
 
-## Code Architecture & Development
-
-- `src/integration/` contains integration between aws and boilingdata. Code that is agnostic to command line args handling. Keep the code decoupled with clear interfaces so that it could be moved as a separate node module (SDK) in the future if needed.
-- `src/bdcli/` contains all the client commands in their own directories. Keep the code lightweight and focus on command line args handling and wiring with utils and core functionality. Goal is to be able to create PRs that add new functionality by adding new files without having to modify other commmands.
-- `src/utils/` general utilities consumed by multiple `bdcli` commands. Includes for example authentication handling and logging.
-
-```shell
-yarn build
-BD_USERNAME=<username> BD_PASSWORD=<password> ./bdcli -h
-```
-
 ## Data Sources configuration file
 
 Data Sources (sandboxes) can be defined in a yaml file. Currently, only S3 is supported.
@@ -122,4 +111,15 @@ dataSources:                                                   # list
     dataSets:
       - name: s3AccessLogs
         urlPrefix: s3://logs-bucket/s3_access/
+```
+
+## Code Architecture & Development
+
+- `src/integration/` contains integration between aws and boilingdata. Code that is agnostic to command line args handling. Keep the code decoupled with clear interfaces so that it could be moved as a separate node module (SDK) in the future if needed.
+- `src/bdcli/` contains all the client commands in their own directories. Keep the code lightweight and focus on command line args handling and wiring with utils and core functionality. Goal is to be able to create PRs that add new functionality by adding new files without having to modify other commmands.
+- `src/utils/` general utilities consumed by multiple `bdcli` commands. Includes for example authentication handling and logging.
+
+```shell
+yarn build
+./bdcli
 ```
