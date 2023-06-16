@@ -90,29 +90,30 @@ Data Sources (sandboxes) can be defined in a yaml file. Currently, only S3 is su
 
 ```shell
 version: 1.0
-dataSources:                                                       # list
+uniqNamePart: myBdIamRoleOptionalParam                         # opt. deterministic uniq role name
+dataSources:                                                   # list
   - name: demo
-    type: s3                                                       # "s3"
-    sessionType: assumeRole                                        # "assumeRole"
+    type: s3                                                   # "s3"
+    sessionType: assumeRole                                    # "assumeRole"
     accessPolicy:
-      - id: bd-demo-policy                                         # string
-        urlPrefix: s3://boilingdata-demo/demo                      # string, for now must be S3 URL
-        permissions:                                               # list: "read", "write"
+      - id: bd-demo-policy                                     # string
+        urlPrefix: s3://boilingdata-demo/demo                  # string, for now must be S3 URL
+        permissions:                                           # list: "read", "write"
           - read
       - id: nyc-policy
         urlPrefix: s3://isecurefi-dev-test/nyc-tlc/
         permissions:
           - read
           - write
-    dataSets:                                                      # list
-      - name: demo                                                 # file unique string
-        urlPrefix: s3://boilingdata-demo/demo.parquet              # string, for now must be S3 URL
+    dataSets:                                                  # list
+      - name: demo                                             # file unique string
+        urlPrefix: s3://boilingdata-demo/demo.parquet          # string, for now must be S3 URL
       - name: demo2
         urlPrefix: s3://boilingdata-demo/demo2.parquet
       - name: nyc
         urlPrefix: s3://isecurefi-dev-test/nyc-tlc/trip_data/
-        layout: hive                                               # "hive", "folder", "file"
-        filetype: parquet                                          # "parquet", "json", "csv"
+        layout: hive                                           # "hive", "folder", "file"
+        filetype: parquet                                      # "parquet", "json", "csv"
   - name: logs
     type: s3
     accessPolicy:
