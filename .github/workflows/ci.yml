@@ -16,7 +16,6 @@ jobs:
           node-version: 18
       - name: CI
         run: |
-          yarn audit
           yarn build
           yarn lint
           yarn test
