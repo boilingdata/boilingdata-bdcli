@@ -19,7 +19,8 @@ export class BDDataSetConfig {
 
   public async getUniqueNamePart(): Promise<string> {
     if (!this._dataSourcesConfig) throw new Error("Set datasources config first");
-    const uniqName = this._dataSourcesConfig.uniqNamePart;
+    const uniqName =
+      this._dataSourcesConfig.uniqNamePart ?? this._dataSourcesConfig.dataSources.pop()?.name ?? "bdIamRole";
     this.logger.debug({ uniqName });
     return uniqName;
   }

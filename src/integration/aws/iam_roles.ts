@@ -50,7 +50,7 @@ export class BDIamRole {
 
   private getName(type: string): string {
     const prefix = this.params.roleNamePrefix ?? "bd";
-    const regionShort = getRegionShortName(this.params.region);
+    const regionShort = getRegionShortName(this.params.region ?? process.env["AWS_REGION"]);
     const hash = crypto
       .createHash("md5")
       .update(

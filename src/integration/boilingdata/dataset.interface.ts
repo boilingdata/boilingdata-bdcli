@@ -32,12 +32,12 @@ export interface IDataSource {
   name: string;
   type: EDataSetType;
   accessPolicy: Array<IStatement>;
-  dataSets: Array<IDataSet>;
+  dataSets?: Array<IDataSet>;
   sessionType?: USessionType;
 }
 
 export interface IDataSources {
   version?: string | number;
-  uniqNamePart: string;
+  uniqNamePart?: string;
   dataSources: Array<IDataSource>;
 }

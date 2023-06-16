@@ -6,25 +6,37 @@
 npm install -g boilingdata/boilingdata-bdcli
 ```
 
-Register at [app.boiilngdata.com](https://app.boilingdata.com) and create a one-off-access S3 sandbox readable by BoilingData with short term session credentials (AWS STS).
+Register at [app.boiilngdata.com](https://app.boilingdata.com) and create an IAM Role assumable by BoilingData.
 
 ```shell
-bdcli setup account
-bdcli setup iam-role -c example_dataset_config.yaml --region eu-west-1
+bdcli setup account --email myEmail@something.com --password 'mySuperSecretPw' --create-config-only
+echo "version: 1.0
+dataSources:
+  - name: demo
+    type: s3
+    accessPolicy:
+      - id: bd-demo-policy
+        urlPrefix: s3://boilingdata-demo/demo
+" > dataset_config.yaml
+bdcli setup iam-role -c dataset_config.yaml --region eu-west-1 --create-role-only
+echo "Now you can verify the generated IAM role"
+bdcli setup iam-role -c dataset_config.yaml --region eu-west-1
 ```
 
 ## Introduction
 
-`bdcli` is used to deploy BoilingData Data Sources - **sandboxes**. These are e.g. S3 data access configurations with permissions and locations (buckets and prefixes). `bdcli` creates the needed IAM Role(s) into your AWS Account and updates your existing BoilingData user account configurations. Once the IAM Role is configured into your BoilingData account, you access your data with Boiling.
+`bdcli` is used to grant access for BoilingData to your selected S3 data in your AWS Account.
+
+`bdcli` creates the needed IAM Role into your AWS Account based on the configuration file that you provide, and sets the IAM Role ARN into your BoilingData user account configuration.
 
 The created IAM Roles have least-privilege permissions that BoilingData needs. For example, the IAM Role created from below configuration, would allow getting the S3 Bucket location for query routing purposes, and getting the `demo*` objects from `boilingdata-demo` S3 Bucket.
 
 ```yaml
 version: 1.0
+uniqNamePart: myBdIamRole
 dataSources:
   - name: demo
     type: s3
-    sessionType: assumeRole
     accessPolicy:
       - id: bd-demo-policy
         urlPrefix: s3://boilingdata-demo/demo

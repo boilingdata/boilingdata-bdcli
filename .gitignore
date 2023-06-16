@@ -2,3 +2,4 @@ src/VERSION.ts
 dist/
 node_modules/
 *.log
+dataset_config.yaml

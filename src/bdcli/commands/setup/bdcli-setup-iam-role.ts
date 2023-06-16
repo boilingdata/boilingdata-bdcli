@@ -25,6 +25,7 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
 
     updateSpinnerText("Authenticating");
     const token = await getIdToken();
+    updateSpinnerText("Authenticating: success");
     spinnerSuccess();
 
     updateSpinnerText("Creating IAM Role");
@@ -45,11 +46,14 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
     const bdIntegration = new BDIntegration({ logger, bdAccount, bdRole, bdDataSets });
     const policyDocument = await bdIntegration.getPolicyDocument();
     const iamRoleArn = await bdRole.upsertRole(JSON.stringify(policyDocument));
+    updateSpinnerText(`Creating IAM Role: ${iamRoleArn}`);
     spinnerSuccess();
 
-    updateSpinnerText("Registering IAM Role");
-    await bdAccount.setIamRole(iamRoleArn);
-    spinnerSuccess();
+    if (!options.createRoleOnly) {
+      updateSpinnerText(`Registering IAM Role: ${iamRoleArn}`);
+      await bdAccount.setIamRole(iamRoleArn);
+      spinnerSuccess();
+    }
   } catch (err: any) {
     spinnerError(err?.message);
   }
@@ -59,6 +63,7 @@ const program = new cmd.Command("bdcli setup iam-role")
   .addOption(new cmd.Option("-c, --config <filepath>", "Data access conf").makeOptionMandatory())
   .addOption(new cmd.Option("-r, --region <region>", "AWS region"))
   .addOption(new cmd.Option("--delete", "Delete the IAM role"))
+  .addOption(new cmd.Option("--create-role-only", "Create the IAM role only and do not update BoilingData"))
   .action(async (options, command) => await iamrole(options, command));
 
 addGlobalOptions(program, logger);

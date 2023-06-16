@@ -38,13 +38,13 @@ export const IDataSource = t.iface([], {
   "name": "string",
   "type": "EDataSetType",
   "accessPolicy": t.array("IStatement"),
-  "dataSets": t.array("IDataSet"),
+  "dataSets": t.opt(t.array("IDataSet")),
   "sessionType": t.opt("USessionType"),
 });
 
 export const IDataSources = t.iface([], {
   "version": t.opt(t.union("string", "number")),
-  "uniqNamePart": "string",
+  "uniqNamePart": t.opt("string"),
   "dataSources": t.array("IDataSource"),
 });
 
