@@ -3,7 +3,7 @@ import { ELogLevel, getLogger } from "../bdcli/utils/logger_util.js";
 import { BDIamRole } from "./aws/iam_roles.js";
 import { BDIntegration } from "./bdIntegration.js";
 import { BDAccount } from "./boilingdata/account.js";
-import { BDDataSetConfig } from "./boilingdata/dataset.js";
+import { BDDataSourceConfig } from "./boilingdata/dataset.js";
 import { IAMClient } from "@aws-sdk/client-iam";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { mockClient } from "aws-sdk-client-mock";
@@ -24,7 +24,7 @@ accessLogger.setLogLevel(ELogLevel.DEBUG);
 const region = "eu-west-1";
 const iamClient = new IAMClient({ region });
 const stsClient = new STSClient({ region });
-const bdDataSets = new BDDataSetConfig({ logger: dssLogger });
+const bdDataSets = new BDDataSourceConfig({ logger: dssLogger });
 let bdAccount: BDAccount;
 
 describe("BDIntegration", () => {
@@ -34,7 +34,7 @@ describe("BDIntegration", () => {
   });
 
   it.skip("getGroupedBuckets", async () => {
-    bdDataSets.readConfig("./example_dataset_config.yaml");
+    bdDataSets.readConfig("./example_datasource_config.yaml");
     const assumeCondExternalId = await bdAccount.getExtId(); // FIXME: This calls real API
     const assumeAwsAccount = await bdAccount.getAssumeAwsAccount();
     const uniqNamePart = await bdDataSets.getUniqueNamePart();
@@ -47,7 +47,7 @@ describe("BDIntegration", () => {
       assumeAwsAccount,
       assumeCondExternalId,
     });
-    const bdIntegration = new BDIntegration({ logger: accessLogger, bdAccount, bdDataSets, bdRole });
+    const bdIntegration = new BDIntegration({ logger: accessLogger, bdAccount, bdDataSources: bdDataSets, bdRole });
     stsMock.on(GetCallerIdentityCommand).resolves({ Account: "123123123123" });
     expect(bdIntegration.getGroupedBuckets()).toMatchInlineSnapshot(`
       {
@@ -80,7 +80,7 @@ describe("BDIntegration", () => {
   });
 
   it.skip("PolicyDocument", async () => {
-    bdDataSets.readConfig("./example_dataset_config.yaml");
+    bdDataSets.readConfig("./example_datasource_config.yaml");
     const assumeCondExternalId = await bdAccount.getExtId(); // FIXME: This calls real API
     const assumeAwsAccount = await bdAccount.getAssumeAwsAccount();
     const uniqNamePart = await bdDataSets.getUniqueNamePart();
@@ -93,7 +93,7 @@ describe("BDIntegration", () => {
       assumeAwsAccount,
       assumeCondExternalId,
     });
-    const bdIntegration = new BDIntegration({ logger: accessLogger, bdAccount, bdDataSets, bdRole });
+    const bdIntegration = new BDIntegration({ logger: accessLogger, bdAccount, bdDataSources: bdDataSets, bdRole });
     stsMock.on(GetCallerIdentityCommand).resolves({ Account: "123123123123" });
     const res = await bdIntegration.getPolicyDocument();
     expect(res).toMatchInlineSnapshot(`

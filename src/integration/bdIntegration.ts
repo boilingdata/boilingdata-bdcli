@@ -2,7 +2,7 @@ import { ILogger } from "../bdcli/utils/logger_util.js";
 import { BDIamRole } from "./aws/iam_roles.js";
 import { BDAccount } from "./boilingdata/account.js";
 import { G_WRITE, G_READ, IStatementExt } from "./boilingdata/dataset.interface.js";
-import { BDDataSetConfig } from "./boilingdata/dataset.js";
+import { BDDataSourceConfig } from "./boilingdata/dataset.js";
 
 const RO_ACTIONS = ["s3:GetObject"];
 const WO_ACTIONS = ["s3:PutObject"];
@@ -13,7 +13,7 @@ export interface IBDIntegration {
   logger: ILogger;
   bdAccount: BDAccount;
   bdRole: BDIamRole;
-  bdDataSets: BDDataSetConfig;
+  bdDataSources: BDDataSourceConfig;
 }
 
 interface IGroupedDataSources {
@@ -26,13 +26,13 @@ export class BDIntegration {
   private logger: ILogger;
   // private bdAccount: BDAccount;
   // private bdRole: BDIamRole;
-  private bdDatasets: BDDataSetConfig;
+  private bdDatasets: BDDataSourceConfig;
 
   constructor(private params: IBDIntegration) {
     this.logger = this.params.logger;
     // this.bdAccount = this.params.bdAccount;
     // this.bdRole = this.params.bdRole;
-    this.bdDatasets = this.params.bdDataSets;
+    this.bdDatasets = this.params.bdDataSources;
     // this.logger.debug({ account: this.bdAccount, role: this.bdRole, datasets: this.bdDatasets });
   }
 

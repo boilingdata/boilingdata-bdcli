@@ -7,7 +7,7 @@ import { addGlobalOptions } from "../../utils/options_util.js";
 import { getIdToken } from "../../utils/auth_util.js";
 import { BDIamRole } from "../../../integration/aws/iam_roles.js";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
-import { BDDataSetConfig } from "../../../integration/boilingdata/dataset.js";
+import { BDDataSourceConfig } from "../../../integration/boilingdata/dataset.js";
 import { BDIntegration } from "../../../integration/bdIntegration.js";
 
 const logger = getLogger("bdcli-setup-iam-role");
@@ -32,18 +32,17 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
     const region = options.region ?? process.env["AWS_REGION"];
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdAccount = new BDAccount({ logger, authToken: token });
-    const bdDataSets = new BDDataSetConfig({ logger });
+    const bdDataSources = new BDDataSourceConfig({ logger });
     const bdRole = new BDIamRole({
       ...options,
       logger,
       iamClient: new iam.IAMClient({ region }),
       stsClient: new sts.STSClient({ region }),
-      datasets: await bdDataSets.readConfig(options.config),
-      uniqNamePart: await bdDataSets.getUniqueNamePart(),
+      uniqNamePart: await bdDataSources.getUniqueNamePart(),
       assumeAwsAccount: await bdAccount.getAssumeAwsAccount(),
       assumeCondExternalId: await bdAccount.getExtId(),
     });
-    const bdIntegration = new BDIntegration({ logger, bdAccount, bdRole, bdDataSets });
+    const bdIntegration = new BDIntegration({ logger, bdAccount, bdRole, bdDataSources });
     const policyDocument = await bdIntegration.getPolicyDocument();
     const iamRoleArn = await bdRole.upsertRole(JSON.stringify(policyDocument));
     updateSpinnerText(`Creating IAM Role: ${iamRoleArn}`);

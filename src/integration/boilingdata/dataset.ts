@@ -5,15 +5,15 @@ import { ILogger } from "../../bdcli/utils/logger_util.js";
 import { IDataSources } from "./dataset.interface.js";
 import { createCheckers } from "ts-interface-checker";
 
-export interface IBDDataSetConfig {
+export interface IBDDataSourceConfig {
   logger: ILogger;
 }
 
-export class BDDataSetConfig {
+export class BDDataSourceConfig {
   private logger: ILogger;
   private _dataSourcesConfig?: IDataSources;
 
-  constructor(private params: IBDDataSetConfig) {
+  constructor(private params: IBDDataSourceConfig) {
     this.logger = this.params.logger;
   }
 
