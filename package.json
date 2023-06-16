@@ -6,6 +6,9 @@
   "main": "dist/cjs/index.js",
   "types": "dist/cjs/index.d.ts",
   "module": "dist/esm/index.js",
+  "bin": {
+    "bdcli": "./dist/esm/index.js"
+  },
   "engines": {
     "node": ">= 16"
   },
@@ -25,7 +28,7 @@
   "scripts": {
     "release": "standard-version",
     "prebuild": "yarn install --frozen-lockfile && rm -rf dist/ && echo \"/* istanbul ignore file */\nexport const version = \\\"$(git describe --tags)\\\";\" > src/VERSION.ts && ts-interface-builder src/integration/boilingdata/dataset.interface.ts ",
-    "build": "rm -rf dist/ && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json && chmod 755 dist/esm/index.js && ln -fs dist/esm/index.js bdcli",
+    "build": "rm -rf dist/ && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json && chmod 755 dist/esm/index.js",
     "prettier": "prettier --check 'src/**/*.{js,ts}'",
     "prettier:fix": "prettier --write 'src/**/*.{js,ts}'",
     "lint": "yarn prettier && eslint \"./src/**/*.ts\"",
