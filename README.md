@@ -3,7 +3,18 @@
 ## TL;DR
 
 ```shell
-npm install -g @boilingdata/boilingdata-bdcli
+% npm install -g @boilingdata/boilingdata-bdcli
+% bdcli
+Usage: bdcli [options] [command]
+
+Options:
+  -V, --version   output the version number
+  -h, --help      display help for command
+
+Commands:
+  setup           Setup configuration
+  data-source     Manage data sources
+  help [command]  display help for command
 ```
 
 Register at [app.boiilngdata.com](https://app.boilingdata.com) and create an IAM Role assumable by BoilingData.
