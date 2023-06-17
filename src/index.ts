@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import * as cmd from "commander";
-import { version } from "./VERSION.js"; // yarn prebuild
+import { VERSION } from "./VERSION.js";
 
 const program = new cmd.Command("bdcli");
 
 program
   .executableDir("bdcli/commands")
-  .version(version)
+  .version(VERSION)
   .allowExcessArguments(false)
   .command("setup", "Setup configuration")
   .command("data-source", "Manage data sources");
