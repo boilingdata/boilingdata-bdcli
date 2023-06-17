@@ -1,0 +1,6 @@
+generateVersionFile.js
+src/
+tsconfig*
+jest.config.js
+example_datasource_config.yaml
+badges/
