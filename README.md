@@ -91,12 +91,12 @@ Data Sources (sandboxes) can be defined in a yaml file. Currently, only S3 is su
 ```yaml
 version: 1.0
 uniqNamePart: myBdIamRoleOptionalParam # opt. deterministic uniq role id
-dataSources: # list
+dataSources:
   - name: demo
     type: s3 # "s3"
     sessionType: assumeRole # "assumeRole"
     accessPolicy:
-      - id: bd-demo-policy # string
+      - id: bd-demo-policy # unique statement id
         urlPrefix: s3://boilingdata-demo/demo # string, for now must be S3 URL
         permissions: # list: "read", "write"
           - read
@@ -106,7 +106,7 @@ dataSources: # list
           - read
           - write
     dataSets: # list
-      - name: demo # file unique string
+      - name: demo # unique data set id
         urlPrefix: s3://boilingdata-demo/demo.parquet # string, for now must be S3 URL
       - name: demo2
         urlPrefix: s3://boilingdata-demo/demo2.parquet
