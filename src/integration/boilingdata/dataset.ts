@@ -41,19 +41,31 @@ export class BDDataSourceConfig {
     return true;
   }
 
+  public async getDatasourcesConfig(): Promise<IDataSources> {
+    if (!this._dataSourcesConfig) throw new Error("Please read the configuration file first with readConfig()");
+    return this._dataSourcesConfig;
+  }
+
   public async readConfig(filename: string): Promise<IDataSources> {
     if (this._dataSourcesConfig) return this._dataSourcesConfig;
-    const dataSourcesConfig = <object>yaml.load(await fs.readFile(filename, "utf8"));
-    this.logger.debug({ dataSourcesConfig });
-    // all required keys and values?
-    if (!this.isDataSetsConfig(dataSourcesConfig)) throw new Error("datasources config schema not validated");
-    // valid urlPrefixes?
-    if (!this.hasValidUrlPrefixes(dataSourcesConfig)) {
-      throw new Error("datasources config URL prefixes mismatch between policy and data sets");
-    }
+    try {
+      const dataSourcesConfig = <object>yaml.load(await fs.readFile(filename, "utf8"));
+      this.logger.debug({ dataSourcesConfig });
+      // all required keys and values?
+      if (!this.isDataSetsConfig(dataSourcesConfig)) throw new Error("datasources config schema not validated");
+      // valid urlPrefixes?
+      if (!this.hasValidUrlPrefixes(dataSourcesConfig)) {
+        throw new Error("datasources config URL prefixes mismatch between policy and data sets");
+      }
 
-    this._dataSourcesConfig = dataSourcesConfig;
-    return this._dataSourcesConfig;
+      this._dataSourcesConfig = dataSourcesConfig;
+      return this._dataSourcesConfig;
+    } catch (err: any) {
+      if (err?.code == "ENOENT") {
+        throw new Error(`Configuration file does not exist ${filename}`);
+      }
+      throw err;
+    }
   }
 
   public get dataSourcesConfig(): IDataSources {

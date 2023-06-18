@@ -23,9 +23,9 @@ export class BDAccount {
     this.token = this.params.authToken;
   }
 
-  public async setIamRole(IamRoleArn: string): Promise<void> {
+  public async setIamRoleWithPayload(IamRoleArn: string, payload: any): Promise<void> {
     // channel("undici:request:create").subscribe(console.log);
-    const body = JSON.stringify({ IamRoleArn });
+    const body = JSON.stringify({ IamRoleArn, ...payload });
     this.logger.debug({ body });
     const res = await fetch(accountUrl + "/iamrole", { method: "PUT", headers: await getReqHeaders(this.token), body });
     const respBody = await res.json();

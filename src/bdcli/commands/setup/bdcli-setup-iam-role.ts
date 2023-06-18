@@ -33,6 +33,7 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdAccount = new BDAccount({ logger, authToken: token });
     const bdDataSources = new BDDataSourceConfig({ logger });
+    await bdDataSources.readConfig(options.config);
     const bdRole = new BDIamRole({
       ...options,
       logger,
@@ -50,7 +51,8 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
 
     if (!options.createRoleOnly) {
       updateSpinnerText(`Registering IAM Role: ${iamRoleArn}`);
-      await bdAccount.setIamRole(iamRoleArn);
+      const datasourcesConfig = await bdDataSources.getDatasourcesConfig();
+      await bdAccount.setIamRoleWithPayload(iamRoleArn, { datasourcesConfig });
       spinnerSuccess();
     }
   } catch (err: any) {
