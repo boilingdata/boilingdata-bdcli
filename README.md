@@ -20,7 +20,7 @@ Commands:
 Register at [app.boiilngdata.com](https://app.boilingdata.com) and create an IAM Role assumable by BoilingData.
 
 ```shell
-% bdcli setup account \
+% bdcli account account \
   --email myBoilingRegisteredEmail@something.com \
   --password 'mySuperSecretPw' \
   --create-config-only
@@ -34,14 +34,14 @@ dataSources:
         urlPrefix: s3://my-bucket/and/prefix
 " > datasource_config.yaml
 
-% bdcli setup iam-role -c datasource_config.yaml --region eu-west-1 --create-role-only
+% bdcli account iam-role -c datasource_config.yaml --region eu-west-1 --create-role-only
 ✔ Authenticating: success
 ✔ Creating IAM Role: arn:aws:iam::123123123123:role/boilingdata/bd-ew1-demo-0ccb08a39c45a24
 
 % echo "Now you can verify the generated IAM role"
 Now you can verify the generated IAM role
 
-% AWS_REGION=eu-west-1 bdcli setup iam-role -c datasource_config.yaml
+% AWS_REGION=eu-west-1 bdcli account iam-role -c datasource_config.yaml
 ✔ Authenticating: success
 ✔ Creating IAM Role: arn:aws:iam::123123123123:role/boilingdata/bd-ew1-demo-0ccb08a39c45a24
 ✔ Registering IAM Role: arn:aws:iam::123123123123:role/boilingdata/bd-ew1-demo-0ccb08a39c45a24

@@ -30,7 +30,7 @@ let bdAccount: BDAccount;
 describe("BDIntegration", () => {
   beforeAll(async () => {
     const authToken = await getIdToken();
-    bdAccount = new BDAccount({ logger: accountLogger, authToken });
+    bdAccount = new BDAccount({ logger: accountLogger, authToken: authToken.idToken });
   });
 
   it.skip("getGroupedBuckets", async () => {
