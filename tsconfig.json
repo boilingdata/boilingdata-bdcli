@@ -4,11 +4,11 @@
   "compilerOptions": {
     // Disabled because of https://github.com/Microsoft/TypeScript/issues/29172
     "outDir": "dist/esm",
-    "module": "node16",
-    "moduleResolution": "node16",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "moduleDetection": "force",
-    "target": "ES2021", // Node.js 16
-    "lib": ["DOM", "DOM.Iterable", "ES2021"],
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "allowSyntheticDefaultImports": true, // To provide backwards compatibility, Node.js allows you to import most CommonJS packages with a default import. This flag tells TypeScript that it's okay to use import on CommonJS modules.
     "resolveJsonModule": false, // ESM doesn't yet support JSON modules.
     "jsx": "react",

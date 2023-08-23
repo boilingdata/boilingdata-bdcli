@@ -148,9 +148,8 @@ export class BDIamRole {
     const allBoilingDataPolicies = resp.Policies;
     this.logger.debug({ allBoilingDataPolicies });
     if (!allBoilingDataPolicies) return;
-    this.policyArn = allBoilingDataPolicies.find(policy =>
-      policy.Arn?.includes(this.path + this.iamManagedPolicyName),
-    )?.Arn;
+    this.policyArn = allBoilingDataPolicies.find(policy => policy.Arn?.includes(this.path + this.iamManagedPolicyName))
+      ?.Arn;
     return this.policyArn;
   }
 
