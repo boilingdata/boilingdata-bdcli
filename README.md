@@ -2,6 +2,8 @@
 
 ## TL;DR
 
+You can use this tool to register into BoilingData (or alternatively in [app.boiilngdata.com](https://app.boilingdata.com)) and manage your account and get BoilingData STS Token.
+
 ```shell
 % npm install -g @boilingdata/boilingdata-bdcli
 % bdcli
@@ -12,19 +14,14 @@ Options:
   -h, --help      display help for command
 
 Commands:
-  setup           Setup configuration
-  data-source     Manage data sources
+  account         Setup and configure your BoilingData account
+  aws             Setup and configure your AWS account integration with BoilingData
   help [command]  display help for command
 ```
 
-Register at [app.boiilngdata.com](https://app.boilingdata.com) and create an IAM Role assumable by BoilingData.
+You can create BoilingData assumable IAM role into your AWS account with clear scope.
 
 ```shell
-% bdcli account account \
-  --email myBoilingRegisteredEmail@something.com \
-  --password 'mySuperSecretPw' \
-  --create-config-only
-
 % echo "version: 1.0
 dataSources:
   - name: demo
@@ -34,14 +31,14 @@ dataSources:
         urlPrefix: s3://my-bucket/and/prefix
 " > datasource_config.yaml
 
-% bdcli account iam-role -c datasource_config.yaml --region eu-west-1 --create-role-only
+% bdcli aws iam -c datasource_config.yaml --region eu-west-1 --create-role-only
 ✔ Authenticating: success
 ✔ Creating IAM Role: arn:aws:iam::123123123123:role/boilingdata/bd-ew1-demo-0ccb08a39c45a24
 
 % echo "Now you can verify the generated IAM role"
 Now you can verify the generated IAM role
 
-% AWS_REGION=eu-west-1 bdcli account iam-role -c datasource_config.yaml
+% bdcli aws iam -c datasource_config.yaml
 ✔ Authenticating: success
 ✔ Creating IAM Role: arn:aws:iam::123123123123:role/boilingdata/bd-ew1-demo-0ccb08a39c45a24
 ✔ Registering IAM Role: arn:aws:iam::123123123123:role/boilingdata/bd-ew1-demo-0ccb08a39c45a24
@@ -49,7 +46,7 @@ Now you can verify the generated IAM role
 
 ## Introduction
 
-`bdcli` is used to grant access for BoilingData to your selected S3 data in your AWS Account.
+`bdcli` is used to grant access for BoilingData to your selected S3 data in your AWS Account. It is also used to fully manage your BoilingData account, like changing password, setting up MFA, recovering password etc.
 
 `bdcli` creates the needed IAM Role into your AWS Account based on the configuration file that you provide, and sets the IAM Role ARN into your BoilingData user account configuration.
 
