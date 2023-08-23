@@ -1,20 +1,309 @@
 import * as id from "amazon-cognito-identity-js";
-import { getCredentials } from "./config_util.js";
+import { getCredentials, updateConfig } from "./config_util.js";
 import { Pool } from "../../integration/boilingdata/boilingdata_api.js";
+import { CognitoJwtVerifier } from "aws-jwt-verify";
+import { ILogger } from "./logger_util.js";
+import prompts from "prompts";
+import qrcode from "qrcode";
+import { resumeSpinner, spinnerInfo, stopSpinner } from "./spinner_util.js";
+
+const userPoolId = "eu-west-1_0GLV9KO1p"; // eu-west-1 preview
+const clientId = "6timr8knllr4frovfvq8r2o6oo"; // eu-west-1 preview
+
+async function getCognitoUser(_logger?: ILogger, Username?: string): Promise<id.CognitoUser> {
+  if (!Username) {
+    const creds = await getCredentials();
+    Username = creds.email;
+  }
+  const userData = { Username, Pool };
+  const cognitoUser = new id.CognitoUser(userData);
+  return cognitoUser;
+}
+
+async function getCognitoUserSession(logger?: ILogger): Promise<id.CognitoUser> {
+  const creds = await getCredentials(logger);
+  const { email: Username, idToken: IdToken, accessToken: AccessToken, refreshToken: RefreshToken } = creds;
+  if (!IdToken || !AccessToken || !RefreshToken) throw new Error("Missing tokens, please log in first");
+  const session = new id.CognitoUserSession({
+    IdToken: new id.CognitoIdToken({ IdToken }),
+    AccessToken: new id.CognitoAccessToken({ AccessToken }),
+    RefreshToken: new id.CognitoRefreshToken({ RefreshToken }),
+  });
+  const cognitoUser = await getCognitoUser(logger, Username);
+  cognitoUser.setSignInUserSession(session);
+  logger?.debug({ status: "Cognito user session created" });
+  return cognitoUser;
+}
+
+export async function registerToBoilingData(
+  optsRegion: string,
+  optsEnvironment: string,
+  optsEmail?: string,
+  optsPassword?: string,
+  logger?: ILogger,
+): Promise<void> {
+  logger?.debug({ status: "registerToBoilingData" });
+  const creds = await getCredentials(logger);
+  let { email, password, region, environment } = creds;
+  // TODO: Add support for multiple profiles, i.e. BoilingData users.
+  if (optsEmail && email && optsEmail.trim().localeCompare(email.trim()) != 0) {
+    throw new Error("Config file email and provided email option differ");
+  }
+  if (optsRegion && region && optsRegion.trim().localeCompare(region.trim()) != 0) {
+    throw new Error("Config file region and provided region option differ");
+  }
+  if (optsEnvironment && environment && optsEnvironment.trim().localeCompare(environment.trim()) != 0) {
+    throw new Error("Config file environment and provided environment option differ");
+  }
+  region = region ?? optsRegion; // config overrides as opts have default value always
+  email = optsEmail ?? email; // option overrides
+  password = optsPassword ?? password; // option overrides
+  environment = environment ?? optsEnvironment;
+
+  logger?.debug({ region, email, environment });
+  const attributeList: id.CognitoUserAttribute[] = [];
+
+  const dataEmail = { Name: "email", Value: email };
+  attributeList.push(new id.CognitoUserAttribute(dataEmail));
+
+  // const dataPhoneNumber = { Name: "phone_number", Value: "+15555555555" };
+  // attributeList.push(new id.CognitoUserAttribute(dataPhoneNumber));
+
+  const userPool = new id.CognitoUserPool({ UserPoolId: userPoolId, ClientId: clientId });
+  return new Promise((resolve, reject) => {
+    userPool.signUp(email, "", attributeList, [], (err: any, result?: id.ISignUpResult) => {
+      if (err) return reject(err);
+      if (!result) return reject("No results");
+      const cognitoUser = result.user;
+      updateConfig({ credentials: { email, password, region, environment } });
+      logger?.debug({ cognitoUserName: cognitoUser.getUsername() });
+      resolve();
+    });
+  });
+}
+
+export async function updatePassword(_logger?: ILogger): Promise<void> {
+  const cognitoUser = await getCognitoUserSession();
+  const oldPassword = (await getCredentials()).password;
+  stopSpinner();
+  const inp = await prompts({
+    type: "password",
+    name: "pw",
+    message: "Please enter new password",
+    validate: (pw: any) => (`${pw}`.length < 12 ? `Must be at least 12 characters long with special characters` : true),
+  });
+  const newPassword = inp["pw"];
+  if (!newPassword || newPassword?.length < 12) throw new Error("Invalid new password");
+  resumeSpinner();
+  return new Promise((resolve, reject) => {
+    cognitoUser.changePassword(oldPassword, inp["pw"], (err: any, data: any) => {
+      if (err) reject(err);
+      resolve(data);
+    });
+  });
+}
+
+export async function recoverPassword(logger?: ILogger): Promise<any> {
+  const cognitoUser = await getCognitoUser(logger);
+  return new Promise((resolve, reject) => {
+    cognitoUser.forgotPassword({
+      onSuccess: (data: any) => {
+        logger?.debug({ status: "forgotPassword.onSuccess" });
+        logger?.debug({ data });
+        resolve(data);
+      },
+      onFailure: (err: Error) => {
+        logger?.debug({ status: "forgotPassword.onFailure" });
+        logger?.debug({ err });
+        reject(err.message);
+      },
+      inputVerificationCode: async (data: any) => {
+        logger?.debug({ status: "forgotPassword.inputVerificationCode" });
+        logger?.debug({ data });
+        const infoMsg = `Code sent to ${data?.CodeDeliveryDetails?.Destination} (${data?.CodeDeliveryDetails?.DeliveryMedium})`;
+        spinnerInfo(infoMsg);
+        stopSpinner();
+        const inp = await prompts({
+          type: "text",
+          name: "code",
+          message: `Please enter the received recovery code`,
+          validate: (code: string) => (code.length != 6 ? `Code must be 6 digits` : true),
+        });
+        const verificationCode = inp["code"];
+        if (!verificationCode || verificationCode?.length < 6) {
+          throw new Error("Invalid recovery code, must be at least 6 chars");
+        }
+        const inp2 = await prompts({
+          type: "password",
+          name: "pw",
+          message: "Please enter new password",
+          validate: (pw: any) =>
+            `${pw}`.length < 12 ? `Must be at least 12 characters long with special characters` : true,
+        });
+        const newPassword = inp2["pw"];
+        if (!newPassword || newPassword.length < 12) throw new Error("Invalid new password");
+        resumeSpinner();
+        cognitoUser.confirmPassword(verificationCode, newPassword, {
+          async onSuccess(success: string) {
+            logger?.debug({ success });
+            await updateConfig({ credentials: { password: newPassword } });
+            resolve(success);
+          },
+          onFailure(err: Error) {
+            logger?.debug({ err });
+            reject(err.message);
+          },
+        });
+      },
+    });
+  });
+}
+
+export async function setupMfa(logger?: ILogger): Promise<void> {
+  const cognitoUser = await getCognitoUserSession(logger);
+  const mfaSettings = { PreferredMfa: true, Enabled: true };
+  const Username = (await getCredentials()).email;
+  return new Promise((resolve, reject) => {
+    cognitoUser.associateSoftwareToken({
+      associateSecretCode: async function (secretCode: any): Promise<void> {
+        stopSpinner();
+        logger?.debug({ secretCode });
+        const qrCode = await qrcode.toString(
+          `otpauth://totp/BoilingData:${Username}?secret=${secretCode}&issuer=BoilingData`,
+          {
+            type: "terminal",
+          },
+        );
+        console.log(qrCode);
+        await prompts({
+          type: "text",
+          name: "resp",
+          message: `Please create new TOTP with this secret. All done? (yes/no)`,
+          validate: (resp: any) => (["yes", "no"].includes(`${resp}`) ? true : `yes/no`),
+        });
+        const code = await prompts({
+          type: "text",
+          name: "code",
+          message: `Please give code from the authenticator`,
+          validate: (code: number) => (`${code}`.length != 6 ? `Please give 6 digits` : true),
+        });
+        resumeSpinner();
+        cognitoUser.verifySoftwareToken(`${code["code"]}`, "Authenticator", {
+          onFailure: function (err: any): void {
+            logger?.debug({ verifySoftwareToken: err });
+            reject(err);
+          },
+          onSuccess: function (err: any): void {
+            if (err) {
+              logger?.debug({ onSuccessError: err }); // what?
+              reject(err);
+            }
+            logger?.debug({ status: "Setting up user MFA preference" });
+            cognitoUser.setUserMfaPreference(null, mfaSettings, function (err, result) {
+              if (err) {
+                logger?.debug({ setUserMfaPreferenceError: err });
+                reject(err);
+              }
+              logger?.debug({ setUserMfaPreferenceResult: result });
+              resolve();
+            });
+          },
+        });
+      },
+      onFailure: function (err: any): void {
+        reject(err);
+      },
+    });
+  });
+}
 
 // NOTE: "accesstoken" does not work, it has to be "idtoken".
-// TODO: Cache the id token to home folder
-export async function getIdToken(): Promise<string> {
-  const { Username, Password } = await getCredentials();
+export async function getIdToken(logger?: ILogger): Promise<{ idToken: string; cached: boolean; region: string }> {
+  const creds = await getCredentials(logger);
+  const { email: Username, password: Password, idToken, region } = creds;
+  // check if idToken is still valid..
+  if (idToken) {
+    const verifier = CognitoJwtVerifier.create({ userPoolId, clientId, tokenUse: "id" });
+    try {
+      const idTokenPayload = await verifier.verify(idToken);
+      logger?.debug({ idTokenPayload });
+      return { idToken, cached: true, region: region ?? "eu-west-1" };
+    } catch (err) {
+      // bypass
+    }
+  }
   return new Promise((resolve, reject) => {
-    //if (jwtToken != undefined) resolve(jwtToken);
     const loginDetails = { Username, Password };
     const userData = { Username, Pool };
     const cognitoUser = new id.CognitoUser(userData);
     const authenticationDetails = new id.AuthenticationDetails(loginDetails);
     cognitoUser.authenticateUser(authenticationDetails, {
-      onSuccess: (result: any) => resolve(result?.getIdToken().getJwtToken()),
-      onFailure: (err: any) => reject(err),
+      mfaSetup: (_challengeName: id.ChallengeName, _challengeParameters: any) => setupMfa(logger),
+      selectMFAType: async function (_challengeName: id.ChallengeName, _challengeParameters: any) {
+        stopSpinner();
+        const inp = await prompts({
+          type: "text",
+          name: "mfatype",
+          message: "Please select the MFA method (sms_mfa, sw_mfa)",
+          validate: (mfatype: string) =>
+            ["sms_mfa", "sw_mfa"].includes(mfatype) ? true : `Please select: sms_mfa or sw_mfa (e.g. google auth.)`,
+        });
+        resumeSpinner();
+        const mfaType = `${inp["mfatype"]}`.toLowerCase() == "sms_mfa" ? "SMS_MFA" : "SOFTWARE_TOKEN_MFA";
+        cognitoUser.sendMFASelectionAnswer(mfaType, this);
+      },
+      totpRequired: async function (challengeName: id.ChallengeName, challengeParameters: any) {
+        logger?.debug({ challengeName, challengeParameters });
+        stopSpinner();
+        const inp = await prompts({
+          type: "text",
+          name: "mfa",
+          message: "Please enter MFA",
+          validate: (mfa: string) => (mfa.length == 6 && !isNaN(parseInt(mfa)) ? true : `Need 6 digits`),
+          format: (mfa: string) => parseInt(mfa),
+        });
+        resumeSpinner();
+        cognitoUser.sendMFACode(`${inp["mfa"]}`, this, "SOFTWARE_TOKEN_MFA");
+      },
+      mfaRequired: async function (challengeName: id.ChallengeName, challengeParameters: any) {
+        logger?.debug({ challengeName, challengeParameters });
+        stopSpinner();
+        const inp = await prompts({
+          type: "number",
+          name: "mfa",
+          message: "Please enter MFA",
+          validate: (mfa: any) => (`${mfa}`.length == 6 ? `Need 6 digits` : true),
+        });
+        resumeSpinner();
+        cognitoUser.sendMFACode(`${inp["mfa"]}`, this);
+      },
+      newPasswordRequired: async function (userAttributes: any, requiredAttributes: any) {
+        logger?.debug({ userAttributes, requiredAttributes });
+        delete userAttributes.email_verified;
+        stopSpinner();
+        const inp = await prompts({
+          type: "password",
+          name: "pw",
+          message: "Please enter new password",
+          validate: (pw: any) =>
+            `${pw}`.length < 12 ? `Must be at least 12 characters long with special characters` : true,
+        });
+        resumeSpinner();
+        cognitoUser.completeNewPasswordChallenge(inp["pw"], userAttributes, this);
+      },
+      onSuccess: async (session: id.CognitoUserSession) => {
+        const idToken = session.getIdToken().getJwtToken();
+        const accessToken = session.getAccessToken().getJwtToken();
+        const refreshToken = session.getRefreshToken()?.getToken();
+        if (!idToken) return reject("Could not fetch Cognito ID Token");
+        updateConfig({ credentials: { idToken, accessToken, refreshToken } })
+          .then(() => resolve({ idToken, cached: false, region: region ?? "eu-west-1" }))
+          .catch(err => reject(err));
+      },
+      onFailure: (err: any) => {
+        logger?.debug({ err });
+        reject(err);
+      },
     });
   });
 }

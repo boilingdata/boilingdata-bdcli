@@ -24,12 +24,11 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
     }
 
     updateSpinnerText("Authenticating");
-    const token = await getIdToken();
-    updateSpinnerText("Authenticating: success");
+    const { idToken: token, cached, region } = await getIdToken(logger);
+    updateSpinnerText(cached ? "Authenticating: cached" : "Authenticating: success");
     spinnerSuccess();
 
     updateSpinnerText("Creating IAM Role");
-    const region = options.region ?? process.env["AWS_REGION"];
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdAccount = new BDAccount({ logger, authToken: token });
     const bdDataSources = new BDDataSourceConfig({ logger });

@@ -19,12 +19,12 @@ describe("bdAccount", () => {
   });
   it.skip("can get account details", async () => {
     const authToken = await getIdToken();
-    const account = new BDAccount({ logger, authToken });
+    const account = new BDAccount({ logger, authToken: authToken.idToken });
     expect(account.getExtId()).resolves.toHaveLength(44);
   });
   it.skip("can get aws account id", async () => {
     const authToken = await getIdToken();
-    const account = new BDAccount({ logger, authToken });
+    const account = new BDAccount({ logger, authToken: authToken.idToken });
     expect(account.getAssumeAwsAccount()).resolves.toHaveLength(12);
   });
 });

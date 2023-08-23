@@ -1,11 +1,13 @@
 import * as id from "amazon-cognito-identity-js";
 
-// FIXME: proper domain and stage
-export const baseApiUrl = "https://8br5emv4u6.execute-api.eu-west-1.amazonaws.com";
-export const dataSetsPath = "/dev/data-sets";
-export const accountPath = "/dev/account";
+// FIXME: test hard-coded
+export const baseApiUrl = "https://rest.api.test.boilingdata.com";
+export const dataSetsPath = "/data-sets";
+export const accountPath = "/account";
+export const tokenPath = "/token";
 export const dataSetsUrl = baseApiUrl + dataSetsPath;
 export const accountUrl = baseApiUrl + accountPath;
+export const tokenUrl = baseApiUrl + tokenPath;
 export const bdAWSAccount = "589434896614"; // FIXME: get from bdAccount API
 
 export const UserPoolId = "eu-west-1_0GLV9KO1p";
@@ -24,5 +26,6 @@ export async function getReqHeaders(token: string): Promise<{ [k: string]: strin
     Authorization: token,
     "x-api-key": apikey,
     "Content-Type": "application/json",
+    Accept: "application/json",
   };
 }
