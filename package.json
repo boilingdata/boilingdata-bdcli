@@ -50,7 +50,6 @@
   "dependencies": {
     "@aws-sdk/client-iam": "3.350.0",
     "@aws-sdk/client-sts": "3.350.0",
-    "@boilingdata/node-boilingdata": "../node-boilingdata",
     "amazon-cognito-identity-js": "^6.2.0",
     "aws-jwt-verify": "^4.0.0",
     "chalk": "^5.0.0",
