@@ -16,7 +16,7 @@ jobs:
           node-version: 18
       - name: CI
         run: |
-          yarn install --frozen-lockfile --ignore-optional
+          yarn install --frozen-lockfile
           yarn build
           yarn lint
           yarn test
@@ -33,7 +33,6 @@ jobs:
           node-version: 18
           registry-url: https://registry.npmjs.org/
       - run: |
-          yarn build
           yarn publish --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
@@ -55,7 +54,6 @@ jobs:
           registry-url: https://npm.pkg.github.com/
       - name: Publish to GitHub packages repository
         run: |
-          yarn build
           yarn publish --access public
         env:
           NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
