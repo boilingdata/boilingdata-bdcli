@@ -4,6 +4,8 @@
 
 You can use this tool to register into BoilingData (or alternatively in [app.boiilngdata.com](https://app.boilingdata.com)) and manage your account and get BoilingData STS Token.
 
+> **NOTE**: The binary does not seem to be installing always properly, in this case see the development section below to get it running.
+
 ```shell
 % npm install -g @boilingdata/boilingdata-bdcli
 % bdcli
