@@ -105,7 +105,7 @@ export class BDAccount {
             twoMinsAgo: twoMinsAgo.toISOString(),
             expReadable: humanReadable.toISOString(),
           });
-          if (diff) {
+          if (diff > 0) {
             this.logger.debug({ cachedBdStstToken: true });
             return { bdStsToken: this.bdStsToken, cached: true };
           }
@@ -131,6 +131,7 @@ export class BDAccount {
       throw new Error("Missing bdStsToken from BD API Response");
     }
     this.bdStsToken = <string>body.bdStsToken;
+    this.decodeToken();
     this.dumpToken();
     await updateConfig({ credentials: { bdStsToken: this.bdStsToken } }); // local cache
     return { bdStsToken: this.bdStsToken, cached: false };
