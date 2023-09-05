@@ -4,8 +4,24 @@ import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spi
 import { addGlobalOptions } from "../../utils/options_util.js";
 import { getIdToken } from "../../utils/auth_util.js";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
+import * as fs from "fs/promises";
+import path from "path";
 
 const logger = getLogger("bdcli-account-sts-token");
+const macroHeader = "\n-- BoilingData DuckDB Table Macro START\n";
+const macroFooter = "\n-- BoilingData DuckDB Table Macro END";
+const rcFilePath = path.join(process.env["HOME"] ?? "~", ".duckdbrc");
+
+function getMacro(token: string): string {
+  return (
+    `${macroHeader}` +
+    `CREATE OR REPLACE TEMP MACRO boilingdata(sql) AS TABLE ` +
+    `SELECT * FROM parquet_scan('https://httpfs.api.test.boilingdata.com/httpfs?bdStsToken=` +
+    token +
+    `&sql=' || sql);` +
+    `${macroFooter}`
+  );
+}
 
 async function show(options: any, _command: cmd.Command): Promise<void> {
   try {
@@ -26,13 +42,20 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
       console.log(
         JSON.stringify({
           stsToken: bdStsToken,
-          duckDbMacro:
-            `CREATE OR REPLACE TEMP MACRO boilingdata(sql) AS TABLE ` +
-            `SELECT * FROM parquet_scan('https://httpfs.api.test.boilingdata.com/httpfs?bdStsToken=` +
-            bdStsToken +
-            `&sql=' || sql);`,
+          duckDbMacro: getMacro(bdStsToken),
         }),
       );
+    } else if (options.duckdbrc) {
+      updateSpinnerText("Storing DuckDB BoilingData TABLE MACRO");
+      const rcContents = (await fs.readFile(rcFilePath)).toString("utf8");
+      const hasMacro = rcContents.includes(macroHeader);
+      const regex = new RegExp(`${macroHeader}.*${macroFooter}`, "g");
+      const newContents = hasMacro
+        ? rcContents.replace(regex, getMacro(bdStsToken))
+        : rcContents + "\n" + getMacro(bdStsToken);
+      logger.debug({ rcContents, hasMacro, newContents, regex });
+      await fs.writeFile(rcFilePath, newContents);
+      spinnerSuccess();
     } else {
       console.log(JSON.stringify({ bdStsToken }));
     }
@@ -49,6 +72,12 @@ const program = new cmd.Command("bdcli account sts-token")
         "with the auth token in place.\n\tMacro usage example:\n" +
         "\t\"SELECT * FROM boilingdata('SELECT * FROM " +
         "parquet_scan(''s3://boilingdata-demo/demo.parquet'') LIMIT 10');\"",
+    ),
+  )
+  .addOption(
+    new cmd.Option(
+      "--duckdbrc",
+      "Upsert DuckDB boilingdata() temporary TABLE MACRO " + "with the auth token in place into ~/.duckdbrc file",
     ),
   )
   .addOption(new cmd.Option("--clear", "Clear cached tokens"))
