@@ -125,7 +125,8 @@ To test the command line client locally, you can create a symbolic link to the i
 ```shell
 git checkout git@github.com:boilingdata/boilingdata-bdcli.git
 cd boilingdata-bdcli
-yarn build
+npm install
+npm run build
 npm install -g .
 bdcli -h
 ```
