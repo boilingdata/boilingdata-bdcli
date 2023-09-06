@@ -10,6 +10,7 @@
   "types": "dist/esm/index.d.ts",
   "module": "dist/esm/index.js",
   "preferGlobal": true,
+  "files": ["dist/*"],
   "bin": {
     "bdcli": "./dist/esm/index.js"
   },

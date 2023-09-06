@@ -4,8 +4,6 @@
 
 You can use this tool to register into BoilingData (or alternatively in [app.boiilngdata.com](https://app.boilingdata.com)) and manage your account and get BoilingData STS Token.
 
-> **NOTE**: The binary does not seem to be installing always properly, in this case see the development section below to get it running.
-
 ```shell
 % npm install -g @boilingdata/boilingdata-bdcli
 % bdcli
@@ -76,13 +74,6 @@ dataSources:
 
 Assumable IAM Role integration works as long as your IAM Role allows Boiling to assume the role. E.g. if you delete the IAM Role, Boiling can not access your data anymore.
 
-## Install
-
-```shell
-yarn install -g boilingdata/boilingdata-bdcli
-bdcli -h
-```
-
 ## Data Sources configuration file
 
 Data Sources (sandboxes) can be defined in a yaml file. Currently, only S3 is supported.
@@ -132,7 +123,9 @@ dataSources:
 To test the command line client locally, you can create a symbolic link to the index.js file while also making it executable
 
 ```shell
+git checkout git@github.com:boilingdata/boilingdata-bdcli.git
+cd boilingdata-bdcli
 yarn build
-ln -fs dist/esm/index.js bdcli && chmod 755 bdcli
-./bdcli
+npm install -g .
+bdcli -h
 ```
