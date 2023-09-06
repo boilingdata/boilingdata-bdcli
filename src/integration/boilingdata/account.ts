@@ -74,14 +74,30 @@ export class BDAccount {
   }
 
   private decodeToken(): void {
-    if (!this.bdStsToken) return;
-    if (!this.decodedToken) this.decodedToken = jwt.decode(this.bdStsToken, { complete: true });
+    if (!this.bdStsToken) throw new Error("No BD STS token");
+    this.decodedToken = jwt.decode(this.bdStsToken, { complete: true });
   }
 
   private dumpToken(): void {
-    if (!this.bdStsToken) return;
+    if (!this.bdStsToken) throw new Error("No BD STS token");
     this.decodeToken();
     this.logger.debug({ bdStsToken: this.bdStsToken, decodedToken: this.decodedToken });
+  }
+
+  private checkExp(exp: number): boolean {
+    const humanReadable = new Date();
+    const twoMinsAgo = new Date();
+    twoMinsAgo.setTime(Date.now() - 2 * 60 * 1000);
+    humanReadable.setTime(exp * 1000);
+    const diff = exp * 1000 - twoMinsAgo.getTime();
+    this.logger.debug({
+      exp,
+      diff,
+      twoMinsAgo: twoMinsAgo.toISOString(),
+      expReadable: humanReadable.toISOString(),
+    });
+    if (diff < 0) return false;
+    return true;
   }
 
   public async getStsToken(): Promise<{ bdStsToken: string; cached: boolean }> {
@@ -93,22 +109,9 @@ export class BDAccount {
         this.dumpToken();
         if (!this.decodedToken) throw new Error("Unable to decode token");
         const exp = this.decodedToken["payload"].exp;
-        if (exp) {
-          const humanReadable = new Date();
-          const twoMinsAgo = new Date();
-          twoMinsAgo.setTime(Date.now() - 2 * 60 * 1000);
-          humanReadable.setTime(exp * 1000);
-          const diff = exp * 1000 - twoMinsAgo.getTime();
-          this.logger.debug({
-            exp,
-            diff,
-            twoMinsAgo: twoMinsAgo.toISOString(),
-            expReadable: humanReadable.toISOString(),
-          });
-          if (diff > 0) {
-            this.logger.debug({ cachedBdStstToken: true });
-            return { bdStsToken: this.bdStsToken, cached: true };
-          }
+        if (exp && this.checkExp(exp)) {
+          this.logger.debug({ cachedBdStstToken: true });
+          return { bdStsToken: this.bdStsToken, cached: true };
         }
       } catch (err) {
         this.logger.debug({ bdStsTokenError: err });
@@ -133,7 +136,13 @@ export class BDAccount {
     this.bdStsToken = <string>body.bdStsToken;
     this.decodeToken();
     this.dumpToken();
-    await updateConfig({ credentials: { bdStsToken: this.bdStsToken } }); // local cache
-    return { bdStsToken: this.bdStsToken, cached: false };
+    if (!this.decodedToken) throw new Error("Unable to decode token");
+    const exp = this.decodedToken["payload"].exp;
+    if (exp && this.checkExp(exp)) {
+      this.logger.debug({ cachedBdStstToken: true });
+      await updateConfig({ credentials: { bdStsToken: this.bdStsToken } }); // local cache
+      return { bdStsToken: this.bdStsToken, cached: false };
+    }
+    throw new Error("Failed to get fresh token");
   }
 }
