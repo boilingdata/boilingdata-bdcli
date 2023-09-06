@@ -1,6 +1,6 @@
 {
   "name": "@boilingdata/boilingdata-bdcli",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "BoilingData command-line client - bdcli",
   "exports": {
     "import": "./dist/esm/index.js",
@@ -32,6 +32,11 @@
   "type": "module",
   "license": "MIT",
   "private": false,
+  "standard-version": {
+    "scripts": {
+      "postbump": "yarn build"
+    }
+  },
   "scripts": {
     "release": "standard-version",
     "prebuild": "rm -rf dist/ && node generateVersionFile.js && npx ts-interface-builder src/integration/boilingdata/dataset.interface.ts ",
