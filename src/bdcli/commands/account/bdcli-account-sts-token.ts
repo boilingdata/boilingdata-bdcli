@@ -6,6 +6,7 @@ import { getIdToken } from "../../utils/auth_util.js";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
 import * as fs from "fs/promises";
 import path from "path";
+import { updateBoilingToken } from "../../utils/yaml_utils.js";
 
 const logger = getLogger("bdcli-account-sts-token");
 const macroHeader = "\n-- BoilingData DuckDB Table Macro START\n";
@@ -38,14 +39,23 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     const { bdStsToken, cached: stsCached } = await bdAccount.getStsToken();
     updateSpinnerText(`Getting BoilingData STS token: ${stsCached ? "cached" : "success"}`);
     spinnerSuccess();
-    if (options.duckDbMacro || options.duckdbMacro) {
+
+    if (options.dbtprofiles) {
+      updateSpinnerText(`Storing Boiling token into DBT profiles file: ${options.dbtprofiles}`);
+      await updateBoilingToken(options.dbtprofiles, { token: bdStsToken });
+      spinnerSuccess();
+    }
+
+    if (options.duckdbMacro) {
       console.log(
         JSON.stringify({
           stsToken: bdStsToken,
           duckDbMacro: getMacro(bdStsToken),
         }),
       );
-    } else if (options.duckdbrc) {
+    }
+
+    if (options.duckdbrc) {
       updateSpinnerText("Storing DuckDB BoilingData TABLE MACRO");
       const rcContents = (await fs.readFile(rcFilePath)).toString("utf8");
       const hasMacro = rcContents.includes(macroHeader);
@@ -56,7 +66,9 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
       logger.debug({ rcContents, hasMacro, newContents, regex });
       await fs.writeFile(rcFilePath, newContents);
       spinnerSuccess();
-    } else {
+    }
+
+    if (!options.duckdbrc && !options.dbtprofiles && !options.duckdbMacro) {
       console.log(JSON.stringify({ bdStsToken }));
     }
   } catch (err: any) {
@@ -72,6 +84,13 @@ const program = new cmd.Command("bdcli account sts-token")
         "with the auth token in place.\n\tMacro usage example:\n" +
         "\t\"SELECT * FROM boilingdata('SELECT * FROM " +
         "parquet_scan(''s3://boilingdata-demo/demo.parquet'') LIMIT 10');\"",
+    ),
+  )
+  .addOption(
+    new cmd.Option(
+      "--dbtprofiles <profilesFilePath>",
+      "Upsert Boiling credentials into DBT profiles YAML configuration file. " +
+        "\n\tExpects 'module: boilingdata' entry and upserts its config.token value",
     ),
   )
   .addOption(
