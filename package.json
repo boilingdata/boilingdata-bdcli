@@ -1,6 +1,6 @@
 {
   "name": "@boilingdata/boilingdata-bdcli",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "BoilingData command-line client - bdcli",
   "exports": {
     "import": "./dist/esm/index.js",
@@ -35,7 +35,7 @@
   "standard-version": {
     "scripts": {
       "postbump": "yarn build",
-      "precommit": "git add dist/"
+      "prerelease": "git add dist/"
     }
   },
   "scripts": {
