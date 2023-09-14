@@ -34,9 +34,6 @@ const deepmerge_1 = __importDefault(require("deepmerge"));
 const configFile = `${os.homedir()}/.bdcli.yaml`;
 async function hasValidConfig() {
     try {
-        if (!fs.statfs)
-            throw new Error("Please use more recent node version that supports fs.statfs()");
-        await fs.statfs(configFile);
         const config = yaml.load(await fs.readFile(configFile, "utf8"));
         if (config["credentials"] && config["credentials"]["email"] && config["credentials"]["password"])
             return true;
@@ -50,7 +47,6 @@ exports.hasValidConfig = hasValidConfig;
 async function updateConfig(updates) {
     let config = {};
     try {
-        await fs.statfs(configFile);
         config = yaml.load(await fs.readFile(configFile, "utf8"));
     }
     catch (err) {
