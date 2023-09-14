@@ -34,6 +34,7 @@ const auth_util_js_1 = require("../../utils/auth_util.js");
 const account_js_1 = require("../../../integration/boilingdata/account.js");
 const fs = __importStar(require("fs/promises"));
 const path_1 = __importDefault(require("path"));
+const yaml_utils_js_1 = require("../../utils/yaml_utils.js");
 const logger = (0, logger_util_js_1.getLogger)("bdcli-account-sts-token");
 const macroHeader = "\n-- BoilingData DuckDB Table Macro START\n";
 const macroFooter = "\n-- BoilingData DuckDB Table Macro END";
@@ -60,13 +61,18 @@ async function show(options, _command) {
         const { bdStsToken, cached: stsCached } = await bdAccount.getStsToken();
         (0, spinner_util_js_1.updateSpinnerText)(`Getting BoilingData STS token: ${stsCached ? "cached" : "success"}`);
         (0, spinner_util_js_1.spinnerSuccess)();
-        if (options.duckDbMacro || options.duckdbMacro) {
+        if (options.dbtprofiles) {
+            (0, spinner_util_js_1.updateSpinnerText)(`Storing Boiling token into DBT profiles file: ${options.dbtprofiles}`);
+            await (0, yaml_utils_js_1.updateBoilingToken)(options.dbtprofiles, { token: bdStsToken });
+            (0, spinner_util_js_1.spinnerSuccess)();
+        }
+        if (options.duckdbMacro) {
             console.log(JSON.stringify({
                 stsToken: bdStsToken,
                 duckDbMacro: getMacro(bdStsToken),
             }));
         }
-        else if (options.duckdbrc) {
+        if (options.duckdbrc) {
             (0, spinner_util_js_1.updateSpinnerText)("Storing DuckDB BoilingData TABLE MACRO");
             const rcContents = (await fs.readFile(rcFilePath)).toString("utf8");
             const hasMacro = rcContents.includes(macroHeader);
@@ -78,7 +84,7 @@ async function show(options, _command) {
             await fs.writeFile(rcFilePath, newContents);
             (0, spinner_util_js_1.spinnerSuccess)();
         }
-        else {
+        if (!options.duckdbrc && !options.dbtprofiles && !options.duckdbMacro) {
             console.log(JSON.stringify({ bdStsToken }));
         }
     }
@@ -91,6 +97,8 @@ const program = new cmd.Command("bdcli account sts-token")
     "with the auth token in place.\n\tMacro usage example:\n" +
     "\t\"SELECT * FROM boilingdata('SELECT * FROM " +
     "parquet_scan(''s3://boilingdata-demo/demo.parquet'') LIMIT 10');\""))
+    .addOption(new cmd.Option("--dbtprofiles <profilesFilePath>", "Upsert Boiling credentials into DBT profiles YAML configuration file. " +
+    "\n\tExpects 'module: boilingdata' entry and upserts its config.token value"))
     .addOption(new cmd.Option("--duckdbrc", "Upsert DuckDB boilingdata() temporary TABLE MACRO " + "with the auth token in place into ~/.duckdbrc file"))
     .addOption(new cmd.Option("--clear", "Clear cached tokens"))
     .action(async (options, command) => await show(options, command));
