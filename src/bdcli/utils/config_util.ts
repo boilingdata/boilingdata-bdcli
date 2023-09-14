@@ -24,8 +24,6 @@ export interface IConfig {
 
 export async function hasValidConfig(): Promise<boolean> {
   try {
-    if (!fs.statfs) throw new Error("Please use more recent node version that supports fs.statfs()");
-    await fs.statfs(configFile);
     const config = <any>yaml.load(await fs.readFile(configFile, "utf8"));
     if (config["credentials"] && config["credentials"]["email"] && config["credentials"]["password"]) return true;
     return false;
@@ -37,7 +35,6 @@ export async function hasValidConfig(): Promise<boolean> {
 export async function updateConfig(updates: IConfig): Promise<void> {
   let config = {};
   try {
-    await fs.statfs(configFile);
     config = <object>yaml.load(await fs.readFile(configFile, "utf8"));
   } catch (err: any) {
     if (err?.code != "ENOENT") throw err;
