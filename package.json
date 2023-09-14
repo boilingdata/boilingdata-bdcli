@@ -1,6 +1,6 @@
 {
   "name": "@boilingdata/boilingdata-bdcli",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "description": "BoilingData command-line client - bdcli",
   "exports": {
     "import": "./dist/esm/index.js",
@@ -39,7 +39,7 @@
     }
   },
   "scripts": {
-    "release": "standard-version",
+    "release": "standard-version -a",
     "prebuild": "rm -rf dist/ && node generateVersionFile.js && npx ts-interface-builder src/integration/boilingdata/dataset.interface.ts ",
     "build": "rm -rf dist/ && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json && chmod 755 dist/esm/index.js",
     "prettier": "prettier --check 'src/**/*.{js,ts}'",
