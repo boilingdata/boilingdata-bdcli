@@ -6,8 +6,10 @@ import { getIdToken } from "../../utils/auth_util.js";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
 import * as fs from "fs/promises";
 import path from "path";
+import ms from "ms";
+import { updateBoilingToken } from "../../utils/yaml_utils.js";
 
-const logger = getLogger("bdcli-account-sts-token");
+const logger = getLogger("bdcli-account-token");
 const macroHeader = "\n-- BoilingData DuckDB Table Macro START\n";
 const macroFooter = "\n-- BoilingData DuckDB Table Macro END";
 const rcFilePath = path.join(process.env["HOME"] ?? "~", ".duckdbrc");
@@ -27,6 +29,16 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
   try {
     logger.debug({ options });
 
+    if (options.lifetime) {
+      const lifetimeInMs = ms(`${options.lifetime}`);
+      logger.debug({ lifetimeInMs });
+      if (!lifetimeInMs || lifetimeInMs < 60000) {
+        throw new Error(
+          "Invalid token expiration time span, please see https://github.com/vercel/ms for the format of the period",
+        );
+      }
+    }
+
     updateSpinnerText("Authenticating");
     const { idToken: token, cached: idCached, region } = await getIdToken(logger);
     updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
@@ -35,17 +47,20 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     updateSpinnerText("Getting BoilingData STS token");
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdAccount = new BDAccount({ logger, authToken: token });
-    const { bdStsToken, cached: stsCached } = await bdAccount.getStsToken();
+    const { bdStsToken, cached: stsCached } = await bdAccount.getToken(options.lifetime ?? "1h", options.vendingWindow);
     updateSpinnerText(`Getting BoilingData STS token: ${stsCached ? "cached" : "success"}`);
     spinnerSuccess();
-    if (options.duckDbMacro || options.duckdbMacro) {
+
+    if (options.duckdbMacro) {
       console.log(
         JSON.stringify({
           stsToken: bdStsToken,
           duckDbMacro: getMacro(bdStsToken),
         }),
       );
-    } else if (options.duckdbrc) {
+    }
+
+    if (options.duckdbrc) {
       updateSpinnerText("Storing DuckDB BoilingData TABLE MACRO");
       const rcContents = (await fs.readFile(rcFilePath)).toString("utf8");
       const hasMacro = rcContents.includes(macroHeader);
@@ -56,7 +71,15 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
       logger.debug({ rcContents, hasMacro, newContents, regex });
       await fs.writeFile(rcFilePath, newContents);
       spinnerSuccess();
-    } else {
+    }
+
+    if (options.dbtprofiles) {
+      updateSpinnerText(`Storing Boiling token into DBT profiles file: ${options.dbtprofiles}`);
+      await updateBoilingToken(options.dbtprofiles, { token: bdStsToken });
+      spinnerSuccess();
+    }
+
+    if (!options.dbtprofiles && !options.duckdbrc) {
       console.log(JSON.stringify({ bdStsToken }));
     }
   } catch (err: any) {
@@ -64,12 +87,12 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
   }
 }
 
-const program = new cmd.Command("bdcli account sts-token")
+const program = new cmd.Command("bdcli account token")
   .addOption(
     new cmd.Option(
       "--duckdb-macro",
       "Output copy-pasteable DuckDB boilingdata() temporary TABLE MACRO " +
-        "with the auth token in place.\n\tMacro usage example:\n" +
+        "with the auth token in place.\n\tMacro usage example for full query pushdown to Boiling cloud:\n" +
         "\t\"SELECT * FROM boilingdata('SELECT * FROM " +
         "parquet_scan(''s3://boilingdata-demo/demo.parquet'') LIMIT 10');\"",
     ),
@@ -80,9 +103,22 @@ const program = new cmd.Command("bdcli account sts-token")
       "Upsert DuckDB boilingdata() temporary TABLE MACRO " + "with the auth token in place into ~/.duckdbrc file",
     ),
   )
-  .addOption(new cmd.Option("--clear", "Clear cached tokens"))
+  .addOption(
+    new cmd.Option(
+      "--dbtprofiles <profilesFilePath>",
+      "Upsert Boiling credentials into DBT profiles YAML configuration file. " +
+        "\n\tExpects 'module: boilingdata' entry and upserts its config.token value",
+    ),
+  )
+  .addOption(
+    new cmd.Option(
+      "--lifetime <lifetime>",
+      "Expiration lifetime for the token, in string format, like '1h' (see https://github.com/vercel/ms)",
+    ),
+  )
   .action(async (options, command) => await show(options, command));
 
-addGlobalOptions(program, logger);
-
-(async () => await program.parseAsync(process.argv))();
+(async () => {
+  await addGlobalOptions(program, logger);
+  await program.parseAsync(process.argv);
+})();

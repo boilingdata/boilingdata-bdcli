@@ -66,6 +66,7 @@ const program = new cmd.Command("bdcli setup iam-role")
   .addOption(new cmd.Option("--create-role-only", "Create the IAM role only and do not update BoilingData"))
   .action(async (options, command) => await iamrole(options, command));
 
-addGlobalOptions(program, logger);
-
-(async () => await program.parseAsync(process.argv))();
+(async () => {
+  await addGlobalOptions(program, logger);
+  await program.parseAsync(process.argv);
+})();

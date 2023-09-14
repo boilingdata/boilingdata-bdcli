@@ -31,6 +31,7 @@ const program = new cmd.Command("bdcli account enable-mfa").action(
   async (options, command) => await show(options, command),
 );
 
-addGlobalOptions(program, logger);
-
-(async () => await program.parseAsync(process.argv))();
+(async () => {
+  await addGlobalOptions(program, logger);
+  await program.parseAsync(process.argv);
+})();
