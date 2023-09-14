@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [1.0.11](https://github.com/boilingdata/boilingdata-bdcli/compare/v1.0.10...v1.0.11) (2023-09-14)
 
+### [1.0.11](https://github.com/boilingdata/boilingdata-bdcli/compare/v1.0.10...v1.0.11) (2023-09-14)
+
 ### [1.0.18](https://github.com/boilingdata/boilingdata-bdcli/compare/v1.0.17...v1.0.18) (2023-09-14)
 
 ### [1.0.17](https://github.com/boilingdata/boilingdata-bdcli/compare/v1.0.16...v1.0.17) (2023-09-14)
