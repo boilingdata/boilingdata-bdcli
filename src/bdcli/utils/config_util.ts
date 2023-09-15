@@ -3,10 +3,12 @@ import * as yaml from "js-yaml";
 import * as os from "os";
 import deepmerge from "deepmerge";
 import { ILogger } from "./logger_util.js";
+import { getPw } from "./auth_util.js";
 
 export const BDCONF = "~/.bdcli.yaml";
 const configFile = `${os.homedir()}/.bdcli.yaml`;
 export let profile = "default";
+let currentCreds: any;
 
 export interface ICredentials {
   email?: string;
@@ -34,7 +36,7 @@ export async function hasValidConfig(logger?: ILogger): Promise<boolean> {
     const config = await getConfig(logger);
     logger?.debug({ hasValidConfig: config });
     if (!config) return false;
-    if (config["credentials"] && config["credentials"]["email"] && config["credentials"]["password"]) return true;
+    if (config["credentials"] && config["credentials"]["email"]) return true;
     return false;
   } catch (err: any) {
     return false;
@@ -55,18 +57,16 @@ export async function listConfigProfiles(logger?: ILogger): Promise<string[]> {
 export async function updateConfig(updates: IConfig, logger?: ILogger): Promise<void> {
   let config: any = {};
   try {
-    config = <any>yaml.load(await fs.readFile(configFile, "utf8"));
+    config = <object>yaml.load(await fs.readFile(configFile, "utf8"));
   } catch (err: any) {
     if (err?.code != "ENOENT") throw err;
   }
   let contents = yaml.dump(deepmerge(config, updates));
-  if (profile !== "default" || !config?.credentials) {
-    if (config["credentials"]) {
-      logger?.debug({ status: "Converting config file to use profiles" });
-      contents = yaml.dump(deepmerge({ default: config }, { [profile]: { ...(await getConfig()), ...updates } }));
-    } else {
-      contents = yaml.dump(deepmerge(config, { [profile]: { ...(await getConfig()), ...updates } }));
-    }
+  if (config["credentials"]) {
+    logger?.debug({ status: "Updating config file to use profiles" });
+    contents = yaml.dump(deepmerge({ default: config }, { [profile]: { ...(await getConfig()), ...updates } }));
+  } else {
+    contents = yaml.dump(deepmerge(config, { [profile]: { ...(await getConfig()), ...updates } }));
   }
   await fs.writeFile(configFile, contents, {
     encoding: "utf8",
@@ -105,12 +105,15 @@ export async function combineOptsWithSettings(opts: any, logger?: ILogger): Prom
 export async function getConfigCredentials(
   logger?: ILogger,
 ): Promise<ICredentials & Required<Pick<ICredentials, "email" | "password">>> {
+  if (currentCreds) return currentCreds; // cached in mem, so you can call this method multiple times
   const conf = await getConfig();
   if (!conf) throw new Error(`No config for profile "${profile}"`);
   logger?.debug({ conf });
   const { credentials } = conf;
-  if (!credentials.email || !credentials.password) throw new Error("Could not get credentials");
-  const resp = { ...credentials, email: credentials.email, password: credentials.password }; // To make TS happy..
-  logger?.debug({ ...resp, password: resp?.password ? "**" : undefined });
-  return resp;
+  if (!credentials.email) throw new Error("Could not get credentials (email)");
+  credentials.password = credentials.password ?? (await getPw("Please enter password"));
+  if (!credentials.password) throw new Error("Could not get credentials (password)");
+  currentCreds = { ...credentials, email: credentials.email, password: credentials.password }; // To make TS happy..
+  logger?.debug({ ...currentCreds, password: currentCreds?.password ? "**" : undefined });
+  return currentCreds;
 }

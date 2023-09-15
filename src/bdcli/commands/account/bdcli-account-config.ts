@@ -4,7 +4,7 @@ import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spi
 import { addGlobalOptions } from "../../utils/options_util.js";
 import { BDCONF, hasValidConfig, listConfigProfiles, updateConfig, profile } from "../../utils/config_util.js";
 import prompts from "prompts";
-import * as EmailValidator from "email-validator";
+import { getEmail } from "../../utils/auth_util.js";
 
 const logger = getLogger("bdcli-account-config");
 
@@ -29,20 +29,19 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
       return;
     }
 
-    if (await hasValidConfig(logger)) {
+    if (await hasValidConfig()) {
+      if (options.password) {
+        await updateConfig({ credentials: { password: options.password } });
+        return spinnerSuccess("Password added to the config");
+      }
       return spinnerSuccess(`Valid configuration already exists for "${profile}" profile`);
     }
 
-    if (!options.email) {
-      const inp = await prompts({
-        type: "text",
-        name: "email",
-        message: "Please enter your email",
-        validate: (email: string) => (EmailValidator.validate(email) ? true : "Invalid email address"),
-      });
-      options.email = inp["email"];
+    if (!options.email && !options.validate) {
+      options.email = await getEmail();
     }
-    if (!options.password) {
+
+    if (!options.password && !options.noPassword && !options.validate) {
       const inp = await prompts({
         type: "password",
         name: "pw",
@@ -55,7 +54,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
 
     updateSpinnerText("Creating ~/.bdclirc");
     const { email, password, region } = options;
-    if (!email || !password) return spinnerError("No email or password found");
+    if (!email) return spinnerError("No email found");
     await updateConfig({ credentials: { email, password, region } });
     spinnerSuccess();
   } catch (err: any) {
@@ -64,8 +63,10 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
 }
 
 const program = new cmd.Command("bdcli account config")
-  .addOption(new cmd.Option("--email <email>", "email address that works"))
+  .addOption(new cmd.Option("--validate", "validate current config"))
+  .addOption(new cmd.Option("--email <email>", "email address that works").conflicts("--validate"))
   .addOption(new cmd.Option("--password <password>", "suitably complex password"))
+  .addOption(new cmd.Option("--no-password", "suitably complex password").conflicts("--password"))
   .addOption(new cmd.Option("--clear", "delete all session tokens (for opt. selected profile)"))
   .addOption(new cmd.Option("--region <awsRegion>", "Sign-in AWS region").default("eu-west-1"))
   .addOption(new cmd.Option("--list", `List all config profiles (see ${BDCONF})`))

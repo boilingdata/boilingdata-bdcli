@@ -10,6 +10,39 @@ import { resumeSpinner, spinnerInfo, stopSpinner } from "./spinner_util.js";
 const userPoolId = "eu-west-1_0GLV9KO1p"; // eu-west-1 preview
 const clientId = "6timr8knllr4frovfvq8r2o6oo"; // eu-west-1 preview
 
+export async function getEmail(): Promise<string> {
+  stopSpinner();
+  const inp = await prompts({
+    type: "text",
+    name: "email",
+    message: "Please give email",
+    validate: (email: any) =>
+      `${email}`.length < 6 || !email.includes("@")
+        ? `Email must be at least 6 characters long with @ character`
+        : true,
+  });
+  if (!inp["email"] || inp["email"].length < 6) {
+    throw new Error("Email must be at least 6 characters long with @ character");
+  }
+  resumeSpinner();
+  return inp["email"];
+}
+
+export async function getPw(message: string): Promise<string> {
+  stopSpinner();
+  const inp = await prompts({
+    type: "password",
+    name: "pw",
+    message,
+    validate: (pw: any) => (`${pw}`.length < 12 ? `Must be at least 12 characters long with special characters` : true),
+  });
+  if (!inp["pw"] || inp["pw"].length < 12) {
+    throw new Error("Password must be at least 12 characters long with special characters");
+  }
+  resumeSpinner();
+  return inp["pw"];
+}
+
 async function getCognitoUser(_logger?: ILogger, Username?: string): Promise<id.CognitoUser> {
   if (!Username) {
     const creds = await getConfigCredentials();
@@ -60,6 +93,8 @@ export async function registerToBoilingData(
   password = optsPassword ?? password; // option overrides
   environment = environment ?? optsEnvironment;
 
+  if (!password) password = await getPw("Please enter password");
+
   logger?.debug({ region, email, environment });
   const attributeList: id.CognitoUserAttribute[] = [];
 
@@ -86,17 +121,11 @@ export async function updatePassword(_logger?: ILogger): Promise<void> {
   const cognitoUser = await getCognitoUserSession();
   const oldPassword = (await getConfigCredentials()).password;
   stopSpinner();
-  const inp = await prompts({
-    type: "password",
-    name: "pw",
-    message: "Please enter new password",
-    validate: (pw: any) => (`${pw}`.length < 12 ? `Must be at least 12 characters long with special characters` : true),
-  });
-  const newPassword = inp["pw"];
+  const newPassword = await getPw("Please enter new password");
   if (!newPassword || newPassword?.length < 12) throw new Error("Invalid new password");
   resumeSpinner();
   return new Promise((resolve, reject) => {
-    cognitoUser.changePassword(oldPassword, inp["pw"], (err: any, data: any) => {
+    cognitoUser.changePassword(oldPassword, newPassword, (err: any, data: any) => {
       if (err) reject(err);
       resolve(data);
     });
@@ -133,14 +162,7 @@ export async function recoverPassword(logger?: ILogger): Promise<any> {
         if (!verificationCode || verificationCode?.length < 6) {
           throw new Error("Invalid recovery code, must be at least 6 chars");
         }
-        const inp2 = await prompts({
-          type: "password",
-          name: "pw",
-          message: "Please enter new password",
-          validate: (pw: any) =>
-            `${pw}`.length < 12 ? `Must be at least 12 characters long with special characters` : true,
-        });
-        const newPassword = inp2["pw"];
+        const newPassword = await getPw("Please enter new password");
         if (!newPassword || newPassword.length < 12) throw new Error("Invalid new password");
         resumeSpinner();
         cognitoUser.confirmPassword(verificationCode, newPassword, {
@@ -286,19 +308,8 @@ export async function getIdToken(logger?: ILogger): Promise<{ idToken: string; c
       newPasswordRequired: async function (userAttributes: any, requiredAttributes: any) {
         logger?.debug({ userAttributes, requiredAttributes });
         delete userAttributes.email_verified;
-        stopSpinner();
-        const inp = await prompts({
-          type: "password",
-          name: "pw",
-          message: "Please enter new password",
-          validate: (pw: any) =>
-            `${pw}`.length < 12 ? `Password must be at least 12 characters long with special characters` : true,
-        });
-        if (!inp["pw"] || inp["pw"].length < 12) {
-          throw new Error("Password must be at least 12 characters long with special characters");
-        }
-        resumeSpinner();
-        cognitoUser.completeNewPasswordChallenge(inp["pw"], userAttributes, this);
+        const newPassword = await getPw("Please enter new password");
+        cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, this);
       },
       onSuccess: async (session: id.CognitoUserSession) => {
         const idToken = session.getIdToken().getJwtToken();

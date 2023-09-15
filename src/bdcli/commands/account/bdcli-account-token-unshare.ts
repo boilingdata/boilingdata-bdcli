@@ -55,7 +55,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
   }
 }
 
-const program = new cmd.Command("bdcli account sts-token-unshare")
+const program = new cmd.Command("bdcli account token-unshare")
   .addOption(new cmd.Option("--users <boilingUsers>", "Comma separated list of Boiling users").makeOptionMandatory())
   .action(async (options, command) => await show(options, command));
 

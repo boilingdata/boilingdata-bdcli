@@ -1,6 +1,5 @@
 coverage/
 src/VERSION.ts
-dist/
 node_modules/
 *.log
 datasource_config.yaml
