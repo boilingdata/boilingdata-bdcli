@@ -1,5 +1,4 @@
 import * as id from "amazon-cognito-identity-js";
-import ms from "ms";
 // FIXME: switch to prod as default
 export const baseApiUrl = "https://rest.api.test.boilingdata.com";
 export const dataSetsPath = "/data-sets";
@@ -20,21 +19,9 @@ export const apiKey = "Ak7itOEG1N1I7XpFfmYO97NWHRZwEYDmYBL4y0lb";
 export function getApiKey() {
     return Promise.resolve(apiKey); // FIXME: Get API key..
 }
-export async function getReqHeaders(token, reqOptions) {
+export async function getReqHeaders(token) {
     const apikey = await getApiKey();
-    if (reqOptions?.tokenLifetime) {
-        const periodInMs = ms(reqOptions.tokenLifetime);
-        if (!periodInMs || periodInMs < 60000) {
-            throw new Error("Invalid time period, please see https://github.com/vercel/ms for the format of the period");
-        }
-    }
-    const tokenPeriod = reqOptions?.tokenLifetime ? { "x-token-lifetime": reqOptions.tokenLifetime } : undefined;
-    const vendingWindow = reqOptions?.vendingSchedule
-        ? { "x-token-vending-window": reqOptions.vendingSchedule }
-        : undefined;
     return {
-        ...tokenPeriod,
-        ...vendingWindow,
         Authorization: token,
         "x-api-key": apikey,
         "Content-Type": "application/json",

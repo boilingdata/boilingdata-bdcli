@@ -7,16 +7,20 @@ export declare class BDAccount {
     private params;
     private cognitoIdToken;
     private bdStsToken;
+    private sharedTokens;
+    private selectedToken;
     private decodedToken;
     private logger;
     private accountDetails;
     constructor(params: IBDConfig);
     setIamRoleWithPayload(IamRoleArn: string, payload: any): Promise<void>;
+    private serialiseTokensMap;
+    private unserialiseTokensMap;
     private _getAccountDetails;
     getAssumeAwsAccount(): Promise<string>;
     getExtId(): Promise<string>;
-    private decodeToken;
-    private dumpToken;
+    private selectAndDecodeToken;
+    private dumpSelectedToken;
     private checkExp;
     listSharedTokens(): Promise<{
         toList: string[];
@@ -24,7 +28,7 @@ export declare class BDAccount {
     }>;
     shareToken(tokenLifetime: string, vendingSchedule: string | undefined, users: string[], shareName?: string, shareSql?: string): Promise<void>;
     unshareToken(shareId: string): Promise<void>;
-    getToken(tokenLifetime: string, vendingSchedule?: string): Promise<{
+    getToken(tokenLifetime: string, shareId?: string): Promise<{
         bdStsToken: string;
         cached: boolean;
     }>;

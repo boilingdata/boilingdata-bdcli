@@ -8,6 +8,7 @@ export interface ICredentials {
     accessToken?: string;
     refreshToken?: string;
     bdStsToken?: string;
+    sharedTokens?: string[];
     region?: string;
     mfa?: boolean;
     environment?: string;

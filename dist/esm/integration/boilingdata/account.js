@@ -5,6 +5,8 @@ export class BDAccount {
     params;
     cognitoIdToken;
     bdStsToken;
+    sharedTokens;
+    selectedToken;
     decodedToken;
     logger;
     accountDetails;
@@ -13,6 +15,7 @@ export class BDAccount {
         this.logger = this.params.logger;
         // this.logger.debug(this.params);
         this.cognitoIdToken = this.params.authToken;
+        this.sharedTokens = new Map();
     }
     async setIamRoleWithPayload(IamRoleArn, payload) {
         // channel("undici:request:create").subscribe(console.log);
@@ -29,6 +32,19 @@ export class BDAccount {
             this.logger.error({ status: res.status, statusText: res.statusText, respBody });
             throw new Error(`Failed to configure IAM Role (${IamRoleArn}) into BoilingData - ${res.status} ${res.statusText}: ${respBody?.ResponseText}; ${respBody?.RequestId}`);
         }
+    }
+    serialiseTokensMap() {
+        const entries = [...this.sharedTokens.entries()];
+        return entries.map(([id, token]) => `${id}:${token}`);
+    }
+    unserialiseTokensMap(tokens) {
+        this.sharedTokens = new Map();
+        tokens.map(t => {
+            const [id, token] = t.split(":");
+            if (!token || !id)
+                throw new Error("Local shared token cache corrupted in the config");
+            this.sharedTokens.set(id, token);
+        });
     }
     async _getAccountDetails() {
         if (this.accountDetails)
@@ -54,16 +70,32 @@ export class BDAccount {
         await this._getAccountDetails();
         return this.accountDetails.AccountExtId;
     }
-    decodeToken() {
-        if (!this.bdStsToken)
-            throw new Error("No BD STS token");
-        this.decodedToken = jwt.decode(this.bdStsToken, { complete: true });
+    selectAndDecodeToken(shareId) {
+        if (shareId) {
+            if (!this.sharedTokens.has(shareId))
+                throw new Error(`No token with share id ${shareId}`);
+            const bdStsToken = this.sharedTokens.get(shareId);
+            this.decodedToken = jwt.decode(bdStsToken, { complete: true });
+            this.logger.debug({ decodedToken: this.decodedToken });
+            this.selectedToken = bdStsToken;
+            const aud = this.decodedToken?.["payload"]?.aud; // audience
+            if (!aud || !Array.isArray(aud) || aud.length < 3 || aud[2].length < 6 || aud[2] != shareId) {
+                throw new Error("Decoded token not matching with selected shareId");
+            }
+        }
+        else {
+            if (!this.bdStsToken)
+                throw new Error("No BD STS token");
+            this.decodedToken = jwt.decode(this.bdStsToken, { complete: true });
+            this.selectedToken = this.bdStsToken;
+        }
+        if (!this.decodedToken || !this.selectedToken)
+            throw new Error(`Could not find token (share id ${shareId})`);
     }
-    dumpToken() {
-        if (!this.bdStsToken)
-            throw new Error("No BD STS token");
-        this.decodeToken();
-        this.logger.debug({ bdStsToken: this.bdStsToken, decodedToken: this.decodedToken });
+    dumpSelectedToken() {
+        if (!this.selectedToken)
+            throw new Error("No selected BD STS token");
+        this.logger.debug({ bdStsToken: this.selectedToken, decodedToken: this.decodedToken });
     }
     checkExp(exp) {
         const humanReadable = new Date();
@@ -129,53 +161,68 @@ export class BDAccount {
             return;
         throw new Error("Failed to unshare token");
     }
-    async getToken(tokenLifetime, vendingSchedule) {
-        if (this.bdStsToken)
+    async getToken(tokenLifetime, shareId) {
+        if (this.bdStsToken && !shareId) {
+            this.selectedToken = this.bdStsToken;
             return { bdStsToken: this.bdStsToken, cached: true };
-        this.bdStsToken = (await getConfigCredentials()).bdStsToken;
-        if (this.bdStsToken) {
-            try {
-                this.decodeToken();
-                this.dumpToken();
-                if (!this.decodedToken)
-                    throw new Error("Unable to decode token");
-                const exp = this.decodedToken["payload"].exp;
-                if (exp && this.checkExp(exp)) {
-                    this.logger.debug({ cachedBdStstToken: true });
-                    return { bdStsToken: this.bdStsToken, cached: true };
-                }
-            }
-            catch (err) {
-                this.logger.debug({ bdStsTokenError: err });
+        }
+        const creds = await getConfigCredentials();
+        this.bdStsToken = creds.bdStsToken;
+        if (creds.sharedTokens)
+            this.unserialiseTokensMap(creds.sharedTokens);
+        try {
+            this.selectAndDecodeToken(shareId);
+            this.dumpSelectedToken();
+            if (!this.decodedToken || !this.selectedToken)
+                throw new Error("Unable to select/decode token");
+            const exp = this.decodedToken["payload"].exp;
+            if (exp && this.checkExp(exp)) {
+                this.logger.debug({ cachedBdStstToken: true });
+                return { bdStsToken: this.selectedToken, cached: true };
             }
         }
-        else {
-            this.logger.debug({ bdStsTokenCached: this.bdStsToken });
+        catch (err) {
+            this.logger.debug({ bdStsTokenError: err });
         }
+        this.logger.debug({ bdStsTokenCached: this.bdStsToken });
+        this.logger.debug({ status: "need fresh token" });
         // channel("undici:request:create").subscribe(console.log);
         // channel("undici:request:headers").subscribe(console.log);
-        const headers = await getReqHeaders(this.cognitoIdToken, { tokenLifetime, vendingSchedule });
-        this.logger.debug({ tokenUrl, headers });
-        const res = await fetch(tokenUrl, { method: "GET", headers });
-        const body = await res.json();
-        this.logger.debug({ getStsToken: { body } });
-        if (!body.ResponseCode || !body.ResponseText) {
+        const headers = await getReqHeaders(this.cognitoIdToken); // , { tokenLifetime, vendingSchedule, shareId });
+        let method = "GET";
+        let body = undefined;
+        if (shareId) {
+            method = "POST";
+            body = JSON.stringify({ tokenLifetime, shareId });
+        }
+        this.logger.debug({ method, tokenUrl, headers, body });
+        const res = await fetch(tokenUrl, { method, headers, body });
+        const resBody = await res.json();
+        this.logger.debug({ getStsToken: { body: resBody } });
+        if (!resBody.ResponseCode || !resBody.ResponseText) {
             throw new Error("Malformed response from BD API");
         }
-        if (!body.bdStsToken) {
+        if (!resBody.bdStsToken) {
             throw new Error("Missing bdStsToken in BD API Response");
         }
-        this.bdStsToken = body.bdStsToken;
-        this.decodeToken();
-        this.dumpToken();
-        if (!this.decodedToken)
-            throw new Error("Unable to decode token");
+        if (shareId) {
+            this.sharedTokens.set(shareId, resBody.bdStsToken);
+        }
+        else {
+            this.bdStsToken = resBody.bdStsToken;
+        }
+        this.selectAndDecodeToken(shareId);
+        this.dumpSelectedToken();
+        if (!this.decodedToken || !this.selectedToken) {
+            throw new Error("Unable to select/decode token after fetch from API");
+        }
         const exp = this.decodedToken["payload"].exp;
         if (exp && this.checkExp(exp)) {
             this.logger.debug({ cachedBdStstToken: true });
-            await updateConfig({ credentials: { bdStsToken: this.bdStsToken } }); // local cache
-            return { bdStsToken: this.bdStsToken, cached: false };
+            const credentials = shareId ? { sharedTokens: this.serialiseTokensMap() } : { bdStsToken: this.selectedToken };
+            await updateConfig({ credentials }); // local cache
+            return { bdStsToken: this.selectedToken, cached: false };
         }
-        throw new Error("Failed to get fresh token from BD API");
+        throw new Error(`Failed to get fresh token from BD API (with share id ${shareId})`);
     }
 }

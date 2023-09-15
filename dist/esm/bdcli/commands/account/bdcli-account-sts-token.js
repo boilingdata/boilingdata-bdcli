@@ -32,7 +32,7 @@ async function show(options, _command) {
         if (!region)
             throw new Error("Pass --region parameter or set AWS_REGION env");
         const bdAccount = new BDAccount({ logger, authToken: token });
-        const { bdStsToken, cached: stsCached } = await bdAccount.getToken(options.lifetime ?? "1h", options.vendingWindow);
+        const { bdStsToken, cached: stsCached } = await bdAccount.getToken(options.lifetime ?? "1h", options.shareId);
         updateSpinnerText(`Getting BoilingData STS token: ${stsCached ? "cached" : "success"}`);
         spinnerSuccess();
         if (options.dbtprofiles) {
@@ -72,7 +72,7 @@ async function show(options, _command) {
     }
 }
 const program = new cmd.Command("bdcli account sts-token")
-    .addOption(new cmd.Option("--shared-token-id", "Another user's shared acces token id for you (see token-list for the ids).\n" +
+    .addOption(new cmd.Option("--share-id <id>", "Another user's shared acces token id for you (see token-list for the ids).\n" +
     "\tOptional, the default is token that binds to your AWS IAM Role access."))
     .addOption(new cmd.Option("--duckdb-macro", "Output copy-pasteable DuckDB boilingdata() temporary TABLE MACRO " +
     "with the auth token in place.\n\tMacro usage example for full query pushdown to Boiling cloud:\n" +
@@ -81,8 +81,6 @@ const program = new cmd.Command("bdcli account sts-token")
     .addOption(new cmd.Option("--dbtprofiles <profilesFilePath>", "Upsert Boiling credentials into DBT profiles YAML configuration file. " +
     "\n\tExpects 'module: boilingdata' entry and upserts its config.token value"))
     .addOption(new cmd.Option("--duckdbrc", "Upsert DuckDB boilingdata() temporary TABLE MACRO " + "with the auth token in place into ~/.duckdbrc file"))
-    .addOption(new cmd.Option("--dbtprofiles <profilesFilePath>", "Upsert Boiling credentials into DBT profiles YAML configuration file. " +
-    "\n\tExpects 'module: boilingdata' entry and upserts its config.token value"))
     .addOption(new cmd.Option("--lifetime <lifetime>", "Expiration lifetime for the token, in string format, like '1h' (see https://github.com/vercel/ms)"))
     .action(async (options, command) => await show(options, command));
 (async () => {

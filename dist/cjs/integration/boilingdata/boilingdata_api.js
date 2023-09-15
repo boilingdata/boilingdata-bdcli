@@ -22,13 +22,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getReqHeaders = exports.getApiKey = exports.apiKey = exports.Pool = exports.poolData = exports.UserPoolId = exports.bdAWSAccount = exports.tokenShareUrl = exports.tokenUrl = exports.accountUrl = exports.dataSetsUrl = exports.sharePath = exports.tokenPath = exports.accountPath = exports.dataSetsPath = exports.baseApiUrl = void 0;
 const id = __importStar(require("amazon-cognito-identity-js"));
-const ms_1 = __importDefault(require("ms"));
 // FIXME: switch to prod as default
 exports.baseApiUrl = "https://rest.api.test.boilingdata.com";
 exports.dataSetsPath = "/data-sets";
@@ -50,21 +46,9 @@ function getApiKey() {
     return Promise.resolve(exports.apiKey); // FIXME: Get API key..
 }
 exports.getApiKey = getApiKey;
-async function getReqHeaders(token, reqOptions) {
+async function getReqHeaders(token) {
     const apikey = await getApiKey();
-    if (reqOptions?.tokenLifetime) {
-        const periodInMs = (0, ms_1.default)(reqOptions.tokenLifetime);
-        if (!periodInMs || periodInMs < 60000) {
-            throw new Error("Invalid time period, please see https://github.com/vercel/ms for the format of the period");
-        }
-    }
-    const tokenPeriod = reqOptions?.tokenLifetime ? { "x-token-lifetime": reqOptions.tokenLifetime } : undefined;
-    const vendingWindow = reqOptions?.vendingSchedule
-        ? { "x-token-vending-window": reqOptions.vendingSchedule }
-        : undefined;
     return {
-        ...tokenPeriod,
-        ...vendingWindow,
         Authorization: token,
         "x-api-key": apikey,
         "Content-Type": "application/json",

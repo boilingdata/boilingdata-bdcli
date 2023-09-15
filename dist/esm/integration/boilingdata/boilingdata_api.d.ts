@@ -17,10 +17,6 @@ export declare const poolData: {
 export declare const Pool: id.CognitoUserPool;
 export declare const apiKey = "Ak7itOEG1N1I7XpFfmYO97NWHRZwEYDmYBL4y0lb";
 export declare function getApiKey(): Promise<string>;
-export interface IGetReqHeadersOptions {
-    tokenLifetime?: string;
-    vendingSchedule?: string;
-}
-export declare function getReqHeaders(token: string, reqOptions?: IGetReqHeadersOptions): Promise<{
+export declare function getReqHeaders(token: string): Promise<{
     [k: string]: string;
 }>;
