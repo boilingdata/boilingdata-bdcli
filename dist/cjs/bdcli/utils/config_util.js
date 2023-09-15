@@ -31,11 +31,13 @@ const fs = __importStar(require("fs/promises"));
 const yaml = __importStar(require("js-yaml"));
 const os = __importStar(require("os"));
 const deepmerge_1 = __importDefault(require("deepmerge"));
+const auth_util_js_1 = require("./auth_util.js");
 const configFile = `${os.homedir()}/.bdcli.yaml`;
+let currentCreds;
 async function hasValidConfig() {
     try {
         const config = yaml.load(await fs.readFile(configFile, "utf8"));
-        if (config["credentials"] && config["credentials"]["email"] && config["credentials"]["password"])
+        if (config["credentials"] && config["credentials"]["email"])
             return true;
         return false;
     }
@@ -65,11 +67,14 @@ async function getConfig() {
 }
 exports.getConfig = getConfig;
 async function getCredentials(logger) {
+    if (currentCreds)
+        return currentCreds; // cached in mem, so you can call this method multiple times
     const { credentials } = await getConfig();
-    if (!credentials.email || !credentials.password)
+    if (!credentials.email)
         throw new Error("Could not get credentials");
-    const resp = { ...credentials, email: credentials.email, password: credentials.password }; // To make TS happy..
-    logger?.debug({ ...resp, password: resp?.password ? "**" : undefined });
-    return resp;
+    credentials.password = credentials.password ?? (await (0, auth_util_js_1.getPw)("Please enter password"));
+    currentCreds = { ...credentials, email: credentials.email, password: credentials.password }; // To make TS happy..
+    logger?.debug({ ...currentCreds, password: currentCreds?.password ? "**" : undefined });
+    return currentCreds;
 }
 exports.getCredentials = getCredentials;

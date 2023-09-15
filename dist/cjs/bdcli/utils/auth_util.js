@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getIdToken = exports.setupMfa = exports.recoverPassword = exports.updatePassword = exports.registerToBoilingData = void 0;
+exports.getIdToken = exports.setupMfa = exports.recoverPassword = exports.updatePassword = exports.registerToBoilingData = exports.getPw = void 0;
 const id = __importStar(require("amazon-cognito-identity-js"));
 const config_util_js_1 = require("./config_util.js");
 const boilingdata_api_js_1 = require("../../integration/boilingdata/boilingdata_api.js");
@@ -36,6 +36,18 @@ const qrcode_1 = __importDefault(require("qrcode"));
 const spinner_util_js_1 = require("./spinner_util.js");
 const userPoolId = "eu-west-1_0GLV9KO1p"; // eu-west-1 preview
 const clientId = "6timr8knllr4frovfvq8r2o6oo"; // eu-west-1 preview
+async function getPw(message) {
+    (0, spinner_util_js_1.stopSpinner)();
+    const inp = await (0, prompts_1.default)({
+        type: "password",
+        name: "pw",
+        message,
+        validate: (pw) => (`${pw}`.length < 12 ? `Must be at least 12 characters long with special characters` : true),
+    });
+    (0, spinner_util_js_1.resumeSpinner)();
+    return inp["pw"];
+}
+exports.getPw = getPw;
 async function getCognitoUser(_logger, Username) {
     if (!Username) {
         const creds = await (0, config_util_js_1.getCredentials)();
@@ -78,6 +90,8 @@ async function registerToBoilingData(optsRegion, optsEnvironment, optsEmail, opt
     email = optsEmail ?? email; // option overrides
     password = optsPassword ?? password; // option overrides
     environment = environment ?? optsEnvironment;
+    if (!password)
+        password = await getPw("Please enter password");
     logger?.debug({ region, email, environment });
     const attributeList = [];
     const dataEmail = { Name: "email", Value: email };
@@ -103,18 +117,12 @@ async function updatePassword(_logger) {
     const cognitoUser = await getCognitoUserSession();
     const oldPassword = (await (0, config_util_js_1.getCredentials)()).password;
     (0, spinner_util_js_1.stopSpinner)();
-    const inp = await (0, prompts_1.default)({
-        type: "password",
-        name: "pw",
-        message: "Please enter new password",
-        validate: (pw) => (`${pw}`.length < 12 ? `Must be at least 12 characters long with special characters` : true),
-    });
-    const newPassword = inp["pw"];
+    const newPassword = await getPw("Please enter new password");
     if (!newPassword || newPassword?.length < 12)
         throw new Error("Invalid new password");
     (0, spinner_util_js_1.resumeSpinner)();
     return new Promise((resolve, reject) => {
-        cognitoUser.changePassword(oldPassword, inp["pw"], (err, data) => {
+        cognitoUser.changePassword(oldPassword, newPassword, (err, data) => {
             if (err)
                 reject(err);
             resolve(data);
@@ -152,13 +160,7 @@ async function recoverPassword(logger) {
                 if (!verificationCode || verificationCode?.length < 6) {
                     throw new Error("Invalid recovery code, must be at least 6 chars");
                 }
-                const inp2 = await (0, prompts_1.default)({
-                    type: "password",
-                    name: "pw",
-                    message: "Please enter new password",
-                    validate: (pw) => `${pw}`.length < 12 ? `Must be at least 12 characters long with special characters` : true,
-                });
-                const newPassword = inp2["pw"];
+                const newPassword = await getPw("Please enter new password");
                 if (!newPassword || newPassword.length < 12)
                     throw new Error("Invalid new password");
                 (0, spinner_util_js_1.resumeSpinner)();
@@ -297,14 +299,9 @@ async function getIdToken(logger) {
                 logger?.debug({ userAttributes, requiredAttributes });
                 delete userAttributes.email_verified;
                 (0, spinner_util_js_1.stopSpinner)();
-                const inp = await (0, prompts_1.default)({
-                    type: "password",
-                    name: "pw",
-                    message: "Please enter new password",
-                    validate: (pw) => `${pw}`.length < 12 ? `Must be at least 12 characters long with special characters` : true,
-                });
+                const newPassword = await getPw("Please enter new password");
                 (0, spinner_util_js_1.resumeSpinner)();
-                cognitoUser.completeNewPasswordChallenge(inp["pw"], userAttributes, this);
+                cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, this);
             },
             onSuccess: async (session) => {
                 const idToken = session.getIdToken().getJwtToken();

@@ -17,9 +17,14 @@ async function show(options, _command) {
             spinnerSuccess();
             return;
         }
-        if (await hasValidConfig())
+        if (await hasValidConfig()) {
+            if (options.password) {
+                await updateConfig({ credentials: { password: options.password } });
+                return spinnerSuccess("Password added to the config");
+            }
             return spinnerSuccess("Valid config file already exists");
-        if (!options.email) {
+        }
+        if (!options.email && !options.validate) {
             const inp = await prompts({
                 type: "text",
                 name: "email",
@@ -28,7 +33,7 @@ async function show(options, _command) {
             });
             options.email = inp["email"];
         }
-        if (!options.password) {
+        if (!options.password && !options.noPassword && !options.validate) {
             const inp = await prompts({
                 type: "password",
                 name: "pw",
@@ -40,8 +45,8 @@ async function show(options, _command) {
         logger.debug({ options: { ...options, password: options.password ? "**" : undefined } });
         updateSpinnerText("Creating ~/.bdclirc");
         const { email, password, region } = options;
-        if (!email || !password)
-            return spinnerError("No email or password found");
+        if (!email)
+            return spinnerError("No email found");
         await updateConfig({ credentials: { email, password, region } });
         spinnerSuccess();
     }
@@ -50,9 +55,11 @@ async function show(options, _command) {
     }
 }
 const program = new cmd.Command("bdcli account create-config")
-    .addOption(new cmd.Option("--email <email>", "email address that works"))
+    .addOption(new cmd.Option("--validate", "validate current config"))
+    .addOption(new cmd.Option("--email <email>", "email address that works").conflicts("--validate"))
     .addOption(new cmd.Option("--password <password>", "suitably complex password"))
-    .addOption(new cmd.Option("--clear", "delete all session tokens"))
+    .addOption(new cmd.Option("--no-password", "suitably complex password").conflicts("--password"))
+    .addOption(new cmd.Option("--clear", "delete all session tokens in config"))
     .addOption(new cmd.Option("--region <awsRegion>", "Sign-in AWS region").default("eu-west-1"))
     .action(async (options, command) => await show(options, command));
 addGlobalOptions(program, logger);

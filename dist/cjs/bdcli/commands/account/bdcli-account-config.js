@@ -45,9 +45,14 @@ async function show(options, _command) {
             (0, spinner_util_js_1.spinnerSuccess)();
             return;
         }
-        if (await (0, config_util_js_1.hasValidConfig)())
+        if (await (0, config_util_js_1.hasValidConfig)()) {
+            if (options.password) {
+                await (0, config_util_js_1.updateConfig)({ credentials: { password: options.password } });
+                return (0, spinner_util_js_1.spinnerSuccess)("Password added to the config");
+            }
             return (0, spinner_util_js_1.spinnerSuccess)("Valid config file already exists");
-        if (!options.email) {
+        }
+        if (!options.email && !options.validate) {
             const inp = await (0, prompts_1.default)({
                 type: "text",
                 name: "email",
@@ -56,7 +61,7 @@ async function show(options, _command) {
             });
             options.email = inp["email"];
         }
-        if (!options.password) {
+        if (!options.password && !options.noPassword && !options.validate) {
             const inp = await (0, prompts_1.default)({
                 type: "password",
                 name: "pw",
@@ -68,8 +73,8 @@ async function show(options, _command) {
         logger.debug({ options: { ...options, password: options.password ? "**" : undefined } });
         (0, spinner_util_js_1.updateSpinnerText)("Creating ~/.bdclirc");
         const { email, password, region } = options;
-        if (!email || !password)
-            return (0, spinner_util_js_1.spinnerError)("No email or password found");
+        if (!email)
+            return (0, spinner_util_js_1.spinnerError)("No email found");
         await (0, config_util_js_1.updateConfig)({ credentials: { email, password, region } });
         (0, spinner_util_js_1.spinnerSuccess)();
     }
@@ -78,9 +83,11 @@ async function show(options, _command) {
     }
 }
 const program = new cmd.Command("bdcli account create-config")
-    .addOption(new cmd.Option("--email <email>", "email address that works"))
+    .addOption(new cmd.Option("--validate", "validate current config"))
+    .addOption(new cmd.Option("--email <email>", "email address that works").conflicts("--validate"))
     .addOption(new cmd.Option("--password <password>", "suitably complex password"))
-    .addOption(new cmd.Option("--clear", "delete all session tokens"))
+    .addOption(new cmd.Option("--no-password", "suitably complex password").conflicts("--password"))
+    .addOption(new cmd.Option("--clear", "delete all session tokens in config"))
     .addOption(new cmd.Option("--region <awsRegion>", "Sign-in AWS region").default("eu-west-1"))
     .action(async (options, command) => await show(options, command));
 (0, options_util_js_1.addGlobalOptions)(program, logger);
