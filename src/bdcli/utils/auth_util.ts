@@ -6,9 +6,22 @@ import { ILogger } from "./logger_util.js";
 import prompts from "prompts";
 import qrcode from "qrcode";
 import { resumeSpinner, spinnerInfo, stopSpinner } from "./spinner_util.js";
+import ms from "ms";
 
 const userPoolId = "eu-west-1_0GLV9KO1p"; // eu-west-1 preview
 const clientId = "6timr8knllr4frovfvq8r2o6oo"; // eu-west-1 preview
+
+export async function validateTokenLifetime(lifetime: string, logger?: ILogger): Promise<void> {
+  const lifetimeInMs = ms(`${lifetime}`);
+  logger?.debug({ lifetimeInMs });
+  if (!lifetimeInMs || lifetimeInMs < ms("30min") || lifetimeInMs > ms("24h")) {
+    throw new Error(
+      "Invalid token expiration time span, " +
+        "please see https://github.com/vercel/ms for the format of the period. " +
+        "Lifetime must be between 30min - 24h",
+    );
+  }
+}
 
 export async function getEmail(): Promise<string> {
   stopSpinner();

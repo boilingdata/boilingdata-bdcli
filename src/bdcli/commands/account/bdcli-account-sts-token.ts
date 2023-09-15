@@ -2,11 +2,10 @@ import * as cmd from "commander";
 import { getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
-import { getIdToken } from "../../utils/auth_util.js";
+import { getIdToken, validateTokenLifetime } from "../../utils/auth_util.js";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
 import * as fs from "fs/promises";
 import path from "path";
-import ms from "ms";
 import { updateBoilingToken } from "../../utils/yaml_utils.js";
 
 const logger = getLogger("bdcli-account-token");
@@ -29,17 +28,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
   try {
     logger.debug({ options });
 
-    if (options.lifetime) {
-      const lifetimeInMs = ms(`${options.lifetime}`);
-      logger.debug({ lifetimeInMs });
-      if (!lifetimeInMs || lifetimeInMs < ms("30min") || lifetimeInMs > ms("24h")) {
-        throw new Error(
-          "Invalid token expiration time span, " +
-            "please see https://github.com/vercel/ms for the format of the period. " +
-            "Lifetime must be between 30min - 24h",
-        );
-      }
-    }
+    if (options.lifetime) await validateTokenLifetime(options.lifetime);
 
     updateSpinnerText("Authenticating");
     const { idToken: token, cached: idCached, region } = await getIdToken(logger);

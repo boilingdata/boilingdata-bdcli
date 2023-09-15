@@ -2,8 +2,7 @@ import * as cmd from "commander";
 import { getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
-import { getIdToken } from "../../utils/auth_util.js";
-import ms from "ms";
+import { getIdToken, validateTokenLifetime } from "../../utils/auth_util.js";
 import cron from "cron-validate";
 import { parseCronExpression } from "cron-schedule";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
@@ -14,15 +13,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
   try {
     logger.debug({ options });
 
-    if (options.lifetime) {
-      const lifetimeInMs = ms(`${options.lifetime}`);
-      logger.debug({ lifetimeInMs });
-      if (!lifetimeInMs || lifetimeInMs < 60000) {
-        throw new Error(
-          "Invalid token expiration time span, please see https://github.com/vercel/ms for the format of the period",
-        );
-      }
-    }
+    if (options.lifetime) await validateTokenLifetime(options.lifetime);
 
     if (options.vendingSchedule) {
       const cronResult = (<(cronString: string, inputOptions?: any) => any>(<unknown>cron))(options.vendingSchedule, {
