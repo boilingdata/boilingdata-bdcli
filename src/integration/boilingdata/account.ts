@@ -212,23 +212,25 @@ export class BDAccount {
     // channel("undici:request:headers").subscribe(console.log);
     const headers = await getReqHeaders(this.cognitoIdToken); // , { tokenLifetime, vendingSchedule, shareId });
     let method = "GET";
-    let reqBody: string | undefined = undefined;
-    if (tokenLifetime || shareId) {
+    let body: string | undefined = undefined;
+    if (shareId) {
       method = "POST";
-      reqBody = JSON.stringify({ tokenLifetime, shareId });
+      body = JSON.stringify({ tokenLifetime, shareId });
     }
-    this.logger.debug({ method, tokenUrl, headers, body: reqBody });
-    const res = await fetch(tokenUrl, { method, headers, body: reqBody });
-    const body = await res.json();
-    this.logger.debug({ getStsToken: { body } });
-    if (!body.ResponseCode || !body.ResponseText) {
+    this.logger.debug({ method, tokenUrl, headers, body });
+    const res = await fetch(tokenUrl, { method, headers, body });
+    const resBody = await res.json();
+    this.logger.debug({ getStsToken: { body: resBody } });
+    if (!resBody.ResponseCode || !resBody.ResponseText) {
       throw new Error("Malformed response from BD API");
     }
-    if (!body.bdStsToken) {
+    if (!resBody.bdStsToken) {
       throw new Error("Missing bdStsToken in BD API Response");
     }
     if (shareId) {
-      this.sharedTokens.set(shareId, <string>body.bdStsToken);
+      this.sharedTokens.set(shareId, resBody.bdStsToken);
+    } else {
+      this.bdStsToken = resBody.bdStsToken;
     }
     this.selectAndDecodeToken(shareId);
     this.dumpSelectedToken();
