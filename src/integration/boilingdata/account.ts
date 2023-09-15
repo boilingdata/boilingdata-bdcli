@@ -51,6 +51,7 @@ export class BDAccount {
   }
 
   private serialiseTokensMap(): string[] {
+    // TODO: Store all response elements, so that token freshness can be locally checked
     const entries = [...this.sharedTokens.entries()];
     return entries.map(([id, token]) => `${id}:${token}`);
   }
@@ -228,7 +229,7 @@ export class BDAccount {
       throw new Error("Missing bdStsToken in BD API Response");
     }
     if (shareId) {
-      this.sharedTokens.set(shareId, resBody.bdStsToken);
+      this.sharedTokens.set(shareId, resBody);
     } else {
       this.bdStsToken = resBody.bdStsToken;
     }
@@ -242,7 +243,7 @@ export class BDAccount {
       this.logger.debug({ cachedBdStstToken: true });
       const credentials = shareId ? { sharedTokens: this.serialiseTokensMap() } : { bdStsToken: this.selectedToken };
       await updateConfig({ credentials }); // local cache
-      return { bdStsToken: this.selectedToken, cached: false };
+      return { ...resBody, bdStsToken: this.selectedToken, cached: false };
     }
     throw new Error(`Failed to get fresh token from BD API (with share id ${shareId})`);
   }

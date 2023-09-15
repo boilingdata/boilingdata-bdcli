@@ -67,6 +67,7 @@ export async function updateConfig(updates: IConfig, logger?: ILogger): Promise<
     logger?.debug({ status: "Updating config file to use profiles" });
     contents = yaml.dump(deepmerge({ default: config }, { [profile]: { ...(await getConfig()), ...updates } }));
   } else {
+    if (!Object.keys(config).includes(profile)) throw new Error(`Profile "${profile}" does not exist`);
     contents = yaml.dump(deepmerge(config, { [profile]: { ...(await getConfig()), ...updates } }));
   }
   await fs.writeFile(configFile, contents, {

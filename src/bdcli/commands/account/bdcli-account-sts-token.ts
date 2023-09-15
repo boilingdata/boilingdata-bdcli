@@ -38,7 +38,11 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     updateSpinnerText("Getting BoilingData STS token");
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdAccount = new BDAccount({ logger, authToken: token });
-    const { bdStsToken, cached: stsCached } = await bdAccount.getToken(options.lifetime ?? "1h", options.shareId);
+    const {
+      bdStsToken,
+      cached: stsCached,
+      ...rest
+    } = await bdAccount.getToken(options.lifetime ?? "1h", options.shareId);
     updateSpinnerText(`Getting BoilingData STS token: ${stsCached ? "cached" : "success"}`);
     spinnerSuccess();
 
@@ -77,7 +81,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     }
 
     if (!options.duckdbrc && !options.dbtprofiles && !options.duckdbMacro) {
-      console.log(JSON.stringify({ bdStsToken }));
+      console.log(JSON.stringify({ bdStsToken, ...rest }));
     }
   } catch (err: any) {
     spinnerError(err?.message);

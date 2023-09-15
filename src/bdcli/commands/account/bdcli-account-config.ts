@@ -23,7 +23,13 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     if (options.clear) {
       updateSpinnerText(`Deleting session tokens from ${BDCONF}`);
       await updateConfig({
-        credentials: { bdStsToken: undefined, idToken: undefined, accessToken: undefined, refreshToken: undefined },
+        credentials: {
+          bdStsToken: undefined,
+          idToken: undefined,
+          accessToken: undefined,
+          refreshToken: undefined,
+          sharedTokens: undefined,
+        },
       });
       spinnerSuccess();
       return;
