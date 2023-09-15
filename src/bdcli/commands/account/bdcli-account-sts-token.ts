@@ -38,7 +38,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     updateSpinnerText("Getting BoilingData STS token");
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdAccount = new BDAccount({ logger, authToken: token });
-    const { bdStsToken, cached: stsCached } = await bdAccount.getToken(options.lifetime ?? "1h", options.vendingWindow);
+    const { bdStsToken, cached: stsCached } = await bdAccount.getToken(options.lifetime ?? "1h", options.shareId);
     updateSpinnerText(`Getting BoilingData STS token: ${stsCached ? "cached" : "success"}`);
     spinnerSuccess();
 
@@ -87,7 +87,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
 const program = new cmd.Command("bdcli account sts-token")
   .addOption(
     new cmd.Option(
-      "--shared-token-id",
+      "--share-id <id>",
       "Another user's shared acces token id for you (see token-list for the ids).\n" +
         "\tOptional, the default is token that binds to your AWS IAM Role access.",
     ),
@@ -112,13 +112,6 @@ const program = new cmd.Command("bdcli account sts-token")
     new cmd.Option(
       "--duckdbrc",
       "Upsert DuckDB boilingdata() temporary TABLE MACRO " + "with the auth token in place into ~/.duckdbrc file",
-    ),
-  )
-  .addOption(
-    new cmd.Option(
-      "--dbtprofiles <profilesFilePath>",
-      "Upsert Boiling credentials into DBT profiles YAML configuration file. " +
-        "\n\tExpects 'module: boilingdata' entry and upserts its config.token value",
     ),
   )
   .addOption(
