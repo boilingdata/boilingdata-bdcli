@@ -54,14 +54,19 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
 
 const program = new cmd.Command("bdcli account sts-token-share")
   .addOption(new cmd.Option("--users <boilingUsers>", "Comma separated list of Boiling users").makeOptionMandatory())
+  .addOption(new cmd.Option("--name <shareName>", "Friendly name for the share").makeOptionMandatory())
+  .addOption(
+    new cmd.Option(
+      "--sql <sql>",
+      "Target user will have access to a named view of the results of this SQL.",
+    ).makeOptionMandatory(),
+  )
   .addOption(
     new cmd.Option(
       "--lifetime <lifetime>",
       "Token expiration lifetime, in string format. Defaults to '1h' (see https://github.com/vercel/ms)",
     ),
   )
-  .addOption(new cmd.Option("--sql <sql>", "SQL query that filters the data visible on the share"))
-  .addOption(new cmd.Option("--name <name>", "Human readable name of the share"))
   .addOption(
     new cmd.Option(
       "--vending-schedule <cronExpression>",
