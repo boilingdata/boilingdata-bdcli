@@ -1,3 +1,4 @@
+import { isArray } from "lodash";
 import { getConfigCredentials, updateConfig } from "../../bdcli/utils/config_util.js";
 import { ILogger } from "../../bdcli/utils/logger_util.js";
 import { accountUrl, getReqHeaders, tokenShareUrl, tokenUrl } from "./boilingdata_api.js";
@@ -17,7 +18,8 @@ interface IAPIAccountDetails {
 
 export class BDAccount {
   private cognitoIdToken: string;
-  private bdStsToken: string | undefined;
+  private bdStsToken: string | string[] | undefined;
+  private selectedToken: string | undefined;
   private decodedToken!: jwt.JwtPayload | null;
   private logger: ILogger;
   private accountDetails!: IAPIAccountDetails;
@@ -73,15 +75,27 @@ export class BDAccount {
     return this.accountDetails.AccountExtId;
   }
 
-  private decodeToken(): void {
+  private selectAndDecodeToken(shareId?: string): void {
     if (!this.bdStsToken) throw new Error("No BD STS token");
-    this.decodedToken = jwt.decode(this.bdStsToken, { complete: true });
+    if (isArray(this.bdStsToken) && !shareId) throw new Error("Please specify share id");
+    if (isArray(this.bdStsToken)) {
+      this.bdStsToken.map(token => {
+        const [id, bdStsToken] = token.split(":");
+        if (bdStsToken && id == shareId) {
+          this.decodedToken = jwt.decode(bdStsToken, { complete: true });
+          this.selectedToken = bdStsToken;
+        }
+      });
+    } else {
+      this.decodedToken = jwt.decode(this.bdStsToken, { complete: true });
+      this.selectedToken = this.bdStsToken;
+    }
+    if (!this.decodedToken || !this.selectedToken) throw new Error(`Could not find token (share id ${shareId})`);
   }
 
-  private dumpToken(): void {
-    if (!this.bdStsToken) throw new Error("No BD STS token");
-    this.decodeToken();
-    this.logger.debug({ bdStsToken: this.bdStsToken, decodedToken: this.decodedToken });
+  private dumpSelectedToken(): void {
+    if (!this.selectedToken) throw new Error("No selected BD STS token");
+    this.logger.debug({ bdStsToken: this.selectedToken, decodedToken: this.decodedToken });
   }
 
   private checkExp(exp: number): boolean {
@@ -157,19 +171,29 @@ export class BDAccount {
 
   public async getToken(
     tokenLifetime: string,
+    shareId?: string,
     vendingSchedule?: string,
   ): Promise<{ bdStsToken: string; cached: boolean }> {
-    if (this.bdStsToken) return { bdStsToken: this.bdStsToken, cached: true };
+    if (this.bdStsToken && !Array.isArray(this.bdStsToken) && !shareId) {
+      return { bdStsToken: this.bdStsToken, cached: true };
+    }
     this.bdStsToken = (await getConfigCredentials()).bdStsToken;
+    if (isArray(this.bdStsToken) && !shareId) throw new Error("Please specify token share id");
     if (this.bdStsToken) {
       try {
-        this.decodeToken();
-        this.dumpToken();
-        if (!this.decodedToken) throw new Error("Unable to decode token");
+        this.selectAndDecodeToken(shareId);
+        this.dumpSelectedToken();
+        if (!this.decodedToken || !this.selectedToken) throw new Error("Unable to select/decode token");
+        if (shareId) {
+          const aud = this.decodedToken["payload"].aud; // audience
+          if (aud.length < 3 || aud[2].length < 6 || aud[2] != shareId) {
+            throw new Error("Cached token not matching with shareId");
+          }
+        }
         const exp = this.decodedToken["payload"].exp;
         if (exp && this.checkExp(exp)) {
           this.logger.debug({ cachedBdStstToken: true });
-          return { bdStsToken: this.bdStsToken, cached: true };
+          return { bdStsToken: this.selectedToken, cached: true };
         }
       } catch (err) {
         this.logger.debug({ bdStsTokenError: err });
@@ -192,15 +216,17 @@ export class BDAccount {
       throw new Error("Missing bdStsToken in BD API Response");
     }
     this.bdStsToken = <string>body.bdStsToken;
-    this.decodeToken();
-    this.dumpToken();
-    if (!this.decodedToken) throw new Error("Unable to decode token");
+    this.selectAndDecodeToken(shareId);
+    this.dumpSelectedToken();
+    if (!this.decodedToken || !this.selectedToken) {
+      throw new Error("Unable to select/decode token after fetch from API");
+    }
     const exp = this.decodedToken["payload"].exp;
     if (exp && this.checkExp(exp)) {
       this.logger.debug({ cachedBdStstToken: true });
       await updateConfig({ credentials: { bdStsToken: this.bdStsToken } }); // local cache
       return { bdStsToken: this.bdStsToken, cached: false };
     }
-    throw new Error("Failed to get fresh token from BD API");
+    throw new Error(`Failed to get fresh token from BD API (with share id ${shareId})`);
   }
 }

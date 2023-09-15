@@ -16,7 +16,7 @@ export interface ICredentials {
   idToken?: string;
   accessToken?: string;
   refreshToken?: string;
-  bdStsToken?: string;
+  bdStsToken?: string | string[];
   region?: string;
   mfa?: boolean;
   environment?: string;
