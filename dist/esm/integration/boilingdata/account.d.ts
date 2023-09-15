@@ -23,7 +23,7 @@ export declare class BDAccount {
         fromList: string[];
     }>;
     shareToken(tokenLifetime: string, vendingSchedule: string | undefined, users: string[], shareName?: string, shareSql?: string): Promise<void>;
-    unshareToken(users: string[]): Promise<void>;
+    unshareToken(shareId: string): Promise<void>;
     getToken(tokenLifetime: string, vendingSchedule?: string): Promise<{
         bdStsToken: string;
         cached: boolean;

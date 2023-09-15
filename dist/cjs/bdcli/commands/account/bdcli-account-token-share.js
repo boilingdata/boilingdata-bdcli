@@ -71,9 +71,9 @@ async function show(options, _command) {
 }
 const program = new cmd.Command("bdcli account sts-token-share")
     .addOption(new cmd.Option("--users <boilingUsers>", "Comma separated list of Boiling users").makeOptionMandatory())
+    .addOption(new cmd.Option("--name <shareName>", "Friendly name for the share").makeOptionMandatory())
+    .addOption(new cmd.Option("--sql <sql>", "Target user will have access to a named view of the results of this SQL.").makeOptionMandatory())
     .addOption(new cmd.Option("--lifetime <lifetime>", "Token expiration lifetime, in string format. Defaults to '1h' (see https://github.com/vercel/ms)"))
-    .addOption(new cmd.Option("--sql <sql>", "SQL query that filters the data visible on the share"))
-    .addOption(new cmd.Option("--name <name>", "Human readable name of the share"))
     .addOption(new cmd.Option("--vending-schedule <cronExpression>", "Cron start times, when the shared token can be vended. Defaults to '* * * * * *' (at any time)\n" +
     "\tPleases see https://www.npmjs.com/package/cron-schedule as format for the cron expression.\n" +
     "\tGiven as a cron expression with the accuracy of the <lifetime> parameter.\n" +

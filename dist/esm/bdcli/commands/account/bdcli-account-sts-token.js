@@ -72,6 +72,8 @@ async function show(options, _command) {
     }
 }
 const program = new cmd.Command("bdcli account sts-token")
+    .addOption(new cmd.Option("--shared-token-id", "Another user's shared acces token id for you (see token-list for the ids).\n" +
+    "\tOptional, the default is token that binds to your AWS IAM Role access."))
     .addOption(new cmd.Option("--duckdb-macro", "Output copy-pasteable DuckDB boilingdata() temporary TABLE MACRO " +
     "with the auth token in place.\n\tMacro usage example for full query pushdown to Boiling cloud:\n" +
     "\t\"SELECT * FROM boilingdata('SELECT * FROM " +

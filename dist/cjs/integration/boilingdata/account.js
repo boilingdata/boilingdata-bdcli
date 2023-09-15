@@ -139,11 +139,11 @@ class BDAccount {
             return;
         throw new Error("Failed to share token");
     }
-    async unshareToken(users) {
+    async unshareToken(shareId) {
         // channel("undici:request:create").subscribe(console.log);
         // channel("undici:request:headers").subscribe(console.log);
         const headers = await (0, boilingdata_api_js_1.getReqHeaders)(this.cognitoIdToken);
-        const putBody = JSON.stringify({ users });
+        const putBody = JSON.stringify({ shareId });
         this.logger.debug({ tokenShareUrl: boilingdata_api_js_1.tokenShareUrl, headers, body: putBody });
         const res = await fetch(boilingdata_api_js_1.tokenShareUrl, { method: "DELETE", headers, body: putBody });
         const resBody = await res.json();
