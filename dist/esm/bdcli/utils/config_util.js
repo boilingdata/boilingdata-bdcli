@@ -48,6 +48,8 @@ export async function updateConfig(updates, logger) {
         contents = yaml.dump(deepmerge({ default: config }, { [profile]: { ...(await getConfig()), ...updates } }));
     }
     else {
+        if (!Object.keys(config).includes(profile))
+            throw new Error(`Profile "${profile}" does not exist`);
         contents = yaml.dump(deepmerge(config, { [profile]: { ...(await getConfig()), ...updates } }));
     }
     await fs.writeFile(configFile, contents, {

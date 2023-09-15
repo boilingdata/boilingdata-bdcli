@@ -47,7 +47,13 @@ async function show(options, _command) {
         if (options.clear) {
             (0, spinner_util_js_1.updateSpinnerText)(`Deleting session tokens from ${config_util_js_1.BDCONF}`);
             await (0, config_util_js_1.updateConfig)({
-                credentials: { bdStsToken: undefined, idToken: undefined, accessToken: undefined, refreshToken: undefined },
+                credentials: {
+                    bdStsToken: undefined,
+                    idToken: undefined,
+                    accessToken: undefined,
+                    refreshToken: undefined,
+                    sharedTokens: undefined,
+                },
             });
             (0, spinner_util_js_1.spinnerSuccess)();
             return;

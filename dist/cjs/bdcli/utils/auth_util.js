@@ -40,10 +40,10 @@ const clientId = "6timr8knllr4frovfvq8r2o6oo"; // eu-west-1 preview
 async function validateTokenLifetime(lifetime, logger) {
     const lifetimeInMs = (0, ms_1.default)(`${lifetime}`);
     logger?.debug({ lifetimeInMs });
-    if (!lifetimeInMs || lifetimeInMs < (0, ms_1.default)("30min") || lifetimeInMs > (0, ms_1.default)("24h")) {
+    if (!lifetimeInMs || lifetimeInMs < (0, ms_1.default)("10min") || lifetimeInMs > (0, ms_1.default)("24h")) {
         throw new Error("Invalid token expiration time span, " +
             "please see https://github.com/vercel/ms for the format of the period. " +
-            "Lifetime must be between 30min - 24h");
+            "Lifetime must be between 10min - 24h");
     }
 }
 exports.validateTokenLifetime = validateTokenLifetime;
