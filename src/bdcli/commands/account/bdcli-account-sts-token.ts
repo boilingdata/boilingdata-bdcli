@@ -32,9 +32,11 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     if (options.lifetime) {
       const lifetimeInMs = ms(`${options.lifetime}`);
       logger.debug({ lifetimeInMs });
-      if (!lifetimeInMs || lifetimeInMs < 60000) {
+      if (!lifetimeInMs || lifetimeInMs < ms("30min") || lifetimeInMs > ms("24h")) {
         throw new Error(
-          "Invalid token expiration time span, please see https://github.com/vercel/ms for the format of the period",
+          "Invalid token expiration time span, " +
+            "please see https://github.com/vercel/ms for the format of the period. " +
+            "Lifetime must be between 30min - 24h",
         );
       }
     }
