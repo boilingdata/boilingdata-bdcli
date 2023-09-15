@@ -34,7 +34,7 @@
   "private": false,
   "standard-version": {
     "scripts": {
-      "postbump": "yarn build && git add dist/"
+      "postbump": "yarn build && git add -f dist/"
     }
   },
   "scripts": {

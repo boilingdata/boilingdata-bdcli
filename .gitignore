@@ -1,6 +1,7 @@
 coverage/
 src/VERSION.ts
 node_modules/
+dist/
 *.log
 datasource_config.yaml
 bdcli
