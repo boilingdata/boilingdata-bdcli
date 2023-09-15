@@ -114,7 +114,11 @@ dataSources:
         urlPrefix: s3://logs-bucket/s3_access/
 ```
 
-## Code Architecture & Development
+## Token sharing
+
+Please see [TOKEN_SHARING.md](TOKEN_SHARING.md) for more details and background of this feature.
+
+# Code Architecture & Development
 
 - `src/integration/` contains integration between AWS and BoilingData. Code that is agnostic to command line args handling. Keep the code decoupled with clear interfaces so that it could be moved as a separate node module (SDK) in the future if needed.
 - `src/bdcli/` contains all the client commands in their own directories. Keep the code lightweight and focus on command line args handling and wiring with utils and core functionality. Goal is to be able to create PRs that add new functionality by adding new files without having to modify other commmands.

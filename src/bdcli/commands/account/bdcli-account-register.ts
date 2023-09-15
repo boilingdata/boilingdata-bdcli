@@ -35,6 +35,7 @@ const program = new cmd.Command("bdcli account register")
   .addOption(new cmd.Option("--environment <environment>", "'production' or 'preview' (default)").default("preview"))
   .action(async (options, command) => await show(options, command));
 
-addGlobalOptions(program, logger);
-
-(async () => await program.parseAsync(process.argv))();
+(async () => {
+  await addGlobalOptions(program, logger);
+  await program.parseAsync(process.argv);
+})();

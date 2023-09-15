@@ -1,6 +1,6 @@
-import { getCredentials, updateConfig } from "../../bdcli/utils/config_util.js";
+import { getConfigCredentials, updateConfig } from "../../bdcli/utils/config_util.js";
 import { ILogger } from "../../bdcli/utils/logger_util.js";
-import { accountUrl, getReqHeaders, tokenUrl } from "./boilingdata_api.js";
+import { accountUrl, getReqHeaders, tokenShareUrl, tokenUrl } from "./boilingdata_api.js";
 import * as jwt from "jsonwebtoken";
 
 // import { channel } from "node:diagnostics_channel";
@@ -54,7 +54,7 @@ export class BDAccount {
     const body = await res.json();
     this.logger.debug({ getAccountDetails: { body } });
     if (!body.ResponseCode || !body.ResponseText) {
-      throw new Error("Malformed response from BD API Response");
+      throw new Error("Malformed response from BD API");
     }
     if (!body.AccountDetails?.AccountAwsAccount || !body.AccountDetails?.AccountExtId) {
       throw new Error("Missing AccountDetails from BD API Response");
@@ -100,9 +100,67 @@ export class BDAccount {
     return true;
   }
 
-  public async getStsToken(): Promise<{ bdStsToken: string; cached: boolean }> {
+  public async listSharedTokens(): Promise<{ toList: string[]; fromList: string[] }> {
+    // channel("undici:request:create").subscribe(console.log);
+    // channel("undici:request:headers").subscribe(console.log);
+    const headers = await getReqHeaders(this.cognitoIdToken);
+    this.logger.debug({ tokenShareUrl, headers });
+    const res = await fetch(tokenShareUrl, { method: "GET", headers });
+    const body = await res.json();
+    this.logger.debug({ listTokens: { body } });
+    if (!body.ResponseCode || !body.ResponseText) {
+      throw new Error("Malformed response from BD API");
+    }
+    if (Array.isArray(body.toList) && Array.isArray(body.fromList)) {
+      return { toList: body.toList, fromList: body.fromList };
+    }
+    throw new Error("Failed to list tokens shared for you");
+  }
+
+  public async shareToken(
+    tokenLifetime: string,
+    vendingSchedule: string = "* * * * * *",
+    users: string[],
+    shareName: string = "",
+    shareSql: string = "",
+  ): Promise<void> {
+    // channel("undici:request:create").subscribe(console.log);
+    // channel("undici:request:headers").subscribe(console.log);
+    const headers = await getReqHeaders(this.cognitoIdToken);
+    const putBody = JSON.stringify({ users, vendingSchedule, tokenLifetime, shareName, shareSql });
+    this.logger.debug({ tokenShareUrl, headers, body: putBody });
+    const res = await fetch(tokenShareUrl, { method: "PUT", headers, body: putBody });
+    const resBody = await res.json();
+    this.logger.debug({ shareToken: { body: resBody } });
+    if (!resBody.ResponseCode || !resBody.ResponseText) {
+      throw new Error("Malformed response from BD API");
+    }
+    if (resBody.ResponseCode == "00" && resBody.ResponseText == "OK") return;
+    throw new Error("Failed to share token");
+  }
+
+  public async unshareToken(users: string[]): Promise<void> {
+    // channel("undici:request:create").subscribe(console.log);
+    // channel("undici:request:headers").subscribe(console.log);
+    const headers = await getReqHeaders(this.cognitoIdToken);
+    const putBody = JSON.stringify({ users });
+    this.logger.debug({ tokenShareUrl, headers, body: putBody });
+    const res = await fetch(tokenShareUrl, { method: "DELETE", headers, body: putBody });
+    const resBody = await res.json();
+    this.logger.debug({ unshareToken: { body: resBody } });
+    if (!resBody.ResponseCode || !resBody.ResponseText) {
+      throw new Error("Malformed response from BD API");
+    }
+    if (resBody.ResponseCode == "00" && resBody.ResponseText == "OK") return;
+    throw new Error("Failed to unshare token");
+  }
+
+  public async getToken(
+    tokenLifetime: string,
+    vendingSchedule?: string,
+  ): Promise<{ bdStsToken: string; cached: boolean }> {
     if (this.bdStsToken) return { bdStsToken: this.bdStsToken, cached: true };
-    this.bdStsToken = (await getCredentials()).bdStsToken;
+    this.bdStsToken = (await getConfigCredentials()).bdStsToken;
     if (this.bdStsToken) {
       try {
         this.decodeToken();
@@ -122,16 +180,16 @@ export class BDAccount {
 
     // channel("undici:request:create").subscribe(console.log);
     // channel("undici:request:headers").subscribe(console.log);
-    const headers = await getReqHeaders(this.cognitoIdToken);
+    const headers = await getReqHeaders(this.cognitoIdToken, { tokenLifetime, vendingSchedule });
     this.logger.debug({ tokenUrl, headers });
     const res = await fetch(tokenUrl, { method: "GET", headers });
     const body = await res.json();
     this.logger.debug({ getStsToken: { body } });
     if (!body.ResponseCode || !body.ResponseText) {
-      throw new Error("Malformed response from BD API Response");
+      throw new Error("Malformed response from BD API");
     }
     if (!body.bdStsToken) {
-      throw new Error("Missing bdStsToken from BD API Response");
+      throw new Error("Missing bdStsToken in BD API Response");
     }
     this.bdStsToken = <string>body.bdStsToken;
     this.decodeToken();
@@ -143,6 +201,6 @@ export class BDAccount {
       await updateConfig({ credentials: { bdStsToken: this.bdStsToken } }); // local cache
       return { bdStsToken: this.bdStsToken, cached: false };
     }
-    throw new Error("Failed to get fresh token");
+    throw new Error("Failed to get fresh token from BD API");
   }
 }

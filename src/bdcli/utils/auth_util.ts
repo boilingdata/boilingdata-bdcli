@@ -1,14 +1,45 @@
 import * as id from "amazon-cognito-identity-js";
-import { getCredentials, updateConfig } from "./config_util.js";
+import { getConfigCredentials, updateConfig } from "./config_util.js";
 import { Pool } from "../../integration/boilingdata/boilingdata_api.js";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 import { ILogger } from "./logger_util.js";
 import prompts from "prompts";
 import qrcode from "qrcode";
 import { resumeSpinner, spinnerInfo, stopSpinner } from "./spinner_util.js";
+import ms from "ms";
 
 const userPoolId = "eu-west-1_0GLV9KO1p"; // eu-west-1 preview
 const clientId = "6timr8knllr4frovfvq8r2o6oo"; // eu-west-1 preview
+
+export async function validateTokenLifetime(lifetime: string, logger?: ILogger): Promise<void> {
+  const lifetimeInMs = ms(`${lifetime}`);
+  logger?.debug({ lifetimeInMs });
+  if (!lifetimeInMs || lifetimeInMs < ms("30min") || lifetimeInMs > ms("24h")) {
+    throw new Error(
+      "Invalid token expiration time span, " +
+        "please see https://github.com/vercel/ms for the format of the period. " +
+        "Lifetime must be between 30min - 24h",
+    );
+  }
+}
+
+export async function getEmail(): Promise<string> {
+  stopSpinner();
+  const inp = await prompts({
+    type: "text",
+    name: "email",
+    message: "Please give email",
+    validate: (email: any) =>
+      `${email}`.length < 6 || !email.includes("@")
+        ? `Email must be at least 6 characters long with @ character`
+        : true,
+  });
+  if (!inp["email"] || inp["email"].length < 6) {
+    throw new Error("Email must be at least 6 characters long with @ character");
+  }
+  resumeSpinner();
+  return inp["email"];
+}
 
 export async function getPw(message: string): Promise<string> {
   stopSpinner();
@@ -18,13 +49,16 @@ export async function getPw(message: string): Promise<string> {
     message,
     validate: (pw: any) => (`${pw}`.length < 12 ? `Must be at least 12 characters long with special characters` : true),
   });
+  if (!inp["pw"] || inp["pw"].length < 12) {
+    throw new Error("Password must be at least 12 characters long with special characters");
+  }
   resumeSpinner();
   return inp["pw"];
 }
 
 async function getCognitoUser(_logger?: ILogger, Username?: string): Promise<id.CognitoUser> {
   if (!Username) {
-    const creds = await getCredentials();
+    const creds = await getConfigCredentials();
     Username = creds.email;
   }
   const userData = { Username, Pool };
@@ -33,7 +67,7 @@ async function getCognitoUser(_logger?: ILogger, Username?: string): Promise<id.
 }
 
 async function getCognitoUserSession(logger?: ILogger): Promise<id.CognitoUser> {
-  const creds = await getCredentials(logger);
+  const creds = await getConfigCredentials(logger);
   const { email: Username, idToken: IdToken, accessToken: AccessToken, refreshToken: RefreshToken } = creds;
   if (!IdToken || !AccessToken || !RefreshToken) throw new Error("Missing tokens, please log in first");
   const session = new id.CognitoUserSession({
@@ -55,7 +89,7 @@ export async function registerToBoilingData(
   logger?: ILogger,
 ): Promise<void> {
   logger?.debug({ status: "registerToBoilingData" });
-  const creds = await getCredentials(logger);
+  const creds = await getConfigCredentials(logger);
   let { email, password, region, environment } = creds;
   // TODO: Add support for multiple profiles, i.e. BoilingData users.
   if (optsEmail && email && optsEmail.trim().localeCompare(email.trim()) != 0) {
@@ -98,7 +132,7 @@ export async function registerToBoilingData(
 
 export async function updatePassword(_logger?: ILogger): Promise<void> {
   const cognitoUser = await getCognitoUserSession();
-  const oldPassword = (await getCredentials()).password;
+  const oldPassword = (await getConfigCredentials()).password;
   stopSpinner();
   const newPassword = await getPw("Please enter new password");
   if (!newPassword || newPassword?.length < 12) throw new Error("Invalid new password");
@@ -163,7 +197,7 @@ export async function recoverPassword(logger?: ILogger): Promise<any> {
 export async function setupMfa(logger?: ILogger): Promise<void> {
   const cognitoUser = await getCognitoUserSession(logger);
   const mfaSettings = { PreferredMfa: true, Enabled: true };
-  const Username = (await getCredentials()).email;
+  const Username = (await getConfigCredentials()).email;
   return new Promise((resolve, reject) => {
     cognitoUser.associateSoftwareToken({
       associateSecretCode: async function (secretCode: any): Promise<void> {
@@ -220,7 +254,7 @@ export async function setupMfa(logger?: ILogger): Promise<void> {
 
 // NOTE: "accesstoken" does not work, it has to be "idtoken".
 export async function getIdToken(logger?: ILogger): Promise<{ idToken: string; cached: boolean; region: string }> {
-  const creds = await getCredentials(logger);
+  const creds = await getConfigCredentials(logger);
   const { email: Username, password: Password, idToken, region } = creds;
   // check if idToken is still valid..
   if (idToken) {
@@ -249,6 +283,9 @@ export async function getIdToken(logger?: ILogger): Promise<{ idToken: string; c
           validate: (mfatype: string) =>
             ["sms_mfa", "sw_mfa"].includes(mfatype) ? true : `Please select: sms_mfa or sw_mfa (e.g. google auth.)`,
         });
+        if (inp["mfatype"] !== "sms_mfa" && inp["mfatype"] !== "sw_mfa") {
+          throw new Error("Please select: sms_mfa or sw_mfa (e.g. google auth.)");
+        }
         resumeSpinner();
         const mfaType = `${inp["mfatype"]}`.toLowerCase() == "sms_mfa" ? "SMS_MFA" : "SOFTWARE_TOKEN_MFA";
         cognitoUser.sendMFASelectionAnswer(mfaType, this);
@@ -259,10 +296,11 @@ export async function getIdToken(logger?: ILogger): Promise<{ idToken: string; c
         const inp = await prompts({
           type: "text",
           name: "mfa",
-          message: "Please enter MFA",
+          message: "Please enter MFA (totp)",
           validate: (mfa: string) => (mfa.length == 6 && !isNaN(parseInt(mfa)) ? true : `Need 6 digits`),
           format: (mfa: string) => parseInt(mfa),
         });
+        if (!inp["mfa"] || isNaN(parseInt(inp["mfa"]))) throw new Error("Please give 6 digits");
         resumeSpinner();
         cognitoUser.sendMFACode(`${inp["mfa"]}`, this, "SOFTWARE_TOKEN_MFA");
       },
@@ -272,18 +310,18 @@ export async function getIdToken(logger?: ILogger): Promise<{ idToken: string; c
         const inp = await prompts({
           type: "number",
           name: "mfa",
-          message: "Please enter MFA",
-          validate: (mfa: any) => (`${mfa}`.length == 6 ? `Need 6 digits` : true),
+          message: "Please enter MFA (sms)",
+          validate: (mfa: string) => (mfa.length == 6 && !isNaN(parseInt(mfa)) ? true : `Need 6 digits`),
+          format: (mfa: string) => parseInt(mfa),
         });
+        if (!inp["mfa"] || isNaN(parseInt(inp["mfa"]))) throw new Error("Please give 6 digits");
         resumeSpinner();
         cognitoUser.sendMFACode(`${inp["mfa"]}`, this);
       },
       newPasswordRequired: async function (userAttributes: any, requiredAttributes: any) {
         logger?.debug({ userAttributes, requiredAttributes });
         delete userAttributes.email_verified;
-        stopSpinner();
         const newPassword = await getPw("Please enter new password");
-        resumeSpinner();
         cognitoUser.completeNewPasswordChallenge(newPassword, userAttributes, this);
       },
       onSuccess: async (session: id.CognitoUserSession) => {
