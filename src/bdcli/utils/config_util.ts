@@ -3,8 +3,10 @@ import * as yaml from "js-yaml";
 import * as os from "os";
 import deepmerge from "deepmerge";
 import { ILogger } from "./logger_util.js";
+import { getPw } from "./auth_util.js";
 
 const configFile = `${os.homedir()}/.bdcli.yaml`;
+let currentCreds: any;
 
 export interface ICredentials {
   email?: string;
@@ -25,7 +27,7 @@ export interface IConfig {
 export async function hasValidConfig(): Promise<boolean> {
   try {
     const config = <any>yaml.load(await fs.readFile(configFile, "utf8"));
-    if (config["credentials"] && config["credentials"]["email"] && config["credentials"]["password"]) return true;
+    if (config["credentials"] && config["credentials"]["email"]) return true;
     return false;
   } catch (err: any) {
     return false;
@@ -53,9 +55,11 @@ export async function getConfig(): Promise<IConfig> {
 export async function getCredentials(
   logger?: ILogger,
 ): Promise<ICredentials & Required<Pick<ICredentials, "email" | "password">>> {
+  if (currentCreds) return currentCreds; // cached in mem, so you can call this method multiple times
   const { credentials } = await getConfig();
-  if (!credentials.email || !credentials.password) throw new Error("Could not get credentials");
-  const resp = { ...credentials, email: credentials.email, password: credentials.password }; // To make TS happy..
-  logger?.debug({ ...resp, password: resp?.password ? "**" : undefined });
-  return resp;
+  if (!credentials.email) throw new Error("Could not get credentials");
+  credentials.password = credentials.password ?? (await getPw("Please enter password"));
+  currentCreds = { ...credentials, email: credentials.email, password: credentials.password }; // To make TS happy..
+  logger?.debug({ ...currentCreds, password: currentCreds?.password ? "**" : undefined });
+  return currentCreds;
 }
