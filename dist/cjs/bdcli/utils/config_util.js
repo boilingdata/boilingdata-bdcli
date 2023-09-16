@@ -26,12 +26,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getConfigCredentials = exports.combineOptsWithSettings = exports.getConfigSettings = exports.getConfig = exports.setProfile = exports.updateConfig = exports.listConfigProfiles = exports.hasValidConfig = exports.profile = exports.BDCONF = void 0;
+exports.getConfigCredentials = exports.getCachedTokenSessions = exports.serialiseTokensList = exports.combineOptsWithSettings = exports.getConfigSettings = exports.getConfig = exports.setProfile = exports.updateConfig = exports.listConfigProfiles = exports.hasValidConfig = exports.profile = exports.BDCONF = void 0;
 const fs = __importStar(require("fs/promises"));
 const yaml = __importStar(require("js-yaml"));
 const os = __importStar(require("os"));
 const deepmerge_1 = __importDefault(require("deepmerge"));
 const auth_util_js_1 = require("./auth_util.js");
+const jwt = __importStar(require("jsonwebtoken"));
 exports.BDCONF = "~/.bdcli.yaml";
 const configFile = `${os.homedir()}/.bdcli.yaml`;
 exports.profile = "default";
@@ -118,6 +119,38 @@ async function combineOptsWithSettings(opts, logger) {
     return (0, deepmerge_1.default)(await getConfigSettings(logger), opts);
 }
 exports.combineOptsWithSettings = combineOptsWithSettings;
+function serialiseTokensList(sharedTokens) {
+    return sharedTokens.map(entry => `${entry.shareId}:${entry.bdStsToken}`);
+}
+exports.serialiseTokensList = serialiseTokensList;
+async function getCachedTokenSessions(logger, showExpired = false) {
+    const conf = await getConfig();
+    const decodedList = (conf?.credentials?.sharedTokens ?? [])
+        .concat(conf?.credentials?.bdStsToken ?? [])
+        ?.map(token => {
+        let shareId = "NA";
+        let bdStsToken = token;
+        if (token.includes(":")) {
+            [shareId, bdStsToken] = token.split(":");
+        }
+        if (!bdStsToken)
+            throw new Error("Could not parse token");
+        const bdStsTokenPayload = jwt.decode(bdStsToken, { json: true });
+        if (!bdStsTokenPayload)
+            throw new Error("Could not parse JWT token payload");
+        const minsRemaining = bdStsTokenPayload?.exp
+            ? Math.floor((new Date(bdStsTokenPayload?.exp * 1000).getTime() - Date.now()) / (60 * 1000))
+            : -1;
+        logger?.debug({ minsRemaining, bdStsTokenPayload });
+        const status = minsRemaining <= 0 ? "EXPIRED" : "VALID";
+        if (!showExpired && status == "EXPIRED")
+            return;
+        return { shareId, bdStsToken, minsRemaining, status, bdStsTokenPayload };
+    })
+        .filter(e => !!e);
+    return decodedList ?? [];
+}
+exports.getCachedTokenSessions = getCachedTokenSessions;
 async function getConfigCredentials(logger) {
     if (currentCreds)
         return currentCreds; // cached in mem, so you can call this method multiple times

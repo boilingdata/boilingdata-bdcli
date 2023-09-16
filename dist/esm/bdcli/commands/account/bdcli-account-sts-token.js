@@ -28,12 +28,12 @@ async function show(options, _command) {
         const { idToken: token, cached: idCached, region } = await getIdToken(logger);
         updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
         spinnerSuccess();
-        updateSpinnerText("Getting BoilingData STS token");
+        updateSpinnerText(`Getting BoilingData STS token ${options.shareId ? "(shared)" : ""}`);
         if (!region)
             throw new Error("Pass --region parameter or set AWS_REGION env");
         const bdAccount = new BDAccount({ logger, authToken: token });
         const { bdStsToken, cached: stsCached, ...rest } = await bdAccount.getToken(options.lifetime ?? "1h", options.shareId);
-        updateSpinnerText(`Getting BoilingData STS token: ${stsCached ? "cached" : "success"}`);
+        updateSpinnerText(`Getting BoilingData STS token ${options.shareId ? "(shared)" : ""}` + `: ${stsCached ? "cached" : "success"}`);
         spinnerSuccess();
         if (options.dbtprofiles) {
             updateSpinnerText(`Storing Boiling token into DBT profiles file: ${options.dbtprofiles}`);

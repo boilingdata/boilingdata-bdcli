@@ -10,6 +10,7 @@ const program = new commander_1.Command("bdcli account")
     .command("sts-token", "Exchange Cognito ID Token into BoilingData (short term session) token")
     .command("token-share", "Share specific access tokens with other Boiling users")
     .command("token-unshare", "Unshare access tokens for other Boiling users")
-    .command("token-list", "List access tokens shared from/to you")
+    .command("token-list-shares", "List shared data accesses (tokens) from/to you")
+    .command("token-list-sessions", "List sessions (vended shared access tokens) in local cache")
     .command("mfa", "Enable MFA");
 program.parse(process.argv);

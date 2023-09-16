@@ -27,23 +27,21 @@ const cmd = __importStar(require("commander"));
 const logger_util_js_1 = require("../../utils/logger_util.js");
 const spinner_util_js_1 = require("../../utils/spinner_util.js");
 const options_util_js_1 = require("../../utils/options_util.js");
-const auth_util_js_1 = require("../../utils/auth_util.js");
-const account_js_1 = require("../../../integration/boilingdata/account.js");
+// import { getIdToken } from "../../utils/auth_util.js";
+// import { BDAccount } from "../../../integration/boilingdata/account.js";
 const config_util_js_1 = require("../../utils/config_util.js");
-const logger = (0, logger_util_js_1.getLogger)("bdcli-account-token-list");
+const logger = (0, logger_util_js_1.getLogger)("bdcli-account-token-list-sessions");
 async function show(options, _command) {
     try {
         options = await (0, config_util_js_1.combineOptsWithSettings)(options);
         logger.debug({ options });
-        (0, spinner_util_js_1.updateSpinnerText)("Authenticating");
-        const { idToken: token, cached: idCached, region: region } = await (0, auth_util_js_1.getIdToken)(logger);
-        (0, spinner_util_js_1.updateSpinnerText)(`Authenticating: ${idCached ? "cached" : "success"}`);
-        (0, spinner_util_js_1.spinnerSuccess)();
-        (0, spinner_util_js_1.updateSpinnerText)("Listing tokens");
-        if (!region)
-            throw new Error("Pass --region parameter or set AWS_REGION env");
-        const bdAccount = new account_js_1.BDAccount({ logger, authToken: token });
-        const list = await bdAccount.listSharedTokens();
+        // updateSpinnerText("Authenticating");
+        // const { idToken: token, cached: idCached, region: region } = await getIdToken(logger);
+        // updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
+        // spinnerSuccess();
+        (0, spinner_util_js_1.updateSpinnerText)("Listing token cached/local sessions");
+        // if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
+        const list = await (0, config_util_js_1.getCachedTokenSessions)(logger, options.showExpired);
         (0, spinner_util_js_1.spinnerSuccess)();
         console.log(JSON.stringify(list));
     }
@@ -51,7 +49,9 @@ async function show(options, _command) {
         (0, spinner_util_js_1.spinnerError)(err?.message);
     }
 }
-const program = new cmd.Command("bdcli account sts-token-list").action(async (options, command) => await show(options, command));
+const program = new cmd.Command("bdcli account token-list-sessions")
+    .addOption(new cmd.Option("--show-expired", "Do not filter expired cached sessions (vended tokens)"))
+    .action(async (options, command) => await show(options, command));
 (async () => {
     await (0, options_util_js_1.addGlobalOptions)(program, logger);
     await program.parseAsync(process.argv, { from: "user" });

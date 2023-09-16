@@ -14,8 +14,6 @@ export declare class BDAccount {
     private accountDetails;
     constructor(params: IBDConfig);
     setIamRoleWithPayload(IamRoleArn: string, payload: any): Promise<void>;
-    private serialiseTokensMap;
-    private unserialiseTokensMap;
     private _getAccountDetails;
     getAssumeAwsAccount(): Promise<string>;
     getExtId(): Promise<string>;
@@ -28,6 +26,7 @@ export declare class BDAccount {
     }>;
     shareToken(tokenLifetime: string, vendingSchedule: string | undefined, users: string[], shareName?: string, shareSql?: string): Promise<void>;
     unshareToken(shareId: string): Promise<void>;
+    private getTokenResp;
     getToken(tokenLifetime: string, shareId?: string): Promise<{
         bdStsToken: string;
         cached: boolean;
