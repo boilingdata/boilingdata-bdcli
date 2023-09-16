@@ -6,7 +6,7 @@ import { getIdToken } from "../../utils/auth_util.js";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
 import { combineOptsWithSettings } from "../../utils/config_util.js";
 
-const logger = getLogger("bdcli-account-token-list");
+const logger = getLogger("bdcli-account-token-list-shares");
 
 async function show(options: any, _command: cmd.Command): Promise<void> {
   try {
@@ -18,7 +18,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
     spinnerSuccess();
 
-    updateSpinnerText("Listing tokens");
+    updateSpinnerText("Listing token shares");
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdAccount = new BDAccount({ logger, authToken: token });
     const list = await bdAccount.listSharedTokens();
@@ -29,7 +29,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
   }
 }
 
-const program = new cmd.Command("bdcli account sts-token-list").action(
+const program = new cmd.Command("bdcli account token-list-shares").action(
   async (options, command) => await show(options, command),
 );
 

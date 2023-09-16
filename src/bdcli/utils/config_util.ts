@@ -4,6 +4,7 @@ import * as os from "os";
 import deepmerge from "deepmerge";
 import { ILogger } from "./logger_util.js";
 import { getPw } from "./auth_util.js";
+import * as jwt from "jsonwebtoken";
 
 export const BDCONF = "~/.bdcli.yaml";
 const configFile = `${os.homedir()}/.bdcli.yaml`;
@@ -21,6 +22,14 @@ export interface ICredentials {
   region?: string;
   mfa?: boolean;
   environment?: string;
+}
+
+export interface IDecodedSession {
+  shareId: string;
+  bdStsToken: string;
+  minsRemaining: number;
+  status: "EXPIRED" | "VALID";
+  bdStsTokenPayload: jwt.JwtPayload;
 }
 
 export interface IConfigProfiles {
@@ -102,6 +111,35 @@ export async function getConfigSettings(logger?: ILogger): Promise<{ [key: strin
 
 export async function combineOptsWithSettings(opts: any, logger?: ILogger): Promise<{ [key: string]: string }> {
   return deepmerge(await getConfigSettings(logger), opts);
+}
+
+export function serialiseTokensList(sharedTokens: IDecodedSession[]): string[] {
+  return sharedTokens.map(entry => `${entry.shareId}:${entry.bdStsToken}`);
+}
+
+export async function getCachedTokenSessions(logger?: ILogger, showExpired = false): Promise<IDecodedSession[]> {
+  const conf = await getConfig();
+  const decodedList = (conf?.credentials?.sharedTokens ?? [])
+    .concat(conf?.credentials?.bdStsToken ?? [])
+    ?.map(token => {
+      let shareId: string | undefined = "NA";
+      let bdStsToken: string | undefined = token;
+      if (token.includes(":")) {
+        [shareId, bdStsToken] = token.split(":");
+      }
+      if (!bdStsToken) throw new Error("Could not parse token");
+      const bdStsTokenPayload = jwt.decode(bdStsToken, { json: true });
+      if (!bdStsTokenPayload) throw new Error("Could not parse JWT token payload");
+      const minsRemaining = bdStsTokenPayload?.exp
+        ? Math.floor((new Date(bdStsTokenPayload?.exp * 1000).getTime() - Date.now()) / (60 * 1000))
+        : -1;
+      logger?.debug({ minsRemaining, bdStsTokenPayload });
+      const status: "EXPIRED" | "VALID" = minsRemaining <= 0 ? "EXPIRED" : "VALID";
+      if (!showExpired && status == "EXPIRED") return;
+      return { shareId, bdStsToken, minsRemaining, status, bdStsTokenPayload };
+    })
+    .filter(e => !!e);
+  return <IDecodedSession[]>decodedList ?? [];
 }
 
 export async function getConfigCredentials(
