@@ -16,6 +16,7 @@ Options:
 Commands:
   account         Setup and configure your BoilingData account
   aws             Setup and configure your AWS account integration with BoilingData
+  domain          Admin setup and configuration for your domain (.e.g @boilingdata.com, @mycompany.com)
   help [command]  display help for command
 ```
 
@@ -63,28 +64,23 @@ dataSources:
         urlPrefix: s3://boilingdata-demo/demo
         permissions:
           - read
-    dataSets:
-      - name: demo
-        urlPrefix: s3://boilingdata-demo/demo.parquet
-      - name: demo2
-        urlPrefix: s3://boilingdata-demo/demo2.parquet
 ```
 
 ### Credentials Integration
 
 Assumable IAM Role integration works as long as your IAM Role allows Boiling to assume the role. E.g. if you delete the IAM Role, Boiling can not access your data anymore.
 
-## Data Sources configuration file
+## Data access configuration file
 
-Data Sources (sandboxes) can be defined in a yaml file. Currently, only S3 is supported.
+A YAML configuration file is used to create the IAM Role.
 
 ```yaml
 version: 1.0
 uniqNamePart: myBdIamRoleOptionalParam # opt. deterministic uniq role id
 dataSources:
   - name: demo
-    type: s3 # "s3"
-    sessionType: assumeRole # "assumeRole"
+    type: s3 # "s3" only for now
+    sessionType: assumeRole # "assumeRole" only for now
     accessPolicy:
       - id: bd-demo-policy # unique statement id
         urlPrefix: s3://boilingdata-demo/demo # string, for now must be S3 URL
@@ -95,23 +91,11 @@ dataSources:
         permissions:
           - read
           - write
-    dataSets: # list
-      - name: demo # unique data set id
-        urlPrefix: s3://boilingdata-demo/demo.parquet # string, for now must be S3 URL
-      - name: demo2
-        urlPrefix: s3://boilingdata-demo/demo2.parquet
-      - name: nyc
-        urlPrefix: s3://isecurefi-dev-test/nyc-tlc/trip_data/
-        layout: hive # "hive", "folder", "file"
-        filetype: parquet # "parquet", "json", "csv"
   - name: logs
     type: s3
     accessPolicy:
       - id: logs-policy
         urlPrefix: s3://logs-bucket/
-    dataSets:
-      - name: s3AccessLogs
-        urlPrefix: s3://logs-bucket/s3_access/
 ```
 
 ## Token sharing
