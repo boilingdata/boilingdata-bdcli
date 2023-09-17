@@ -32,5 +32,6 @@ program
     .version(VERSION_js_1.VERSION)
     .allowExcessArguments(false)
     .command("account", "Setup and configure your BoilingData account")
-    .command("aws", "Setup and configure your AWS account integration with BoilingData");
+    .command("aws", "Setup and configure your AWS account integration with BoilingData")
+    .command("domain", "Admin setup and configuration for your domain (.e.g @boilingdata.com, @mycompany.com)");
 program.parse(process.argv);

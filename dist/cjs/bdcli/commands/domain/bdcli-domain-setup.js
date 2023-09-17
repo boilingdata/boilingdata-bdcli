@@ -34,7 +34,7 @@ const iam_roles_js_1 = require("../../../integration/aws/iam_roles.js");
 const account_js_1 = require("../../../integration/boilingdata/account.js");
 const dataset_js_1 = require("../../../integration/boilingdata/dataset.js");
 const bdIntegration_js_1 = require("../../../integration/bdIntegration.js");
-const logger = (0, logger_util_js_1.getLogger)("bdcli-aws");
+const logger = (0, logger_util_js_1.getLogger)("bdcli-domain");
 logger.setLogLevel(logger_util_js_1.ELogLevel.WARN);
 async function iamrole(options, _command) {
     try {
@@ -79,16 +79,8 @@ async function iamrole(options, _command) {
         (0, spinner_util_js_1.spinnerError)(err?.message);
     }
 }
-const program = new cmd.Command("bdcli setup iam-role")
-    .addHelpText("beforeAll", "If you have an AWS account, you can use this command to create BoilingData assumable AWS IAM Role into " +
-    "your AWS account. It is fully owned and controlled by you. The IAM Policy is based on YAML configuration " +
-    "file that you need to create. It describes S3 bucket(s) and prefixe(s) that you want to make available " +
-    "through Boiling.\n\nSee the README.md in https://github.com/boilingdata/boilingdata-bdcli " +
-    "for more information.\n")
-    .addOption(new cmd.Option("-c, --config <filepath>", "Data access conf").makeOptionMandatory())
-    .addOption(new cmd.Option("-r, --region <region>", "AWS region"))
-    .addOption(new cmd.Option("--delete", "Delete the IAM role"))
-    .addOption(new cmd.Option("--create-role-only", "Create the IAM role only and do not update BoilingData"))
+const program = new cmd.Command("bdcli domain setup")
+    .addOption(new cmd.Option("--domain <domain>", "Initiate your domain setup in BoilingData (to be implemented)").makeOptionMandatory())
     .action(async (options, command) => await iamrole(options, command));
 (async () => {
     await (0, options_util_js_1.addGlobalOptions)(program, logger);
