@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-You can use this tool to register into BoilingData (or alternatively in [app.boiilngdata.com](https://app.boilingdata.com)) and manage your account and get BoilingData STS Token.
+You can use BDCLI to fully managed your BoilingData account, including integration with your AWS Account (if you have one), share and consume data sets to/from other users. See also our demo application [app.boiilngdata.com](https://app.boilingdata.com).
 
 ```shell
 % npm install -g @boilingdata/boilingdata-bdcli
@@ -19,7 +19,7 @@ Commands:
   help [command]  display help for command
 ```
 
-You can create BoilingData assumable IAM role into your AWS account with clear scope.
+You can create BoilingData assumable IAM role into your AWS account with clear scope. The IAM Role is in your AWS account, you can review, and modify it if you like.
 
 ```shell
 % echo "version: 1.0
