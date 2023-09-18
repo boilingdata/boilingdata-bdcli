@@ -47,28 +47,47 @@ Now you can verify the generated IAM role
 
 ## Introduction
 
-`bdcli` is used to grant access for BoilingData to your selected S3 data in your AWS Account. It is also used to fully manage your BoilingData account, like changing password, setting up MFA, recovering password etc.
+`bdcli` is used to grant access for BoilingData to your selected S3 data in your AWS Account. It is also used to fully manage your BoilingData account, like changing password, setting up MFA, recovering password etc. It uses `~/.bdcli.yaml` configuration file for storing both settings and caching access (session) tokens.
 
-`bdcli` creates the needed IAM Role into your AWS Account based on the configuration file that you provide, and sets the IAM Role ARN into your BoilingData user account configuration.
+You can use `bdcli` to optionally create the needed IAM Role into your AWS Account based on the configuration file that you provide, and sets the IAM Role ARN into your BoilingData user account configuration. However, if you don't have an AWS Account or do not want to use boiling over your data, you can consume data from others only.
 
 The created IAM Roles have least-privilege permissions that BoilingData needs. For example, the IAM Role created from below configuration, would allow getting the S3 Bucket location for query routing purposes, and getting the `demo*` objects from `boilingdata-demo` S3 Bucket.
 
-```yaml
-version: 1.0
-uniqNamePart: myBdIamRole
-dataSources:
-  - name: demo
-    type: s3
-    accessPolicy:
-      - id: bd-demo-policy
-        urlPrefix: s3://boilingdata-demo/demo
-        permissions:
-          - read
+> NOTE: Assumable IAM Role integration works as long as your IAM Role allows Boiling to assume the role. E.g. if you delete the IAM Role, Boiling can not access your data anymore.
+
+## Secure and controlled data sharing between users
+
+Please see [TOKEN_SHARING.md](TOKEN_SHARING.md) for more details and background on how to share the capability of vending access tokens between users. Access tokens are used to authorize queries to access data, and thus allow users to query other users data.
+
+## Boiling settings file ~/.bdcli.yaml
+
+You start initially with:
+
+```shell
+bdcli account config
 ```
 
-### Credentials Integration
+This sets your username (valid email address) and password. If you like, you opt out setting the password into the configuration file with `--no-password`. In this case `bdcli` asks the password every time you run it and require login to Boiling, e.g. in case local cached session tokens have expired.
 
-Assumable IAM Role integration works as long as your IAM Role allows Boiling to assume the role. E.g. if you delete the IAM Role, Boiling can not access your data anymore.
+Boiling settings file supports multiple profiles, if you like. You can set the profile with `BD_PROFILE` environment variable, or pass `--profile <selected-profile>` global option. Additionally, `bdcli` picks up all environment variables that start with `BD_` prefix and convert the rest of the string as camelCase option. The same happens with `settings` block under the profile in the configuration file.
+
+Here is a minimal configuration file that does not yet have any cached session tokens. Also, password field is missing, meaning that `bdcli` will ask the password from the user. Status messages are suppressed due to the `disableSpinner` setting set to `true`. When status messages are suppressed the output from `bdcli` is unformatted JSON.
+
+```yaml
+# No "default" profile, so user has to give profile via BD_ENV or --profile option.
+demo: # profile demo
+  settings:
+    disableSpinner: true
+    debug: false
+  credentials:
+    email: demo@boilingdata.com
+dforsber: # profile dforsber
+  settings:
+    disableSpinner: false
+    debug: true
+  credentials:
+    email: dforsber@gmail.com
+```
 
 ## Data access configuration file
 
@@ -79,8 +98,8 @@ version: 1.0
 uniqNamePart: myBdIamRoleOptionalParam # opt. deterministic uniq role id
 dataSources:
   - name: demo
-    type: s3 # "s3" only for now
-    sessionType: assumeRole # "assumeRole" only for now
+    type: s3 # "s3" only supported for now
+    sessionType: assumeRole # "assumeRole" only supported for now
     accessPolicy:
       - id: bd-demo-policy # unique statement id
         urlPrefix: s3://boilingdata-demo/demo # string, for now must be S3 URL
@@ -97,10 +116,6 @@ dataSources:
       - id: logs-policy
         urlPrefix: s3://logs-bucket/
 ```
-
-## Token sharing
-
-Please see [TOKEN_SHARING.md](TOKEN_SHARING.md) for more details and background of this feature.
 
 # Code Architecture & Development
 

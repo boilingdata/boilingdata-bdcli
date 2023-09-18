@@ -7,6 +7,8 @@ import { BDAccount } from "../../../integration/boilingdata/account.js";
 import * as fs from "fs/promises";
 import path from "path";
 import { updateBoilingToken } from "../../utils/yaml_utils.js";
+import { outputResults } from "../../utils/output_util.js";
+import { combineOptsWithSettings } from "../../utils/config_util.js";
 
 const logger = getLogger("bdcli-account-token");
 const macroHeader = "\n-- BoilingData DuckDB Table Macro START\n";
@@ -26,7 +28,7 @@ function getMacro(token: string): string {
 
 async function show(options: any, _command: cmd.Command): Promise<void> {
   try {
-    logger.debug({ options });
+    options = await combineOptsWithSettings(options, logger);
 
     if (options.lifetime) await validateTokenLifetime(options.lifetime);
 
@@ -55,12 +57,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     }
 
     if (options.duckdbMacro) {
-      console.log(
-        JSON.stringify({
-          stsToken: bdStsToken,
-          duckDbMacro: getMacro(bdStsToken),
-        }),
-      );
+      await outputResults({ stsToken: bdStsToken, duckDbMacro: getMacro(bdStsToken) }, options.disableSpinner);
     }
 
     if (options.duckdbrc) {
@@ -83,7 +80,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     }
 
     if (!options.duckdbrc && !options.dbtprofiles && !options.duckdbMacro) {
-      console.log(JSON.stringify({ bdStsToken, ...rest }));
+      await outputResults({ bdStsToken, ...rest }, options.disableSpinner);
     }
   } catch (err: any) {
     spinnerError(err?.message);
