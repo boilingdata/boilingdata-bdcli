@@ -4,10 +4,11 @@ import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spi
 import { addGlobalOptions } from "../../utils/options_util.js";
 import { getIdToken } from "../../utils/auth_util.js";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
+import { combineOptsWithSettings } from "../../utils/config_util.js";
 const logger = getLogger("bdcli-account-token-unshare");
 async function show(options, _command) {
     try {
-        logger.debug({ options });
+        options = await combineOptsWithSettings(options, logger);
         if (options.id.length != 40)
             throw new Error("Invalid share id");
         updateSpinnerText("Authenticating");

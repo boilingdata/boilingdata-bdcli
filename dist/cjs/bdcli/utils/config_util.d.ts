@@ -38,7 +38,11 @@ export declare function getConfig(logger?: ILogger): Promise<IConfig | undefined
 export declare function getConfigSettings(logger?: ILogger): Promise<{
     [key: string]: string;
 }>;
-export declare function combineOptsWithSettings(opts: any, logger?: ILogger): Promise<{
+export declare function getEnvSettings(logger?: ILogger): any;
+export declare function applyGlobalConfigHooks(opts: {
+    [key: string]: any;
+}, logger: ILogger): void;
+export declare function combineOptsWithSettings(opts: any, logger: ILogger): Promise<{
     [key: string]: string;
 }>;
 export declare function serialiseTokensList(sharedTokens: IDecodedSession[]): string[];

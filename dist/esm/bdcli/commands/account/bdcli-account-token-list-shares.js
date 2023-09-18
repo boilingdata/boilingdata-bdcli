@@ -5,11 +5,11 @@ import { addGlobalOptions } from "../../utils/options_util.js";
 import { getIdToken } from "../../utils/auth_util.js";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
 import { combineOptsWithSettings } from "../../utils/config_util.js";
+import { outputResults } from "../../utils/output_util.js";
 const logger = getLogger("bdcli-account-token-list-shares");
 async function show(options, _command) {
     try {
-        options = await combineOptsWithSettings(options);
-        logger.debug({ options });
+        options = await combineOptsWithSettings(options, logger);
         updateSpinnerText("Authenticating");
         const { idToken: token, cached: idCached, region: region } = await getIdToken(logger);
         updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
@@ -20,7 +20,7 @@ async function show(options, _command) {
         const bdAccount = new BDAccount({ logger, authToken: token });
         const list = await bdAccount.listSharedTokens();
         spinnerSuccess();
-        console.log(JSON.stringify(list));
+        await outputResults(list, options.disableSpinner);
     }
     catch (err) {
         spinnerError(err?.message);

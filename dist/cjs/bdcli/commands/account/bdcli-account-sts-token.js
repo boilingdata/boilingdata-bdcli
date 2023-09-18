@@ -35,6 +35,8 @@ const account_js_1 = require("../../../integration/boilingdata/account.js");
 const fs = __importStar(require("fs/promises"));
 const path_1 = __importDefault(require("path"));
 const yaml_utils_js_1 = require("../../utils/yaml_utils.js");
+const output_util_js_1 = require("../../utils/output_util.js");
+const config_util_js_1 = require("../../utils/config_util.js");
 const logger = (0, logger_util_js_1.getLogger)("bdcli-account-token");
 const macroHeader = "\n-- BoilingData DuckDB Table Macro START\n";
 const macroFooter = "\n-- BoilingData DuckDB Table Macro END";
@@ -49,7 +51,7 @@ function getMacro(token) {
 }
 async function show(options, _command) {
     try {
-        logger.debug({ options });
+        options = await (0, config_util_js_1.combineOptsWithSettings)(options, logger);
         if (options.lifetime)
             await (0, auth_util_js_1.validateTokenLifetime)(options.lifetime);
         (0, spinner_util_js_1.updateSpinnerText)("Authenticating");
@@ -69,10 +71,7 @@ async function show(options, _command) {
             (0, spinner_util_js_1.spinnerSuccess)();
         }
         if (options.duckdbMacro) {
-            console.log(JSON.stringify({
-                stsToken: bdStsToken,
-                duckDbMacro: getMacro(bdStsToken),
-            }));
+            await (0, output_util_js_1.outputResults)({ stsToken: bdStsToken, duckDbMacro: getMacro(bdStsToken) }, options.disableSpinner);
         }
         if (options.duckdbrc) {
             (0, spinner_util_js_1.updateSpinnerText)("Storing DuckDB BoilingData TABLE MACRO");
@@ -92,7 +91,7 @@ async function show(options, _command) {
             (0, spinner_util_js_1.spinnerSuccess)();
         }
         if (!options.duckdbrc && !options.dbtprofiles && !options.duckdbMacro) {
-            console.log(JSON.stringify({ bdStsToken, ...rest }));
+            await (0, output_util_js_1.outputResults)({ bdStsToken, ...rest }, options.disableSpinner);
         }
     }
     catch (err) {

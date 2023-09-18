@@ -30,11 +30,11 @@ const options_util_js_1 = require("../../utils/options_util.js");
 const auth_util_js_1 = require("../../utils/auth_util.js");
 const account_js_1 = require("../../../integration/boilingdata/account.js");
 const config_util_js_1 = require("../../utils/config_util.js");
+const output_util_js_1 = require("../../utils/output_util.js");
 const logger = (0, logger_util_js_1.getLogger)("bdcli-account-token-list-shares");
 async function show(options, _command) {
     try {
-        options = await (0, config_util_js_1.combineOptsWithSettings)(options);
-        logger.debug({ options });
+        options = await (0, config_util_js_1.combineOptsWithSettings)(options, logger);
         (0, spinner_util_js_1.updateSpinnerText)("Authenticating");
         const { idToken: token, cached: idCached, region: region } = await (0, auth_util_js_1.getIdToken)(logger);
         (0, spinner_util_js_1.updateSpinnerText)(`Authenticating: ${idCached ? "cached" : "success"}`);
@@ -45,7 +45,7 @@ async function show(options, _command) {
         const bdAccount = new account_js_1.BDAccount({ logger, authToken: token });
         const list = await bdAccount.listSharedTokens();
         (0, spinner_util_js_1.spinnerSuccess)();
-        console.log(JSON.stringify(list));
+        await (0, output_util_js_1.outputResults)(list, options.disableSpinner);
     }
     catch (err) {
         (0, spinner_util_js_1.spinnerError)(err?.message);

@@ -32,7 +32,7 @@ const auth_util_js_1 = require("../../utils/auth_util.js");
 const logger = (0, logger_util_js_1.getLogger)("bdcli-account-register");
 async function show(options, _command) {
     try {
-        logger.debug({ options: { ...options, password: options.password ? "**" : undefined } });
+        options = await (0, config_util_js_1.combineOptsWithSettings)(options, logger);
         if (options.environment != "preview" || options.region != "eu-west-1") {
             return (0, spinner_util_js_1.spinnerError)("Currently only preview environment is supported, and userpool registration on eu-west-1 AWS region. " +
                 "Migration to other regions and production environment(s) will be supported in the future.");

@@ -26,13 +26,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getConfigCredentials = exports.getCachedTokenSessions = exports.serialiseTokensList = exports.combineOptsWithSettings = exports.getConfigSettings = exports.getConfig = exports.setProfile = exports.updateConfig = exports.listConfigProfiles = exports.hasValidConfig = exports.profile = exports.BDCONF = void 0;
+exports.getConfigCredentials = exports.getCachedTokenSessions = exports.serialiseTokensList = exports.combineOptsWithSettings = exports.applyGlobalConfigHooks = exports.getEnvSettings = exports.getConfigSettings = exports.getConfig = exports.setProfile = exports.updateConfig = exports.listConfigProfiles = exports.hasValidConfig = exports.profile = exports.BDCONF = void 0;
 const fs = __importStar(require("fs/promises"));
 const yaml = __importStar(require("js-yaml"));
 const os = __importStar(require("os"));
 const deepmerge_1 = __importDefault(require("deepmerge"));
+const logger_util_js_1 = require("./logger_util.js");
 const auth_util_js_1 = require("./auth_util.js");
 const jwt = __importStar(require("jsonwebtoken"));
+const spinner_util_js_1 = require("./spinner_util.js");
 exports.BDCONF = "~/.bdcli.yaml";
 const configFile = `${os.homedir()}/.bdcli.yaml`;
 exports.profile = "default";
@@ -80,8 +82,7 @@ async function updateConfig(updates, logger) {
         contents = yaml.dump((0, deepmerge_1.default)({ default: config }, { [exports.profile]: { ...(await getConfig()), ...updates } }));
     }
     else {
-        if (!Object.keys(config).includes(exports.profile))
-            throw new Error(`Profile "${exports.profile}" does not exist`);
+        //if (!Object.keys(config).includes(profile)) throw new Error(`Profile "${profile}" does not exist`);
         contents = yaml.dump((0, deepmerge_1.default)(config, { [exports.profile]: { ...(await getConfig()), ...updates } }));
     }
     await fs.writeFile(configFile, contents, {
@@ -97,26 +98,62 @@ function setProfile(profileName, logger) {
 }
 exports.setProfile = setProfile;
 async function getConfig(logger) {
-    const configFileData = await fs.readFile(configFile, "utf8");
-    const config = yaml.load(configFileData, { filename: configFile });
-    if (config.credentials && exports.profile === "default")
-        return config; // no profiles
-    logger?.debug({ profile: exports.profile, keys: Object.keys(config) });
-    if (Object.keys(config).includes(exports.profile)) {
-        return Object.values(config).at(Object.keys(config).indexOf(exports.profile));
+    try {
+        const configFileData = await fs.readFile(configFile, "utf8");
+        const config = yaml.load(configFileData, { filename: configFile });
+        if (config.credentials && exports.profile === "default")
+            return config; // no profiles
+        logger?.debug({ profile: exports.profile, keys: Object.keys(config) });
+        if (Object.keys(config).includes(exports.profile)) {
+            return Object.values(config).at(Object.keys(config).indexOf(exports.profile));
+        }
+    }
+    catch (err) {
+        logger?.debug({ err });
     }
     return;
 }
 exports.getConfig = getConfig;
 async function getConfigSettings(logger) {
-    const conf = await getConfig();
+    const conf = await getConfig(logger);
     const settings = conf?.settings ?? {};
     logger?.debug({ settings });
     return settings;
 }
 exports.getConfigSettings = getConfigSettings;
+function camalize(str) {
+    return str.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (_m, chr) => chr.toUpperCase());
+}
+function getEnvSettings(logger) {
+    const _bdEnvs = Object.entries(process.env)
+        .filter(e => e[0].startsWith("BD_") && e[0].length > 3 && e.length >= 1 && e[1] && e[1].length > 0)
+        .map(e => [camalize(e[0].substring(3).toLowerCase()), e[1]]);
+    const bdEnvs = _bdEnvs.map(e => ({ [`${e[0]}`]: e[1] })).reduce((prev, curr) => ({ ...prev, ...curr }), {});
+    logger?.debug({ bdEnvs });
+    return bdEnvs;
+}
+exports.getEnvSettings = getEnvSettings;
+function applyGlobalConfigHooks(opts, logger) {
+    // global opts handling due to the Commander short comings
+    if (opts["profile"])
+        setProfile(opts["profile"]);
+    if (opts["logLevel"])
+        logger.setLogLevel(opts["level"]);
+    if (opts["debug"])
+        logger.setLogLevel(logger_util_js_1.ELogLevel.DEBUG);
+    if (opts["disableSpinner"])
+        (0, spinner_util_js_1.disableSpinner)();
+}
+exports.applyGlobalConfigHooks = applyGlobalConfigHooks;
 async function combineOptsWithSettings(opts, logger) {
-    return (0, deepmerge_1.default)(await getConfigSettings(logger), opts);
+    const envSettings = getEnvSettings(logger);
+    // we get e.g. BD_PROFILE, so we can get settings
+    applyGlobalConfigHooks(envSettings, logger);
+    const options = (0, deepmerge_1.default)({ ...(await getConfigSettings(logger)), ...envSettings }, opts);
+    // then we also re-apply as we get possibly settings from the configuration file for the profile
+    applyGlobalConfigHooks(options, logger);
+    logger?.debug({ options: { ...options, password: options["password"] ? "**" : undefined } });
+    return options;
 }
 exports.combineOptsWithSettings = combineOptsWithSettings;
 function serialiseTokensList(sharedTokens) {

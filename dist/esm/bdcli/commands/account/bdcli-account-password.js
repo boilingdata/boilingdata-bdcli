@@ -3,10 +3,11 @@ import { getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerInfo, spinnerSuccess, spinnerWarn, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
 import { getIdToken, recoverPassword, updatePassword } from "../../utils/auth_util.js";
+import { combineOptsWithSettings } from "../../utils/config_util.js";
 const logger = getLogger("bdcli-account-password");
 async function show(options, _command) {
     try {
-        logger.debug({ options });
+        options = await combineOptsWithSettings(options, logger);
         if (!options.recover) {
             // by default we update the password
             try {

@@ -203,6 +203,7 @@ class BDAccount {
         this.bdStsToken = creds.bdStsToken;
         this.sharedTokens = (await (0, config_util_js_1.getCachedTokenSessions)(this.logger)).filter(t => t.shareId != "NA");
         try {
+            // Create response if we have all data in cache already
             const resp = await this.getTokenResp(shareId);
             if (resp)
                 return resp;

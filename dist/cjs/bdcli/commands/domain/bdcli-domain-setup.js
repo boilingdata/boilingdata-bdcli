@@ -34,11 +34,12 @@ const iam_roles_js_1 = require("../../../integration/aws/iam_roles.js");
 const account_js_1 = require("../../../integration/boilingdata/account.js");
 const dataset_js_1 = require("../../../integration/boilingdata/dataset.js");
 const bdIntegration_js_1 = require("../../../integration/bdIntegration.js");
+const config_util_js_1 = require("../../utils/config_util.js");
 const logger = (0, logger_util_js_1.getLogger)("bdcli-domain");
 logger.setLogLevel(logger_util_js_1.ELogLevel.WARN);
 async function iamrole(options, _command) {
     try {
-        logger.debug({ options });
+        options = await (0, config_util_js_1.combineOptsWithSettings)(options, logger);
         if (options.delete) {
             (0, spinner_util_js_1.updateSpinnerText)("Not implemented yet. Please delete the IAM Role from AWS Console");
             (0, spinner_util_js_1.spinnerWarn)("Not implemented yet. Please delete the IAM Role from AWS Console");

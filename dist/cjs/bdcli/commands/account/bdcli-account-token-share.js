@@ -34,10 +34,11 @@ const auth_util_js_1 = require("../../utils/auth_util.js");
 const cron_validate_1 = __importDefault(require("cron-validate"));
 const cron_schedule_1 = require("cron-schedule");
 const account_js_1 = require("../../../integration/boilingdata/account.js");
+const config_util_js_1 = require("../../utils/config_util.js");
 const logger = (0, logger_util_js_1.getLogger)("bdcli-account-token-share");
 async function show(options, _command) {
     try {
-        logger.debug({ options });
+        options = await (0, config_util_js_1.combineOptsWithSettings)(options, logger);
         if (options.lifetime)
             await (0, auth_util_js_1.validateTokenLifetime)(options.lifetime);
         if (options.vendingSchedule) {

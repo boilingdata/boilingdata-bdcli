@@ -30,11 +30,11 @@ const options_util_js_1 = require("../../utils/options_util.js");
 // import { getIdToken } from "../../utils/auth_util.js";
 // import { BDAccount } from "../../../integration/boilingdata/account.js";
 const config_util_js_1 = require("../../utils/config_util.js");
+const output_util_js_1 = require("../../utils/output_util.js");
 const logger = (0, logger_util_js_1.getLogger)("bdcli-account-token-list-sessions");
 async function show(options, _command) {
     try {
-        options = await (0, config_util_js_1.combineOptsWithSettings)(options);
-        logger.debug({ options });
+        options = await (0, config_util_js_1.combineOptsWithSettings)(options, logger);
         // updateSpinnerText("Authenticating");
         // const { idToken: token, cached: idCached, region: region } = await getIdToken(logger);
         // updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
@@ -43,7 +43,7 @@ async function show(options, _command) {
         // if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
         const list = await (0, config_util_js_1.getCachedTokenSessions)(logger, options.showExpired);
         (0, spinner_util_js_1.spinnerSuccess)();
-        console.log(JSON.stringify(list));
+        await (0, output_util_js_1.outputResults)(list, options.disableSpinner);
     }
     catch (err) {
         (0, spinner_util_js_1.spinnerError)(err?.message);

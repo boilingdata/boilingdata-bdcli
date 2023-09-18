@@ -3,9 +3,11 @@ import { getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
 import { getIdToken, setupMfa } from "../../utils/auth_util.js";
+import { combineOptsWithSettings } from "../../utils/config_util.js";
 const logger = getLogger("bdcli-account-enable-mfa");
 async function show(_options, _command) {
     try {
+        _options = await combineOptsWithSettings(_options, logger);
         updateSpinnerText("Authenticating");
         const { cached } = await getIdToken(logger);
         updateSpinnerText(cached ? "Authenticating: cached" : "Authenticating: success");

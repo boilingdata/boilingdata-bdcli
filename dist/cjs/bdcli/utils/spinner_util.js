@@ -51,9 +51,9 @@ function spinnerWarn(message) {
 }
 exports.spinnerWarn = spinnerWarn;
 function spinnerError(message) {
-    if (!isEnabled)
-        return;
-    spinner.fail(message ? error(message) : undefined);
+    if (isEnabled)
+        spinner.fail(message ? error(message) : undefined);
+    process.exit(1); // error
 }
 exports.spinnerError = spinnerError;
 function spinnerSuccess(message) {

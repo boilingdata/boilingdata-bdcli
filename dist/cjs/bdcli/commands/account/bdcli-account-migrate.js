@@ -27,10 +27,11 @@ const cmd = __importStar(require("commander"));
 const logger_util_js_1 = require("../../utils/logger_util.js");
 const spinner_util_js_1 = require("../../utils/spinner_util.js");
 const options_util_js_1 = require("../../utils/options_util.js");
+const config_util_js_1 = require("../../utils/config_util.js");
 const logger = (0, logger_util_js_1.getLogger)("bdcli-account-migrate");
-async function show(options, _command) {
+async function show(_options, _command) {
     try {
-        logger.debug({ options: { ...options, password: options.password ? "**" : undefined } });
+        _options = await (0, config_util_js_1.combineOptsWithSettings)(_options, logger);
         (0, spinner_util_js_1.spinnerWarn)("Not supported yet.");
     }
     catch (err) {

@@ -34,7 +34,7 @@ async function addGlobalOptions(program, logger) {
         .addOption(new cmd.Option("--log-level <level>", "log level").choices(["debug", "info", "warn", "error"]))
         .addOption(new cmd.Option("-V, --version", "show version"))
         .addOption(new cmd.Option("--disable-spinner", "disable in-progress spinner status messages"))
-        .addOption(new cmd.Option("--profile <profile>", `select config file profile to use (optional in ${config_util_js_1.BDCONF})`))
+        .addOption(new cmd.Option("--profile <profile>", `select config file profile to use (optional in ${config_util_js_1.BDCONF} and overrides BD_PROFILE env)`))
         .on("option:profile", (profileName) => (0, config_util_js_1.setProfile)(profileName))
         .on("option:log-level", (level) => logger.setLogLevel(level))
         .on("option:debug", () => logger.setLogLevel(logger_util_js_1.ELogLevel.DEBUG))

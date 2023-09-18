@@ -36,7 +36,7 @@ const auth_util_js_1 = require("../../utils/auth_util.js");
 const logger = (0, logger_util_js_1.getLogger)("bdcli-account-config");
 async function show(options, _command) {
     try {
-        logger.debug({ options: { ...options, password: options.password ? "**" : undefined } });
+        options = await (0, config_util_js_1.combineOptsWithSettings)(options, logger);
         if (options.list) {
             (0, spinner_util_js_1.updateSpinnerText)(`Listing profiles in ${config_util_js_1.BDCONF}`);
             const list = await (0, config_util_js_1.listConfigProfiles)(logger);
@@ -59,16 +59,21 @@ async function show(options, _command) {
             return;
         }
         if (await (0, config_util_js_1.hasValidConfig)()) {
-            if (options.password) {
+            if (options.password && !options.validate) {
                 await (0, config_util_js_1.updateConfig)({ credentials: { password: options.password } });
                 return (0, spinner_util_js_1.spinnerSuccess)("Password added to the config");
             }
             return (0, spinner_util_js_1.spinnerSuccess)(`Valid configuration already exists for "${config_util_js_1.profile}" profile`);
         }
+        else {
+            if (options.validate) {
+                return (0, spinner_util_js_1.spinnerError)(`No valid configuration found for "${config_util_js_1.profile}" profile`);
+            }
+        }
         if (!options.email && !options.validate) {
             options.email = await (0, auth_util_js_1.getEmail)();
         }
-        if (!options.password && !options.noPassword && !options.validate) {
+        if (!options.password && !options.nopw && !options.validate) {
             const inp = await (0, prompts_1.default)({
                 type: "password",
                 name: "pw",
@@ -78,10 +83,11 @@ async function show(options, _command) {
             options.password = inp["pw"];
         }
         logger.debug({ options: { ...options, password: options.password ? "**" : undefined } });
-        (0, spinner_util_js_1.updateSpinnerText)("Creating ~/.bdclirc");
+        (0, spinner_util_js_1.updateSpinnerText)(`Creating ${config_util_js_1.BDCONF}`);
         const { email, password, region } = options;
-        if (!email)
-            return (0, spinner_util_js_1.spinnerError)("No email found");
+        if (!email) {
+            return (0, spinner_util_js_1.spinnerError)("No email found, did you forget to set profile with BD_PROFILE env or --profile option?");
+        }
         await (0, config_util_js_1.updateConfig)({ credentials: { email, password, region } });
         (0, spinner_util_js_1.spinnerSuccess)();
     }
@@ -90,10 +96,10 @@ async function show(options, _command) {
     }
 }
 const program = new cmd.Command("bdcli account config")
-    .addOption(new cmd.Option("--validate", "validate current config"))
+    .addOption(new cmd.Option("--validate", "validate current config").conflicts("--clear").conflicts("--list"))
     .addOption(new cmd.Option("--email <email>", "email address that works").conflicts("--validate"))
-    .addOption(new cmd.Option("--password <password>", "suitably complex password"))
-    .addOption(new cmd.Option("--no-password", "suitably complex password").conflicts("--password"))
+    .addOption(new cmd.Option("--password <password>", "suitably complex password to be set into config"))
+    .addOption(new cmd.Option("--nopw", "do not store password into config").conflicts("--password"))
     .addOption(new cmd.Option("--clear", "delete all session tokens (for opt. selected profile)"))
     .addOption(new cmd.Option("--region <awsRegion>", "Sign-in AWS region").default("eu-west-1"))
     .addOption(new cmd.Option("--list", `List all config profiles (see ${config_util_js_1.BDCONF})`))

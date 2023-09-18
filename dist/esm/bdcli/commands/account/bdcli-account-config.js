@@ -2,13 +2,13 @@ import * as cmd from "commander";
 import { getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
-import { BDCONF, hasValidConfig, listConfigProfiles, updateConfig, profile } from "../../utils/config_util.js";
+import { BDCONF, hasValidConfig, listConfigProfiles, updateConfig, profile, combineOptsWithSettings, } from "../../utils/config_util.js";
 import prompts from "prompts";
 import { getEmail } from "../../utils/auth_util.js";
 const logger = getLogger("bdcli-account-config");
 async function show(options, _command) {
     try {
-        logger.debug({ options: { ...options, password: options.password ? "**" : undefined } });
+        options = await combineOptsWithSettings(options, logger);
         if (options.list) {
             updateSpinnerText(`Listing profiles in ${BDCONF}`);
             const list = await listConfigProfiles(logger);
@@ -31,16 +31,21 @@ async function show(options, _command) {
             return;
         }
         if (await hasValidConfig()) {
-            if (options.password) {
+            if (options.password && !options.validate) {
                 await updateConfig({ credentials: { password: options.password } });
                 return spinnerSuccess("Password added to the config");
             }
             return spinnerSuccess(`Valid configuration already exists for "${profile}" profile`);
         }
+        else {
+            if (options.validate) {
+                return spinnerError(`No valid configuration found for "${profile}" profile`);
+            }
+        }
         if (!options.email && !options.validate) {
             options.email = await getEmail();
         }
-        if (!options.password && !options.noPassword && !options.validate) {
+        if (!options.password && !options.nopw && !options.validate) {
             const inp = await prompts({
                 type: "password",
                 name: "pw",
@@ -50,10 +55,11 @@ async function show(options, _command) {
             options.password = inp["pw"];
         }
         logger.debug({ options: { ...options, password: options.password ? "**" : undefined } });
-        updateSpinnerText("Creating ~/.bdclirc");
+        updateSpinnerText(`Creating ${BDCONF}`);
         const { email, password, region } = options;
-        if (!email)
-            return spinnerError("No email found");
+        if (!email) {
+            return spinnerError("No email found, did you forget to set profile with BD_PROFILE env or --profile option?");
+        }
         await updateConfig({ credentials: { email, password, region } });
         spinnerSuccess();
     }
@@ -62,10 +68,10 @@ async function show(options, _command) {
     }
 }
 const program = new cmd.Command("bdcli account config")
-    .addOption(new cmd.Option("--validate", "validate current config"))
+    .addOption(new cmd.Option("--validate", "validate current config").conflicts("--clear").conflicts("--list"))
     .addOption(new cmd.Option("--email <email>", "email address that works").conflicts("--validate"))
-    .addOption(new cmd.Option("--password <password>", "suitably complex password"))
-    .addOption(new cmd.Option("--no-password", "suitably complex password").conflicts("--password"))
+    .addOption(new cmd.Option("--password <password>", "suitably complex password to be set into config"))
+    .addOption(new cmd.Option("--nopw", "do not store password into config").conflicts("--password"))
     .addOption(new cmd.Option("--clear", "delete all session tokens (for opt. selected profile)"))
     .addOption(new cmd.Option("--region <awsRegion>", "Sign-in AWS region").default("eu-west-1"))
     .addOption(new cmd.Option("--list", `List all config profiles (see ${BDCONF})`))

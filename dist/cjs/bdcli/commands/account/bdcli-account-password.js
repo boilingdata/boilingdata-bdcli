@@ -28,10 +28,11 @@ const logger_util_js_1 = require("../../utils/logger_util.js");
 const spinner_util_js_1 = require("../../utils/spinner_util.js");
 const options_util_js_1 = require("../../utils/options_util.js");
 const auth_util_js_1 = require("../../utils/auth_util.js");
+const config_util_js_1 = require("../../utils/config_util.js");
 const logger = (0, logger_util_js_1.getLogger)("bdcli-account-password");
 async function show(options, _command) {
     try {
-        logger.debug({ options });
+        options = await (0, config_util_js_1.combineOptsWithSettings)(options, logger);
         if (!options.recover) {
             // by default we update the password
             try {

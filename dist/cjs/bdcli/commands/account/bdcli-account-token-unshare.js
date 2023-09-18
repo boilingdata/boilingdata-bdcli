@@ -29,10 +29,11 @@ const spinner_util_js_1 = require("../../utils/spinner_util.js");
 const options_util_js_1 = require("../../utils/options_util.js");
 const auth_util_js_1 = require("../../utils/auth_util.js");
 const account_js_1 = require("../../../integration/boilingdata/account.js");
+const config_util_js_1 = require("../../utils/config_util.js");
 const logger = (0, logger_util_js_1.getLogger)("bdcli-account-token-unshare");
 async function show(options, _command) {
     try {
-        logger.debug({ options });
+        options = await (0, config_util_js_1.combineOptsWithSettings)(options, logger);
         if (options.id.length != 40)
             throw new Error("Invalid share id");
         (0, spinner_util_js_1.updateSpinnerText)("Authenticating");

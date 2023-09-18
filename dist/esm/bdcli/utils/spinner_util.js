@@ -39,9 +39,9 @@ export function spinnerWarn(message) {
     spinner.warn(message ? warning(message) : warning(spinner.text));
 }
 export function spinnerError(message) {
-    if (!isEnabled)
-        return;
-    spinner.fail(message ? error(message) : undefined);
+    if (isEnabled)
+        spinner.fail(message ? error(message) : undefined);
+    process.exit(1); // error
 }
 export function spinnerSuccess(message) {
     if (!isEnabled)

@@ -28,9 +28,11 @@ const logger_util_js_1 = require("../../utils/logger_util.js");
 const spinner_util_js_1 = require("../../utils/spinner_util.js");
 const options_util_js_1 = require("../../utils/options_util.js");
 const auth_util_js_1 = require("../../utils/auth_util.js");
+const config_util_js_1 = require("../../utils/config_util.js");
 const logger = (0, logger_util_js_1.getLogger)("bdcli-account-enable-mfa");
 async function show(_options, _command) {
     try {
+        _options = await (0, config_util_js_1.combineOptsWithSettings)(_options, logger);
         (0, spinner_util_js_1.updateSpinnerText)("Authenticating");
         const { cached } = await (0, auth_util_js_1.getIdToken)(logger);
         (0, spinner_util_js_1.updateSpinnerText)(cached ? "Authenticating: cached" : "Authenticating: success");

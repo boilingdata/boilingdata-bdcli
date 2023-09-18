@@ -2,12 +2,12 @@ import * as cmd from "commander";
 import { getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
-import { hasValidConfig } from "../../utils/config_util.js";
+import { combineOptsWithSettings, hasValidConfig } from "../../utils/config_util.js";
 import { registerToBoilingData } from "../../utils/auth_util.js";
 const logger = getLogger("bdcli-account-register");
 async function show(options, _command) {
     try {
-        logger.debug({ options: { ...options, password: options.password ? "**" : undefined } });
+        options = await combineOptsWithSettings(options, logger);
         if (options.environment != "preview" || options.region != "eu-west-1") {
             return spinnerError("Currently only preview environment is supported, and userpool registration on eu-west-1 AWS region. " +
                 "Migration to other regions and production environment(s) will be supported in the future.");

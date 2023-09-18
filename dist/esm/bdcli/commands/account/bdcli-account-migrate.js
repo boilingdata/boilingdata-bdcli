@@ -2,10 +2,11 @@ import * as cmd from "commander";
 import { getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerWarn } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
+import { combineOptsWithSettings } from "../../utils/config_util.js";
 const logger = getLogger("bdcli-account-migrate");
-async function show(options, _command) {
+async function show(_options, _command) {
     try {
-        logger.debug({ options: { ...options, password: options.password ? "**" : undefined } });
+        _options = await combineOptsWithSettings(_options, logger);
         spinnerWarn("Not supported yet.");
     }
     catch (err) {
