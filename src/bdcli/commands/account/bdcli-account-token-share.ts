@@ -6,12 +6,13 @@ import { getIdToken, validateTokenLifetime } from "../../utils/auth_util.js";
 import cron from "cron-validate";
 import { parseCronExpression } from "cron-schedule";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
+import { combineOptsWithSettings } from "../../utils/config_util.js";
 
 const logger = getLogger("bdcli-account-token-share");
 
 async function show(options: any, _command: cmd.Command): Promise<void> {
   try {
-    logger.debug({ options });
+    options = await combineOptsWithSettings(options, logger);
 
     if (options.lifetime) await validateTokenLifetime(options.lifetime);
 

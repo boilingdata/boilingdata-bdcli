@@ -9,13 +9,14 @@ import { BDIamRole } from "../../../integration/aws/iam_roles.js";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
 import { BDDataSourceConfig } from "../../../integration/boilingdata/dataset.js";
 import { BDIntegration } from "../../../integration/bdIntegration.js";
+import { combineOptsWithSettings } from "../../utils/config_util.js";
 
 const logger = getLogger("bdcli-aws");
 logger.setLogLevel(ELogLevel.WARN);
 
 async function iamrole(options: any, _command: cmd.Command): Promise<void> {
   try {
-    logger.debug({ options });
+    options = await combineOptsWithSettings(options, logger);
 
     if (options.delete) {
       updateSpinnerText("Not implemented yet. Please delete the IAM Role from AWS Console");
