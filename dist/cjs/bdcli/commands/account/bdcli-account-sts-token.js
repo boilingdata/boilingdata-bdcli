@@ -41,13 +41,11 @@ const logger = (0, logger_util_js_1.getLogger)("bdcli-account-token");
 const macroHeader = "\n-- BoilingData DuckDB Table Macro START\n";
 const macroFooter = "\n-- BoilingData DuckDB Table Macro END";
 const rcFilePath = path_1.default.join(process.env["HOME"] ?? "~", ".duckdbrc");
-function getMacro(token, shareId) {
-    const share = shareId ? `&shareId=${shareId}` : "";
+function getMacro(token) {
     return (`${macroHeader}` +
         `CREATE OR REPLACE TEMP MACRO boilingdata(sql) AS TABLE ` +
         `SELECT * FROM parquet_scan('https://httpfs.api.test.boilingdata.com/httpfs?bdStsToken=` +
         token +
-        share +
         `&sql=' || sql);` +
         `${macroFooter}`);
 }
@@ -60,12 +58,12 @@ async function show(options, _command) {
         const { idToken: token, cached: idCached, region } = await (0, auth_util_js_1.getIdToken)(logger);
         (0, spinner_util_js_1.updateSpinnerText)(`Authenticating: ${idCached ? "cached" : "success"}`);
         (0, spinner_util_js_1.spinnerSuccess)();
-        (0, spinner_util_js_1.updateSpinnerText)(`Getting BoilingData STS token ${options.shareId ? "(shared)" : ""}`);
+        (0, spinner_util_js_1.updateSpinnerText)(`Getting BoilingData STS token`);
         if (!region)
             throw new Error("Pass --region parameter or set AWS_REGION env");
         const bdAccount = new account_js_1.BDAccount({ logger, authToken: token });
-        const { bdStsToken, cached: stsCached, ...rest } = await bdAccount.getToken(options.lifetime ?? "1h", options.shareId);
-        (0, spinner_util_js_1.updateSpinnerText)(`Getting BoilingData STS token ${options.shareId ? "(shared)" : ""}` + `: ${stsCached ? "cached" : "success"}`);
+        const { bdStsToken, cached: stsCached, ...rest } = await bdAccount.getToken(options.lifetime ?? "1h");
+        (0, spinner_util_js_1.updateSpinnerText)(`Getting BoilingData STS token: ${stsCached ? "cached" : "success"}`);
         (0, spinner_util_js_1.spinnerSuccess)();
         if (options.dbtprofiles) {
             (0, spinner_util_js_1.updateSpinnerText)(`Storing Boiling token into DBT profiles file: ${options.dbtprofiles}`);
@@ -73,7 +71,7 @@ async function show(options, _command) {
             (0, spinner_util_js_1.spinnerSuccess)();
         }
         if (options.duckdbMacro) {
-            await (0, output_util_js_1.outputResults)({ bdStsToken, duckDbMacro: getMacro(bdStsToken, options.shareId), ...rest }, options.disableSpinner);
+            await (0, output_util_js_1.outputResults)({ bdStsToken, duckDbMacro: getMacro(bdStsToken), ...rest }, options.disableSpinner);
         }
         if (options.duckdbrc) {
             (0, spinner_util_js_1.updateSpinnerText)("Storing DuckDB BoilingData TABLE MACRO");
@@ -81,8 +79,8 @@ async function show(options, _command) {
             const hasMacro = rcContents.includes(macroHeader);
             const regex = new RegExp(`${macroHeader}.*${macroFooter}`, "g");
             const newContents = hasMacro
-                ? rcContents.replace(regex, getMacro(bdStsToken, options.shareId))
-                : rcContents + "\n" + getMacro(bdStsToken, options.shareId);
+                ? rcContents.replace(regex, getMacro(bdStsToken))
+                : rcContents + "\n" + getMacro(bdStsToken);
             logger.debug({ rcContents, hasMacro, newContents, regex });
             await fs.writeFile(rcFilePath, newContents);
             (0, spinner_util_js_1.spinnerSuccess)();
@@ -101,8 +99,6 @@ async function show(options, _command) {
     }
 }
 const program = new cmd.Command("bdcli account sts-token")
-    .addOption(new cmd.Option("--share-id <id>", "Another user's shared acces token id for you (see token-list for the ids).\n" +
-    "\tOptional, the default is token that binds to your AWS IAM Role access."))
     .addOption(new cmd.Option("--duckdb-macro", "Output copy-pasteable DuckDB boilingdata() temporary TABLE MACRO " +
     "with the auth token in place.\n\tMacro usage example for full query pushdown to Boiling cloud:\n" +
     "\t\"SELECT * FROM boilingdata('SELECT * FROM " +
