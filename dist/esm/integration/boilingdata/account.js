@@ -1,4 +1,5 @@
 import { getCachedTokenSessions, getConfigCredentials, serialiseTokensList, updateConfig, } from "../../bdcli/utils/config_util.js";
+import { spinnerError } from "../../bdcli/utils/spinner_util.js";
 import { accountUrl, getReqHeaders, tokenShareUrl, tokenUrl } from "./boilingdata_api.js";
 import * as jwt from "jsonwebtoken";
 export class BDAccount {
@@ -86,17 +87,20 @@ export class BDAccount {
             throw new Error("No selected BD STS token");
         this.logger.debug({ bdStsToken: this.selectedToken, decodedToken: this.decodedToken });
     }
-    checkExp(exp) {
+    getHumanReadable(exp) {
         const humanReadable = new Date();
+        humanReadable.setTime(exp * 1000);
+        return humanReadable.toISOString();
+    }
+    checkExp(exp) {
         const twoMinsAgo = new Date();
         twoMinsAgo.setTime(Date.now() - 2 * 60 * 1000);
-        humanReadable.setTime(exp * 1000);
         const diff = exp * 1000 - twoMinsAgo.getTime();
         this.logger.debug({
             exp,
             diff,
             twoMinsAgo: twoMinsAgo.toISOString(),
-            expReadable: humanReadable.toISOString(),
+            expiresIn: this.getHumanReadable(exp),
         });
         if (diff < 0)
             return false;
@@ -156,6 +160,8 @@ export class BDAccount {
         if (!this.decodedToken || !this.selectedToken)
             throw new Error("Unable to select/decode token");
         const exp = this.decodedToken["payload"].exp;
+        const iat = this.decodedToken["payload"].iat;
+        const tokenLifetimeMins = Math.floor((exp - iat) / 60);
         if (exp && this.checkExp(exp)) {
             this.logger.debug({ cachedBdStstToken: true });
             // we clean up expired tokens at the same time
@@ -164,7 +170,7 @@ export class BDAccount {
             const credentials = { sharedTokens: serialiseTokensList(this.sharedTokens), bdStsToken: this.bdStsToken };
             await updateConfig({ credentials }); // local config file
             // NOTE: Even if the tokenLifetime would be different from the request, we return non-expired token
-            return { bdStsToken: this.selectedToken, cached: true };
+            return { bdStsToken: this.selectedToken, cached: true, expiresIn: this.getHumanReadable(exp), tokenLifetimeMins };
         }
         return; // expired
     }
@@ -202,6 +208,10 @@ export class BDAccount {
         this.logger.debug({ getStsToken: { body: resBody } });
         if (!resBody.ResponseCode || !resBody.ResponseText) {
             throw new Error("Malformed response from BD API");
+        }
+        if (resBody.ResponseCode != "00") {
+            spinnerError(resBody.ResponseText);
+            throw new Error(`Failed to fetch token: ${resBody.ResponseText}`);
         }
         if (!resBody.bdStsToken) {
             throw new Error("Missing bdStsToken in BD API Response");

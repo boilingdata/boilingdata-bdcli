@@ -25,6 +25,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BDAccount = void 0;
 const config_util_js_1 = require("../../bdcli/utils/config_util.js");
+const spinner_util_js_1 = require("../../bdcli/utils/spinner_util.js");
 const boilingdata_api_js_1 = require("./boilingdata_api.js");
 const jwt = __importStar(require("jsonwebtoken"));
 class BDAccount {
@@ -112,17 +113,20 @@ class BDAccount {
             throw new Error("No selected BD STS token");
         this.logger.debug({ bdStsToken: this.selectedToken, decodedToken: this.decodedToken });
     }
-    checkExp(exp) {
+    getHumanReadable(exp) {
         const humanReadable = new Date();
+        humanReadable.setTime(exp * 1000);
+        return humanReadable.toISOString();
+    }
+    checkExp(exp) {
         const twoMinsAgo = new Date();
         twoMinsAgo.setTime(Date.now() - 2 * 60 * 1000);
-        humanReadable.setTime(exp * 1000);
         const diff = exp * 1000 - twoMinsAgo.getTime();
         this.logger.debug({
             exp,
             diff,
             twoMinsAgo: twoMinsAgo.toISOString(),
-            expReadable: humanReadable.toISOString(),
+            expiresIn: this.getHumanReadable(exp),
         });
         if (diff < 0)
             return false;
@@ -182,6 +186,8 @@ class BDAccount {
         if (!this.decodedToken || !this.selectedToken)
             throw new Error("Unable to select/decode token");
         const exp = this.decodedToken["payload"].exp;
+        const iat = this.decodedToken["payload"].iat;
+        const tokenLifetimeMins = Math.floor((exp - iat) / 60);
         if (exp && this.checkExp(exp)) {
             this.logger.debug({ cachedBdStstToken: true });
             // we clean up expired tokens at the same time
@@ -190,7 +196,7 @@ class BDAccount {
             const credentials = { sharedTokens: (0, config_util_js_1.serialiseTokensList)(this.sharedTokens), bdStsToken: this.bdStsToken };
             await (0, config_util_js_1.updateConfig)({ credentials }); // local config file
             // NOTE: Even if the tokenLifetime would be different from the request, we return non-expired token
-            return { bdStsToken: this.selectedToken, cached: true };
+            return { bdStsToken: this.selectedToken, cached: true, expiresIn: this.getHumanReadable(exp), tokenLifetimeMins };
         }
         return; // expired
     }
@@ -228,6 +234,10 @@ class BDAccount {
         this.logger.debug({ getStsToken: { body: resBody } });
         if (!resBody.ResponseCode || !resBody.ResponseText) {
             throw new Error("Malformed response from BD API");
+        }
+        if (resBody.ResponseCode != "00") {
+            (0, spinner_util_js_1.spinnerError)(resBody.ResponseText);
+            throw new Error(`Failed to fetch token: ${resBody.ResponseText}`);
         }
         if (!resBody.bdStsToken) {
             throw new Error("Missing bdStsToken in BD API Response");

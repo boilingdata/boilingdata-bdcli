@@ -19,6 +19,7 @@ export declare class BDAccount {
     getExtId(): Promise<string>;
     private selectAndDecodeToken;
     private dumpSelectedToken;
+    private getHumanReadable;
     private checkExp;
     listSharedTokens(): Promise<{
         toList: string[];

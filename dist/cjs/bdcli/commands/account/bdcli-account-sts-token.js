@@ -41,11 +41,13 @@ const logger = (0, logger_util_js_1.getLogger)("bdcli-account-token");
 const macroHeader = "\n-- BoilingData DuckDB Table Macro START\n";
 const macroFooter = "\n-- BoilingData DuckDB Table Macro END";
 const rcFilePath = path_1.default.join(process.env["HOME"] ?? "~", ".duckdbrc");
-function getMacro(token) {
+function getMacro(token, shareId) {
+    const share = shareId ? `&shareId=${shareId}` : "";
     return (`${macroHeader}` +
         `CREATE OR REPLACE TEMP MACRO boilingdata(sql) AS TABLE ` +
         `SELECT * FROM parquet_scan('https://httpfs.api.test.boilingdata.com/httpfs?bdStsToken=` +
         token +
+        share +
         `&sql=' || sql);` +
         `${macroFooter}`);
 }
@@ -71,7 +73,7 @@ async function show(options, _command) {
             (0, spinner_util_js_1.spinnerSuccess)();
         }
         if (options.duckdbMacro) {
-            await (0, output_util_js_1.outputResults)({ stsToken: bdStsToken, duckDbMacro: getMacro(bdStsToken) }, options.disableSpinner);
+            await (0, output_util_js_1.outputResults)({ bdStsToken, duckDbMacro: getMacro(bdStsToken, options.shareId), ...rest }, options.disableSpinner);
         }
         if (options.duckdbrc) {
             (0, spinner_util_js_1.updateSpinnerText)("Storing DuckDB BoilingData TABLE MACRO");
@@ -79,8 +81,8 @@ async function show(options, _command) {
             const hasMacro = rcContents.includes(macroHeader);
             const regex = new RegExp(`${macroHeader}.*${macroFooter}`, "g");
             const newContents = hasMacro
-                ? rcContents.replace(regex, getMacro(bdStsToken))
-                : rcContents + "\n" + getMacro(bdStsToken);
+                ? rcContents.replace(regex, getMacro(bdStsToken, options.shareId))
+                : rcContents + "\n" + getMacro(bdStsToken, options.shareId);
             logger.debug({ rcContents, hasMacro, newContents, regex });
             await fs.writeFile(rcFilePath, newContents);
             (0, spinner_util_js_1.spinnerSuccess)();
@@ -91,7 +93,7 @@ async function show(options, _command) {
             (0, spinner_util_js_1.spinnerSuccess)();
         }
         if (!options.duckdbrc && !options.dbtprofiles && !options.duckdbMacro) {
-            await (0, output_util_js_1.outputResults)({ bdStsToken, ...rest }, options.disableSpinner);
+            await (0, output_util_js_1.outputResults)({ bdStsToken, cached: stsCached, ...rest }, options.disableSpinner);
         }
     }
     catch (err) {
