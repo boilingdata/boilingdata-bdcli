@@ -42,11 +42,16 @@ const macroHeader = "\n-- BoilingData DuckDB Table Macro START\n";
 const macroFooter = "\n-- BoilingData DuckDB Table Macro END";
 const rcFilePath = path_1.default.join(process.env["HOME"] ?? "~", ".duckdbrc");
 function getMacro(token) {
+    const aliases = ["boilingdata", "boiling", "bd"];
     return (`${macroHeader}` +
-        `CREATE OR REPLACE TEMP MACRO boilingdata(sql) AS TABLE ` +
-        `SELECT * FROM parquet_scan('https://httpfs.api.test.boilingdata.com/httpfs?bdStsToken=` +
-        token +
-        `&sql=' || sql);` +
+        aliases
+            .map((alias) => {
+            return (`CREATE OR REPLACE TEMP MACRO ${alias}(sql) AS TABLE ` +
+                `SELECT * FROM parquet_scan('https://httpfs.api.test.boilingdata.com/httpfs?bdStsToken=` +
+                token +
+                `&sql=' || regexp_replace(regexp_replace(sql, '>', '%3E', 'g'), '<', '%3C', 'g'));`);
+        })
+            .join("\n") +
         `${macroFooter}`);
 }
 async function show(options, _command) {
