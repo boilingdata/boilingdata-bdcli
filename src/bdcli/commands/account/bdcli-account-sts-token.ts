@@ -21,6 +21,14 @@ function getMacro(token: string): string {
     `CREATE OR REPLACE TEMP MACRO boilingdata(sql) AS TABLE ` +
     `SELECT * FROM parquet_scan('https://httpfs.api.test.boilingdata.com/httpfs?bdStsToken=` +
     token +
+    `&sql=' || sql);\n` +
+    `CREATE OR REPLACE TEMP MACRO boiling(sql) AS TABLE ` +
+    `SELECT * FROM parquet_scan('https://httpfs.api.test.boilingdata.com/httpfs?bdStsToken=` +
+    token +
+    `&sql=' || sql);\n` +
+    `CREATE OR REPLACE TEMP MACRO bd(sql) AS TABLE ` +
+    `SELECT * FROM parquet_scan('https://httpfs.api.test.boilingdata.com/httpfs?bdStsToken=` +
+    token +
     `&sql=' || sql);` +
     `${macroFooter}`
   );
