@@ -11,31 +11,39 @@ import { outputResults } from "../../utils/output_util.js";
 import { combineOptsWithSettings } from "../../utils/config_util.js";
 
 const logger = getLogger("bdcli-account-token");
-const macroHeader = "\n-- BoilingData DuckDB Table Macro START\n";
-const macroFooter = "\n-- BoilingData DuckDB Table Macro END";
+const macroHeader = "-- BoilingData DuckDB Table Macro START";
+const macroFooter = "-- BoilingData DuckDB Table Macro END";
 const rcFilePath = path.join(process.env["HOME"] ?? "~", ".duckdbrc");
 
-function getMacro(token: string): string {
+function getMacro(token: string, encodings = true): string {
   const aliases = ["boilingdata", "boiling", "bd"];
+  const encodingMap = [
+    [">", "%3E"],
+    ["<", "%3C"],
+  ];
+  const getEncoded = (): string =>
+    encodingMap.reduce((prev, curr) => `regexp_replace(${prev}, '${curr[0]}', '${curr[1]}', 'g')`, "sql");
+  const sqlParam = encodings ? getEncoded() : `sql`;
   return (
-    `${macroHeader}` +
+    `\n${macroHeader}\n` +
     aliases
       .map((alias: string) => {
         return (
           `CREATE OR REPLACE TEMP MACRO ${alias}(sql) AS TABLE ` +
           `SELECT * FROM parquet_scan('https://httpfs.api.test.boilingdata.com/httpfs?bdStsToken=` +
           token +
-          `&sql=' || regexp_replace(regexp_replace(sql, '>', '%3E', 'g'), '<', '%3C', 'g'));`
+          `&sql=' || ${sqlParam});`
         );
       })
       .join("\n") +
-    `${macroFooter}`
+    `\n${macroFooter}\n`
   );
 }
 
 async function show(options: any, _command: cmd.Command): Promise<void> {
   try {
     options = await combineOptsWithSettings(options, logger);
+    const encodings = options.duckdbrcDisableEncode != true;
 
     if (options.lifetime) await validateTokenLifetime(options.lifetime);
 
@@ -58,18 +66,25 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     }
 
     if (options.duckdbMacro) {
-      await outputResults({ bdStsToken, duckDbMacro: getMacro(bdStsToken), ...rest }, options.disableSpinner);
+      await outputResults(
+        { bdStsToken, duckDbMacro: getMacro(bdStsToken, encodings), ...rest },
+        options.disableSpinner,
+      );
     }
 
     if (options.duckdbrc) {
       updateSpinnerText("Storing DuckDB BoilingData TABLE MACRO");
       const rcContents = (await fs.readFile(rcFilePath)).toString("utf8");
       const hasMacro = rcContents.includes(macroHeader);
-      const regex = new RegExp(`${macroHeader}.*${macroFooter}`, "g");
+      // eslint-disable-next-line no-useless-escape
+      //const regex = new RegExp("([\s\S]*)" + macroFooter, "gm");
       const newContents = hasMacro
-        ? rcContents.replace(regex, getMacro(bdStsToken))
-        : rcContents + "\n" + getMacro(bdStsToken);
-      logger.debug({ rcContents, hasMacro, newContents, regex });
+        ? rcContents.replace(
+            /\n-- BoilingData DuckDB Table Macro START([\s\S]*)-- BoilingData DuckDB Table Macro END[\n]*/gm,
+            getMacro(bdStsToken, encodings),
+          )
+        : rcContents + "\n" + getMacro(bdStsToken, encodings);
+      logger.debug({ rcContents, hasMacro, newContents });
       await fs.writeFile(rcFilePath, newContents);
       spinnerSuccess();
     }
@@ -111,6 +126,7 @@ const program = new cmd.Command("bdcli account sts-token")
       "Upsert DuckDB boilingdata() temporary TABLE MACRO " + "with the auth token in place into ~/.duckdbrc file",
     ),
   )
+  .addOption(new cmd.Option("--duckdbrc-disable-encode", "Disable SQL URL encoding with regexp_replace on the MACRO"))
   .addOption(
     new cmd.Option(
       "--lifetime <lifetime>",
