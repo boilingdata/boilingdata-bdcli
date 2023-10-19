@@ -117,6 +117,29 @@ dataSources:
         urlPrefix: s3://logs-bucket/
 ```
 
+## Direct access from DuckDB
+
+You use DuckDB command line client or e.g. [DuckDB ODBC](https://duckdb.org/docs/api/odbc/overview.html) driver to access BoilingData.
+
+```shell
+% ./bdcli account sts-token --profile demo --duckdbrc
+% duckdb
+D INSTALL httpfs;
+D LOAD httpfs;
+```
+
+```shell
+% ./bdcli account sts-token --profile demo --duckdb-macro --disable-spinner | jq -r '.duckDbMacro'
+-- BoilingData DuckDB Table Macro START
+CREATE OR REPLACE TEMP MACRO boilingdata(sql) AS TABLE SELECT * FROM parquet_scan('https://httpfs.api.test.boilingdata.com/httpfs?bdStsToken=eyJhbG..ZJJm0w&sql=' || regexp_replace(regexp_replace(sql, '>', '%3E', 'g'), '<', '%3C', 'g'));
+-- BoilingData DuckDB Table Macro END
+% duckdb
+D INSTALL httpfs;
+D LOAD httpfs;
+D CREATE OR REPLACE TEMP MACRO boilingdata(sql) AS TABLE SELECT * FROM parquet_scan('https://httpfs.api.test.boilingdata.com/httpfs?bdStsToken=eyJhbG..ZJJm0w&sql=' || regexp_replace(regexp_replace(sql, '>', '%3E', 'g'), '<', '%3C', 'g'));
+D SELECT * FROM boilingdata('SELECT * FROM parquet_scan(''s3://boilingdata-demo/test.parquet'') LIMIT 100;');
+```
+
 # Code Architecture & Development
 
 - `src/integration/` contains integration between AWS and BoilingData. Code that is agnostic to command line args handling. Keep the code decoupled with clear interfaces so that it could be moved as a separate node module (SDK) in the future if needed.
