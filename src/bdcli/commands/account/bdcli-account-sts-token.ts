@@ -20,6 +20,7 @@ function getMacro(token: string, encodings = true): string {
   const encodingMap = [
     [">", "%3E"],
     ["<", "%3C"],
+    ["\\|", "%7C"],
   ];
   const getEncoded = (): string =>
     encodingMap.reduce((prev, curr) => `regexp_replace(${prev}, '${curr[0]}', '${curr[1]}', 'g')`, "sql");
