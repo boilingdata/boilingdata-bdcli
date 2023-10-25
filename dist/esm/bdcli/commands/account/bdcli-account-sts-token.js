@@ -18,6 +18,7 @@ function getMacro(token, encodings = true) {
     const encodingMap = [
         [">", "%3E"],
         ["<", "%3C"],
+        ["\\|", "%7C"],
     ];
     const getEncoded = () => encodingMap.reduce((prev, curr) => `regexp_replace(${prev}, '${curr[0]}', '${curr[1]}', 'g')`, "sql");
     const sqlParam = encodings ? getEncoded() : `sql`;
