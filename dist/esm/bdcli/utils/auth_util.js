@@ -99,7 +99,7 @@ export async function registerToBoilingData(optsRegion, optsEnvironment, optsEma
     // attributeList.push(new id.CognitoUserAttribute(dataPhoneNumber));
     const userPool = new id.CognitoUserPool({ UserPoolId: userPoolId, ClientId: clientId });
     return new Promise((resolve, reject) => {
-        userPool.signUp(email, "", attributeList, [], (err, result) => {
+        userPool.signUp(email, password, attributeList, [], (err, result) => {
             if (err)
                 return reject(err);
             if (!result)
