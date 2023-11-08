@@ -119,7 +119,7 @@ export async function registerToBoilingData(
 
   const userPool = new id.CognitoUserPool({ UserPoolId: userPoolId, ClientId: clientId });
   return new Promise((resolve, reject) => {
-    userPool.signUp(email, "", attributeList, [], (err: any, result?: id.ISignUpResult) => {
+    userPool.signUp(email, password, attributeList, [], (err: any, result?: id.ISignUpResult) => {
       if (err) return reject(err);
       if (!result) return reject("No results");
       const cognitoUser = result.user;
