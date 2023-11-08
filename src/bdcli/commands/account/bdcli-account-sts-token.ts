@@ -91,7 +91,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
           )
         : rcContents + "\n" + getMacro(bdStsToken, encodings);
       logger.debug({ rcContents, hasMacro, newContents });
-      await fs.writeFile(rcFilePath, newContents);
+      await fs.writeFile(rcFilePath, newContents, { mode: 0o600 });
       spinnerSuccess();
     }
 
