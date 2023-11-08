@@ -1,5 +1,7 @@
 # bdcli - BoilingData Configuration Tool
 
+See [ONBOARDING.md](ONBOARDING.md) for step by step walk through.
+
 ## TL;DR
 
 You can use BDCLI to fully managed your BoilingData account, including integration with your AWS Account (if you have one), share and consume data sets to/from other users. See also our demo application [app.boiilngdata.com](https://app.boilingdata.com).
