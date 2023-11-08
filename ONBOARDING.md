@@ -1,6 +1,8 @@
 # HOWTO to start your Boiling journey
 
-This HOWTO describes how to get started with Boiling using latest Ubuntu.
+This HOWTO describes how to get started with Boiling using BDCLI.
+
+> This example uses Ubuntu docker instance so that you can, if you like, repeat the steps here regardless of the OS you're using.
 
 - [Getting Started](#getting-started)
   - [0. Create Ubuntu instance with necessary tools (nodejs)](#0-create-ubuntu-instance-with-necessary-tools-nodejs)
