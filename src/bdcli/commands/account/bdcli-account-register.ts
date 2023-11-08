@@ -18,11 +18,12 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
       );
     }
 
-    updateSpinnerText("Registering to BoilingData");
     const { region, environment, password, email, confirm } = options;
     if (confirm && confirm.length == 6 && !isNaN(parseInt(confirm))) {
+      updateSpinnerText("Confirming account to BoilingData");
       await confirmEmailToBoilingData(confirm, logger);
     } else {
+      updateSpinnerText("Registering to BoilingData");
       await registerToBoilingData(region, environment, email, password, logger);
     }
     if (!(await hasValidConfig())) return spinnerError("No valid config, was registration successful?");
