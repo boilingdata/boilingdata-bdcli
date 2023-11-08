@@ -60,7 +60,14 @@ async function show(options, _command) {
         }
         if (options.duckdbrc) {
             updateSpinnerText("Storing DuckDB BoilingData TABLE MACRO");
-            const rcContents = (await fs.readFile(rcFilePath)).toString("utf8");
+            let rcContents = "";
+            try {
+                rcContents = (await fs.readFile(rcFilePath)).toString("utf8");
+            }
+            catch (err) {
+                if (err.code !== "ENOENT")
+                    throw err;
+            }
             const hasMacro = rcContents.includes(macroHeader);
             // eslint-disable-next-line no-useless-escape
             //const regex = new RegExp("([\s\S]*)" + macroFooter, "gm");
@@ -68,7 +75,7 @@ async function show(options, _command) {
                 ? rcContents.replace(/\n-- BoilingData DuckDB Table Macro START([\s\S]*)-- BoilingData DuckDB Table Macro END[\n]*/gm, getMacro(bdStsToken, encodings))
                 : rcContents + "\n" + getMacro(bdStsToken, encodings);
             logger.debug({ rcContents, hasMacro, newContents });
-            await fs.writeFile(rcFilePath, newContents);
+            await fs.writeFile(rcFilePath, newContents, { mode: 0o600 });
             spinnerSuccess();
         }
         if (options.dbtprofiles) {

@@ -37,9 +37,15 @@ async function show(options, _command) {
             return (0, spinner_util_js_1.spinnerError)("Currently only preview environment is supported, and userpool registration on eu-west-1 AWS region. " +
                 "Migration to other regions and production environment(s) will be supported in the future.");
         }
-        (0, spinner_util_js_1.updateSpinnerText)("Registering to BoilingData");
-        const { region, environment, password, email } = options;
-        await (0, auth_util_js_1.registerToBoilingData)(region, environment, email, password, logger);
+        const { region, environment, password, email, confirm } = options;
+        if (confirm && confirm.length == 6 && !isNaN(parseInt(confirm))) {
+            (0, spinner_util_js_1.updateSpinnerText)("Confirming account to BoilingData");
+            await (0, auth_util_js_1.confirmEmailToBoilingData)(confirm, logger);
+        }
+        else {
+            (0, spinner_util_js_1.updateSpinnerText)("Registering to BoilingData");
+            await (0, auth_util_js_1.registerToBoilingData)(region, environment, email, password, logger);
+        }
         if (!(await (0, config_util_js_1.hasValidConfig)()))
             return (0, spinner_util_js_1.spinnerError)("No valid config, was registration successful?");
         (0, spinner_util_js_1.spinnerSuccess)();
@@ -53,6 +59,7 @@ const program = new cmd.Command("bdcli account register")
     .addOption(new cmd.Option("--password <password>", "suitably complex password, at least 12 characters"))
     .addOption(new cmd.Option("--region <region>", "AWS region (by default eu-west-1").default("eu-west-1"))
     .addOption(new cmd.Option("--environment <environment>", "'production' or 'preview' (default)").default("preview"))
+    .addOption(new cmd.Option("--confirm <code>", "Email confirmation code"))
     .action(async (options, command) => await show(options, command));
 (async () => {
     await (0, options_util_js_1.addGlobalOptions)(program, logger);

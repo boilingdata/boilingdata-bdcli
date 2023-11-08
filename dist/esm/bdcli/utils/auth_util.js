@@ -71,6 +71,17 @@ async function getCognitoUserSession(logger) {
     logger?.debug({ status: "Cognito user session created" });
     return cognitoUser;
 }
+export async function confirmEmailToBoilingData(confirm, logger) {
+    logger?.debug({ status: "confirmEmailToBoilingData" });
+    const cognitoUser = await getCognitoUser(logger);
+    return new Promise((resolve, reject) => {
+        cognitoUser.confirmRegistration(confirm, false, (err) => {
+            if (err)
+                return reject(err);
+            resolve();
+        });
+    });
+}
 export async function registerToBoilingData(optsRegion, optsEnvironment, optsEmail, optsPassword, logger) {
     logger?.debug({ status: "registerToBoilingData" });
     const creds = await getConfigCredentials(logger);

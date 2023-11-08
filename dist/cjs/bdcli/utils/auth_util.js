@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getIdToken = exports.setupMfa = exports.recoverPassword = exports.updatePassword = exports.registerToBoilingData = exports.getPw = exports.getEmail = exports.validateTokenLifetime = void 0;
+exports.getIdToken = exports.setupMfa = exports.recoverPassword = exports.updatePassword = exports.registerToBoilingData = exports.confirmEmailToBoilingData = exports.getPw = exports.getEmail = exports.validateTokenLifetime = void 0;
 const id = __importStar(require("amazon-cognito-identity-js"));
 const config_util_js_1 = require("./config_util.js");
 const boilingdata_api_js_1 = require("../../integration/boilingdata/boilingdata_api.js");
@@ -103,6 +103,18 @@ async function getCognitoUserSession(logger) {
     logger?.debug({ status: "Cognito user session created" });
     return cognitoUser;
 }
+async function confirmEmailToBoilingData(confirm, logger) {
+    logger?.debug({ status: "confirmEmailToBoilingData" });
+    const cognitoUser = await getCognitoUser(logger);
+    return new Promise((resolve, reject) => {
+        cognitoUser.confirmRegistration(confirm, false, (err) => {
+            if (err)
+                return reject(err);
+            resolve();
+        });
+    });
+}
+exports.confirmEmailToBoilingData = confirmEmailToBoilingData;
 async function registerToBoilingData(optsRegion, optsEnvironment, optsEmail, optsPassword, logger) {
     logger?.debug({ status: "registerToBoilingData" });
     const creds = await (0, config_util_js_1.getConfigCredentials)(logger);
