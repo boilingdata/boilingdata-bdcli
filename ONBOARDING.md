@@ -84,16 +84,22 @@ bdcli account register --confirm 123456 # code from your email!
 
 You don't need AWS account and/or AWS credentials to use Boiling provided that somebody has shared data for you. Also, your account is pre-configured with AWS IAM Role that allows access to BoilingData demo data, so you can run some tests already without configuring AWS side of things.
 
+Before you can use DuckDB client, you need to generate temporary session token with BDCLI, the `--duckdbrc` switch tells BDCLI to store the credentials on DuckDB's rc file, which DuckDB reads when you launch the command line client.
+
 ```shell
-./bdcli account sts-token --duckdbrc
+bdcli account sts-token --duckdbrc
 ✔ Authenticating: success
 ✔ Getting BoilingData STS token: cached
 ✔ Storing DuckDB BoilingData TABLE MACRO
 ```
 
-Now you have configured access to Boiling into DuckDB command line client through `~/.duckdbrc`.
+Now you have configured access to Boiling into DuckDB command line client through `~/.duckdbrc`. You can have a look at that file to see the MACRO definitions.
 
 Next, we download the duckdb client and run a query against pre-configured Boiling demo data set.
+
+> You need to do this on the same OS user which has the generated `.duckdbrc` file.
+
+> Please note how we embed SQL query into the `boilingdata()`  call. The embedded SQL will run on Boiling side on the cloud and the outer SQL runs locally on the duckdb client. 
 
 ```shell
 wget https://github.com/duckdb/duckdb/releases/download/v0.9.1/duckdb_cli-linux-amd64.zip
