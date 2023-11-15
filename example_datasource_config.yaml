@@ -19,3 +19,5 @@ dataSources:
     accessPolicy:
       - id: logs-policy
         urlPrefix: s3://logs-bucket/
+        permissions:
+          - read
