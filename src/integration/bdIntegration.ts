@@ -24,16 +24,11 @@ interface IGroupedDataSources {
 
 export class BDIntegration {
   private logger: ILogger;
-  // private bdAccount: BDAccount;
-  // private bdRole: BDIamRole;
   private bdDatasets: BDDataSourceConfig;
 
   constructor(private params: IBDIntegration) {
     this.logger = this.params.logger;
-    // this.bdAccount = this.params.bdAccount;
-    // this.bdRole = this.params.bdRole;
     this.bdDatasets = this.params.bdDataSources;
-    // this.logger.debug({ account: this.bdAccount, role: this.bdRole, datasets: this.bdDatasets });
   }
 
   private mapDatasetsToUniqBuckets(statements: IStatementExt[]): string[] {
@@ -50,12 +45,14 @@ export class BDIntegration {
     actions: string[],
     func: (datasets: IStatementExt[]) => string[],
   ): any {
-    return { Effect: "Allow", Action: actions, Resource: func(datasets) };
+    if (Array.isArray(datasets) && datasets.length > 0)
+      return { Effect: "Allow", Action: actions, Resource: func(datasets) };
   }
 
   public getGroupedBuckets(): IGroupedDataSources {
-    const dataSourcesConfig = this.bdDatasets.dataSourcesConfig;
+    const dataSourcesConfig = this.bdDatasets.getDatasourcesConfig();
     const allPolicies = dataSourcesConfig.dataSources.map(d => d.accessPolicy).flat();
+    if (allPolicies.some(policy => !policy.permissions)) throw new Error("Missing policy permissions");
     const readOnly = allPolicies
       .filter(policy => !policy.permissions?.includes(G_WRITE) && policy.permissions?.includes(G_READ))
       .map(policy => ({
@@ -84,17 +81,17 @@ export class BDIntegration {
   public async getPolicyDocument(): Promise<any> {
     const grouped = this.getGroupedBuckets();
     const allDatasets = [...grouped.readOnly, ...grouped.readWrite, ...grouped.writeOnly];
-    const Statement = [];
-    Statement.push(this.getStatement(grouped.readOnly, RO_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
-    Statement.push(this.getStatement(grouped.readWrite, RW_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
-    Statement.push(this.getStatement(grouped.writeOnly, WO_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
-    Statement.push(this.getStatement(allDatasets, BUCKET_ACTIONS, this.mapDatasetsToUniqBuckets.bind(this)));
-    Statement.push({
+    const Statements = [];
+    Statements.push(this.getStatement(grouped.readOnly, RO_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
+    Statements.push(this.getStatement(grouped.readWrite, RW_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
+    Statements.push(this.getStatement(grouped.writeOnly, WO_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
+    Statements.push(this.getStatement(allDatasets, BUCKET_ACTIONS, this.mapDatasetsToUniqBuckets.bind(this)));
+    Statements.push({
       Effect: "Allow",
       Action: "s3:ListAllMyBuckets",
       Resource: "*",
     });
-    const finalPolicy = { Version: "2012-10-17", Statement: Statement.filter(s => s.Resource.length) };
+    const finalPolicy = { Version: "2012-10-17", Statement: Statements.filter(s => s?.Resource?.length) };
     this.logger.debug({ getPolicyDocument: JSON.stringify(finalPolicy) });
     return finalPolicy;
   }

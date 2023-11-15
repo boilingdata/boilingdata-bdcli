@@ -29,15 +29,15 @@ export NODE_MAJOR=18
 echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_${NODE_MAJOR}.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
 apt-get update && apt-get install nodejs -y
 node -v
-v18.18.2
+> v18.18.2
 ```
 
 ### 1. Install `bdcli`
 
 ```shell
-npm install -g @boilingdata/boilingdata-bdcli@^1.0.27
+npm install -g @boilingdata/boilingdata-bdcli@^1.0.28
 bdcli -V
-1.0.27
+> 1.0.28
 ```
 
 Alternative install from the source directly
@@ -50,7 +50,7 @@ npm install
 chmod 755 dist/esm/index.js
 ln -s dist/esm/index.js bdcli
 ./bdcli -V
-1.0.27
+> 1.0.28
 ```
 
 ### 2. Configure Boiling Account and Register

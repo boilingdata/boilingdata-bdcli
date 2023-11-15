@@ -51,7 +51,7 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
 
     if (!options.createRoleOnly) {
       updateSpinnerText(`Registering IAM Role: ${iamRoleArn}`);
-      const datasourcesConfig = await bdDataSources.getDatasourcesConfig();
+      const datasourcesConfig = bdDataSources.getDatasourcesConfig();
       await bdAccount.setIamRoleWithPayload(iamRoleArn, { datasourcesConfig });
       spinnerSuccess();
     }
