@@ -73,6 +73,7 @@ async function show(options, _command) {
         if (!options.email && !options.validate) {
             options.email = await (0, auth_util_js_1.getEmail)();
         }
+        // FIXME: If the PW is invalid, don't write the .bdcli.yaml file!
         if (!options.password && !options.nopw && !options.validate) {
             const inp = await (0, prompts_1.default)({
                 type: "password",

@@ -11,7 +11,6 @@ export declare class BDDataSourceConfig {
     getUniqueNamePart(): Promise<string>;
     isDataSetsConfig(dataSourcesConfig: unknown): dataSourcesConfig is IDataSources;
     hasValidUrlPrefixes(_dataSourcesConfig: IDataSources): boolean;
-    getDatasourcesConfig(): Promise<IDataSources>;
+    getDatasourcesConfig(): IDataSources;
     readConfig(filename: string): Promise<IDataSources>;
-    get dataSourcesConfig(): IDataSources;
 }

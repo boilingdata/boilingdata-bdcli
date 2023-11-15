@@ -11,9 +11,12 @@ export class BDDataSourceConfig {
         this.logger = this.params.logger;
     }
     async getUniqueNamePart() {
-        if (!this._dataSourcesConfig)
+        if (!this._dataSourcesConfig || this._dataSourcesConfig.dataSources.length <= 0) {
             throw new Error("Set datasources config first");
-        const uniqName = this._dataSourcesConfig.uniqNamePart ?? this._dataSourcesConfig.dataSources.pop()?.name ?? "bdIamRole";
+        }
+        const uniqName = this._dataSourcesConfig.uniqNamePart ??
+            this._dataSourcesConfig.dataSources[this._dataSourcesConfig.dataSources.length - 1]?.name ??
+            "bdIamRole";
         this.logger.debug({ uniqName });
         return uniqName;
     }
@@ -32,17 +35,16 @@ export class BDDataSourceConfig {
         // TOOD: Validate URL prefixes.
         return true;
     }
-    async getDatasourcesConfig() {
+    getDatasourcesConfig() {
         if (!this._dataSourcesConfig)
             throw new Error("Please read the configuration file first with readConfig()");
-        return this._dataSourcesConfig;
+        return { ...this._dataSourcesConfig }; // make copy
     }
     async readConfig(filename) {
         if (this._dataSourcesConfig)
             return this._dataSourcesConfig;
         try {
             const dataSourcesConfig = yaml.load(await fs.readFile(filename, "utf8"));
-            this.logger.debug({ dataSourcesConfig });
             // all required keys and values?
             if (!this.isDataSetsConfig(dataSourcesConfig))
                 throw new Error("datasources config schema not validated");
@@ -51,6 +53,7 @@ export class BDDataSourceConfig {
                 throw new Error("datasources config URL prefixes mismatch between policy and data sets");
             }
             this._dataSourcesConfig = dataSourcesConfig;
+            this.logger.debug({ dataSourcesConfig: this._dataSourcesConfig });
             return this._dataSourcesConfig;
         }
         catch (err) {
@@ -59,10 +62,5 @@ export class BDDataSourceConfig {
             }
             throw err;
         }
-    }
-    get dataSourcesConfig() {
-        if (!this._dataSourcesConfig)
-            throw new Error("datasets config file not read yet, please call readConfig()");
-        return this._dataSourcesConfig;
     }
 }
