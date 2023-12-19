@@ -12,7 +12,7 @@ export const GRANT_PERMISSION = t.enumtype({
 });
 export const SESSION_TYPE = t.enumtype({
     "STS": "sts",
-    "ASSUME_ROLE": "assume_role",
+    "ASSUME_ROLE": "assumeRole",
 });
 export const LAYOUT = t.enumtype({
     "HIVE": "hive",

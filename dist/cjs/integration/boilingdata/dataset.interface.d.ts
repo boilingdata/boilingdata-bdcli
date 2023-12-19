@@ -7,7 +7,7 @@ export declare enum GRANT_PERMISSION {
 }
 export declare enum SESSION_TYPE {
     STS = "sts",
-    ASSUME_ROLE = "assume_role"
+    ASSUME_ROLE = "assumeRole"
 }
 export declare enum LAYOUT {
     HIVE = "hive",

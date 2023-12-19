@@ -38,7 +38,7 @@ exports.GRANT_PERMISSION = t.enumtype({
 });
 exports.SESSION_TYPE = t.enumtype({
     "STS": "sts",
-    "ASSUME_ROLE": "assume_role",
+    "ASSUME_ROLE": "assumeRole",
 });
 exports.LAYOUT = t.enumtype({
     "HIVE": "hive",

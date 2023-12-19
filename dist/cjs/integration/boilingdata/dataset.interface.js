@@ -13,7 +13,7 @@ var GRANT_PERMISSION;
 var SESSION_TYPE;
 (function (SESSION_TYPE) {
     SESSION_TYPE["STS"] = "sts";
-    SESSION_TYPE["ASSUME_ROLE"] = "assume_role";
+    SESSION_TYPE["ASSUME_ROLE"] = "assumeRole";
 })(SESSION_TYPE || (exports.SESSION_TYPE = SESSION_TYPE = {}));
 var LAYOUT;
 (function (LAYOUT) {
