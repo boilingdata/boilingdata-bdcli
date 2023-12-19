@@ -1,7 +1,7 @@
 import { ILogger } from "../bdcli/utils/logger_util.js";
 import { BDIamRole } from "./aws/iam_roles.js";
 import { BDAccount } from "./boilingdata/account.js";
-import { G_WRITE, G_READ, IStatementExt } from "./boilingdata/dataset.interface.js";
+import { GRANT_PERMISSION, IStatementExt } from "./boilingdata/dataset.interface.js";
 import { BDDataSourceConfig } from "./boilingdata/dataset.js";
 
 const RO_ACTIONS = ["s3:GetObject"];
@@ -51,24 +51,46 @@ export class BDIntegration {
 
   public getGroupedBuckets(): IGroupedDataSources {
     const dataSourcesConfig = this.bdDatasets.getDatasourcesConfig();
-    const allPolicies = dataSourcesConfig.dataSources.map(d => d.accessPolicy).flat();
+    const allPolicies = dataSourcesConfig.dataSources
+      .map(d => {
+        console.log(d);
+        d.accessPolicy = d.accessPolicy.map(pol => {
+          if (!pol.permissions) pol.permissions = [GRANT_PERMISSION.G_READ]; // default
+          return pol;
+        });
+        return d.accessPolicy;
+      })
+      .flat();
+    this.logger.debug({ allPolicies });
     if (allPolicies.some(policy => !policy.permissions)) throw new Error("Missing policy permissions");
     const readOnly = allPolicies
-      .filter(policy => !policy.permissions?.includes(G_WRITE) && policy.permissions?.includes(G_READ))
+      .filter(
+        policy =>
+          !policy.permissions?.includes(GRANT_PERMISSION.G_WRITE) &&
+          policy.permissions?.includes(GRANT_PERMISSION.G_READ),
+      )
       .map(policy => ({
         ...policy,
         bucket: new URL(policy.urlPrefix).host,
         prefix: new URL(policy.urlPrefix).pathname.substring(1),
       }));
     const readWrite = allPolicies
-      .filter(policy => policy.permissions?.includes(G_WRITE) && policy.permissions?.includes(G_READ))
+      .filter(
+        policy =>
+          policy.permissions?.includes(GRANT_PERMISSION.G_WRITE) &&
+          policy.permissions?.includes(GRANT_PERMISSION.G_READ),
+      )
       .map(policy => ({
         ...policy,
         bucket: new URL(policy.urlPrefix).host,
         prefix: new URL(policy.urlPrefix).pathname.substring(1),
       }));
     const writeOnly = allPolicies
-      .filter(policy => policy.permissions?.includes(G_WRITE) && !policy.permissions?.includes(G_READ))
+      .filter(
+        policy =>
+          policy.permissions?.includes(GRANT_PERMISSION.G_WRITE) &&
+          !policy.permissions?.includes(GRANT_PERMISSION.G_READ),
+      )
       .map(policy => ({
         ...policy,
         bucket: new URL(policy.urlPrefix).host,

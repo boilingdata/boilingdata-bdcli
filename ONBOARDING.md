@@ -82,7 +82,9 @@ bdcli account register --confirm 123456 # code from your email!
 
 ### 3. Run your first query!
 
-You don't need AWS account and/or AWS credentials to use Boiling provided that somebody has shared data for you. Also, your account is pre-configured with AWS IAM Role that allows access to BoilingData demo data, so you can run some tests already without configuring AWS side of things.
+You don't need AWS account and/or AWS credentials to use Boiling provided that somebody has shared data for you.
+
+Also, your account is pre-configured with AWS IAM Role that allows access to BoilingData demo data, so you can run queries already without configuring AWS side of things.
 
 Before you can use DuckDB client, you need to generate temporary session token with BDCLI, the `--duckdbrc` switch tells BDCLI to store the credentials on DuckDB's rc file, which DuckDB reads when you launch the command line client.
 
@@ -99,7 +101,9 @@ Next, we download the duckdb client and run a query against pre-configured Boili
 
 > You need to do this on the same OS user which has the generated `.duckdbrc` file.
 
-> Please note how we embed SQL query into the `boilingdata()`  call. The embedded SQL will run on Boiling side on the cloud and the outer SQL runs locally on the duckdb client. 
+> Please note how we embed SQL query into the `boilingdata()` call. The embedded SQL will run on Boiling side on the cloud and the outer SQL runs locally on the duckdb client.
+
+> Using this Boiling httpfs+parquet interface directly from duckdb is experimental and slower than compared to using Boiling Python or JS SDK, BI Tool gateway, or the demo GUI web application. Reason being that the results are delivered as Parquet files, which DuckDB then probes with retries.
 
 ```shell
 wget https://github.com/duckdb/duckdb/releases/download/v0.9.1/duckdb_cli-linux-amd64.zip
@@ -128,9 +132,48 @@ If you want to run queries against your own data and not only shared data, you n
 
 Creating the AWS IAM Role with accompanied trust relationship to Boiling AWS Account can be a bit tricky task as we also have added IAM Policy conditions to improve the security furthermore. But don't worry, `bdcli` can be used to create the IAM Role with the help of your Boiling account access.
 
-First, you create a YAML file that describes the S3 Bucket (and optionally a Prefix if you want to restrict access to prefix) for Boiling access. `bdcli` will use this YAML file to create the IAM Role for you. You can then review the IAM Role if you like. Once you're happy with it, you can configure IAM Role arn (arn is like a URL) to your Boiling Account. This way, Boiling knows which credentials to vend and use when accessing data for your queries.
+First, you create a YAML file that describes the S3 Bucket (and optionally a Prefix if you want to restrict access to prefix) for Boiling access. `bdcli` will use this YAML file to create the IAM Role for you. You can then review the IAM Role if you like. Once you're happy with it, you can configure IAM Role arn (arn is like a URL) to your Boiling Account. This way, Boiling knows which IAM Role to assume (credentials to vend) and use when accessing data for your queries.
 
-See the main [README.md](README.md) for an example.
+Here is a minimal YAML configuration example that grants Boiling read access on `s3://YOURBUCKET/YOURPREFIX*`. See [example_datasource_config.yaml](example_datasource_config.yaml) for a more thorough example.
+
+```yaml
+dataSources:
+  - name: YOURDATASOURCENAME
+    accessPolicy:
+      - id: your-user-policy
+        urlPrefix: s3://YOURBUCKET/YOURPREFIX
+```
+
+### Your user's minimal AWS IAM Polify for using Boiling
+
+When you want to use Boiling to read your data on your S3 Bucket, you need these minimal permissions available with the `AWS_PROFILE` in use when you run bdcli.
+
+> You need to replace `YOURBUCKET` and `YOURPREFIX` with the S3 Bucket and Prefix you want to read (and/or write) with Boiling.
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "MinimalBoilingS3Policy",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:ListBucket", "s3:GetBucketLocation"],
+      "Resource": ["arn:aws:s3:::YOURBUCKET", "arn:aws:s3:::YOURBUCKET/YOURPREFIX*"],
+      "Condition": {
+        "StringEquals": {
+          "s3:prefix": "YOURPREFIX"
+        }
+      }
+    },
+    {
+      "Sid": "MinimalBoilingIAMPolicy",
+      "Effect": "Allow",
+      "Action": ["iam:CreateRole", "iam:TagRole", "iam:ListPolicies"],
+      "Resource": "*"
+    }
+  ]
+}
+```
 
 ### Sharing data sets for others and querying data shared to you
 
@@ -150,25 +193,24 @@ duckdb -s "SELECT fromEmail, shareName, lifeTime, schedule FROM boilingdata('SEL
 
 > When you query data shared to you, Boiling will use the data owners credentials for data access, but limit the access to the VIEW described by SQL statement in the share configuration. This SQL statement is not visible to you as a share consumer, but only visible to the account that shared the data for you. In other words, the access is limited by the AWS IAM Role and furthermore, limited by the SQL statement (VIEW) to achieve row and column based security, but also time based security with the lifeTime and schedule attributes.
 
-Here is an example or `demo@boilingdata.com` users' Boiling data shares.
+Here is an example of `demo@boilingdata.com` users' Boiling data shares.
 
 - Please note that the `schema` column can be used to deduce the shared data set schema for cataloguing purpose. We use this data on [Boiling BI Tool Integrations](https://github.com/boilingdata/boilingdata-http-gw).
-- Please note also that the `sql` is only visible for entries having `fromEmail` equal to your account, i.e. data sets that you have shared for others.
+- Please note also that the `sql` column is only visible for entries having `fromEmail` equal to your account, i.e. data sets that you have shared for others.
 
 > OBT (One Big Table) design works also quite nicely with Boiling as you can create multiple segmented views over the same data with row and column filters. Behind the scenes Boiling warms up the whole data set and while users access the segments, they will all hit the same warm data set and experience fast query results right away!
 
-```shell
+````shell
 duckdb -s "SELECT * FROM boilingdata('SELECT * FROM boilingshares ORDER BY shareName');"
-┌──────────────────────┬──────────────────────┬──────────────────────┬──────────┬─────────────┬──────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────┐
-│      fromEmail       │       toEmail        │       shareId        │ lifeTime │  schedule   │      shareName       │                                                                                         schema                                                                                         │                                     sql                                     │
-│       varchar        │       varchar        │       varchar        │ varchar  │   varchar   │       varchar        │                                                                                        varchar                                                                                         │                                   varchar                                   │
-├──────────────────────┼──────────────────────┼──────────────────────┼──────────┼─────────────┼──────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
-│ dforsber@gmail.com   │ demo@boilingdata.com │ 5cc9d5546ab3dd45bb…  │ 1h       │ * * * * * * │ demo_full            │ CREATE TABLE t (VendorID INTEGER, tpep_pickup_datetime TIMESTAMP WITH TIME ZONE, tpep_dropoff_datetime TIMESTAMP WITH TIME ZONE, passenger_count INTEGER, trip_distance DOUBLE, Rate…  │                                                                             │
-│ demo@boilingdata.com │ dforsber@gmail.com   │ 27cdfa4dcd23c597a8…  │ 1h       │ * * * * * * │ taxi_locations       │ CREATE TABLE t (LocationID BIGINT, Borough VARCHAR, Zone VARCHAR, service_zone VARCHAR);                                                                                               │ SELECT * FROM parquet_scan('s3://boilingdata-demo/taxi_locations.parquet'); │
-│ dforsber@gmail.com   │ demo@boilingdata.com │ 2a521dffa65cea9c46…  │ 1h       │ * * * * * * │ taxi_locations       │ CREATE TABLE t (LocationID BIGINT, Borough VARCHAR, Zone VARCHAR, service_zone VARCHAR);                                                                                               │                                                                             │
-│ dforsber@gmail.com   │ demo@boilingdata.com │ 030895e27c10645541…  │ 1h       │ * * * * * * │ taxi_locations_lim…  │ CREATE TABLE t (LocationID BIGINT, Borough VARCHAR);                                                                                                                                   │                                                                             │
-└──────────────────────┴──────────────────────┴──────────────────────┴──────────┴─────────────┴──────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴─────────────────────────────────────────────────────────────────────────────┘
-```
+┌──────────────────────┬──────────────────────┬──────────────────────┬──────────┬─────────────┬──────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────┐
+│      fromEmail       │       toEmail        │       shareId        │ lifeTime │  schedule   │      shareName       │                                                                 schema                                                                 │                                     sql                                     │
+│       varchar        │       varchar        │       varchar        │ varchar  │   varchar   │       varchar        │                                                                varchar                                                                 │                                   varchar                                   │
+├──────────────────────┼──────────────────────┼──────────────────────┼──────────┼─────────────┼──────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────┤
+│ dforsber@gmail.com   │ demo@boilingdata.com │ 5cc9d5546ab3dd45bb…  │ 1h       │ * * * * * * │ demo_full            │ CREATE TABLE t (VendorID INTEGER, tpep_pickup_datetime TIMESTAMP WITH TIME ZONE, tpep_dropoff_datetime TIMESTAMP WITH TIME ZONE, pas…  │                                                                             │
+│ demo@boilingdata.com │ dforsber@gmail.com   │ 27cdfa4dcd23c597a8…  │ 1h       │ * * * * * * │ taxi_locations       │ CREATE TABLE t (LocationID BIGINT, Borough VARCHAR, Zone VARCHAR, service_zone VARCHAR);                                               │ SELECT * FROM parquet_scan('s3://boilingdata-demo/taxi_locations.parquet'); │
+│ dforsber@gmail.com   │ demo@boilingdata.com │ 2a521dffa65cea9c46…  │ 1h       │ * * * * * * │ taxi_locations       │ CREATE TABLE t (LocationID BIGINT, Borough VARCHAR, Zone VARCHAR, service_zone VARCHAR);                                               │                                                                             │
+│ dforsber@gmail.com   │ demo@boilingdata.com │ 030895e27c10645541…  │ 1h       │ * * * * * * │ taxi_locations_lim…  │ CREATE TABLE t (LocationID BIGINT, Borough VARCHAR);                                                                                   │                                                                             │
+└──────────────────────┴──────────────────────┴──────────────────────┴──────────┴─────────────┴──────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴─────────────────────────────────────────────────────────────────────────────┘
 
 Here is an example for accessing shared data set. Both data set shares point to the same data source, where the `taxi_locations_limited` only allows to see two columns instead of all.
 
@@ -195,4 +237,4 @@ duckdb -s "SELECT * FROM boilingdata('SELECT * FROM share(''dforsber@gmail.com:t
 │          4 │ Manhattan     │
 │          5 │ Staten Island │
 └────────────┴───────────────┘
-```
+````

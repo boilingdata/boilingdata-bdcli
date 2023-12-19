@@ -2,13 +2,32 @@ export enum EDataSetType {
   S3 = "s3",
 }
 
-export const G_WRITE = "write";
-export const G_READ = "read";
+export enum GRANT_PERMISSION {
+  G_WRITE = "write",
+  G_READ = "read",
+}
 
-export type USessionType = "sts" | "assumeRole";
-export type UGrant = "read" | "write";
-export type ULayout = "hive" | "folder" | "file";
-export type UFileType = "parquet" | "json" | "csv";
+export enum SESSION_TYPE {
+  STS = "sts",
+  ASSUME_ROLE = "assume_role",
+}
+
+export enum LAYOUT {
+  HIVE = "hive",
+  FOLDER = "folder",
+  FILE = "file",
+}
+
+export enum FILE_TYPE {
+  PARQUET = "parquet",
+  JSON = "json",
+  CSV = "csv",
+}
+
+export type USessionType = SESSION_TYPE.STS | SESSION_TYPE.ASSUME_ROLE;
+export type UGrant = GRANT_PERMISSION.G_READ | GRANT_PERMISSION.G_WRITE;
+export type ULayout = LAYOUT.HIVE | LAYOUT.FOLDER | LAYOUT.FILE;
+export type UFileType = FILE_TYPE.PARQUET | FILE_TYPE.JSON | FILE_TYPE.CSV;
 
 export interface IStatement {
   id: string;
@@ -30,8 +49,8 @@ export interface IDataSet {
 
 export interface IDataSource {
   name: string;
-  type: EDataSetType;
   accessPolicy: Array<IStatement>;
+  type?: EDataSetType;
   dataSets?: Array<IDataSet>;
   sessionType?: USessionType;
 }

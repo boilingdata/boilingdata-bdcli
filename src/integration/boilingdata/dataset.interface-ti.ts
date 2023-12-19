@@ -8,13 +8,35 @@ export const EDataSetType = t.enumtype({
   "S3": "s3",
 });
 
-export const USessionType = t.union(t.lit("sts"), t.lit("assumeRole"));
+export const GRANT_PERMISSION = t.enumtype({
+  "G_WRITE": "write",
+  "G_READ": "read",
+});
 
-export const UGrant = t.union(t.lit("read"), t.lit("write"));
+export const SESSION_TYPE = t.enumtype({
+  "STS": "sts",
+  "ASSUME_ROLE": "assume_role",
+});
 
-export const ULayout = t.union(t.lit("hive"), t.lit("folder"), t.lit("file"));
+export const LAYOUT = t.enumtype({
+  "HIVE": "hive",
+  "FOLDER": "folder",
+  "FILE": "file",
+});
 
-export const UFileType = t.union(t.lit("parquet"), t.lit("json"), t.lit("csv"));
+export const FILE_TYPE = t.enumtype({
+  "PARQUET": "parquet",
+  "JSON": "json",
+  "CSV": "csv",
+});
+
+export const USessionType = t.union(t.enumlit("SESSION_TYPE", "STS"), t.enumlit("SESSION_TYPE", "ASSUME_ROLE"));
+
+export const UGrant = t.union(t.enumlit("GRANT_PERMISSION", "G_READ"), t.enumlit("GRANT_PERMISSION", "G_WRITE"));
+
+export const ULayout = t.union(t.enumlit("LAYOUT", "HIVE"), t.enumlit("LAYOUT", "FOLDER"), t.enumlit("LAYOUT", "FILE"));
+
+export const UFileType = t.union(t.enumlit("FILE_TYPE", "PARQUET"), t.enumlit("FILE_TYPE", "JSON"), t.enumlit("FILE_TYPE", "CSV"));
 
 export const IStatement = t.iface([], {
   "id": "string",
@@ -36,8 +58,8 @@ export const IDataSet = t.iface([], {
 
 export const IDataSource = t.iface([], {
   "name": "string",
-  "type": "EDataSetType",
   "accessPolicy": t.array("IStatement"),
+  "type": t.opt("EDataSetType"),
   "dataSets": t.opt(t.array("IDataSet")),
   "sessionType": t.opt("USessionType"),
 });
@@ -50,6 +72,10 @@ export const IDataSources = t.iface([], {
 
 const exportedTypeSuite: t.ITypeSuite = {
   EDataSetType,
+  GRANT_PERMISSION,
+  SESSION_TYPE,
+  LAYOUT,
+  FILE_TYPE,
   USessionType,
   UGrant,
   ULayout,
