@@ -9,7 +9,7 @@ export enum GRANT_PERMISSION {
 
 export enum SESSION_TYPE {
   STS = "sts",
-  ASSUME_ROLE = "assume_role",
+  ASSUME_ROLE = "assumeRole",
 }
 
 export enum LAYOUT {
