@@ -3,6 +3,10 @@
  */
 import * as t from "ts-interface-checker";
 export declare const EDataSetType: t.TEnumType;
+export declare const GRANT_PERMISSION: t.TEnumType;
+export declare const SESSION_TYPE: t.TEnumType;
+export declare const LAYOUT: t.TEnumType;
+export declare const FILE_TYPE: t.TEnumType;
 export declare const USessionType: t.TUnion;
 export declare const UGrant: t.TUnion;
 export declare const ULayout: t.TUnion;

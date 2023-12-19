@@ -28,25 +28,39 @@ class BDIntegration {
     }
     getGroupedBuckets() {
         const dataSourcesConfig = this.bdDatasets.getDatasourcesConfig();
-        const allPolicies = dataSourcesConfig.dataSources.map(d => d.accessPolicy).flat();
+        const allPolicies = dataSourcesConfig.dataSources
+            .map(d => {
+            console.log(d);
+            d.accessPolicy = d.accessPolicy.map(pol => {
+                if (!pol.permissions)
+                    pol.permissions = [dataset_interface_js_1.GRANT_PERMISSION.G_READ]; // default
+                return pol;
+            });
+            return d.accessPolicy;
+        })
+            .flat();
+        this.logger.debug({ allPolicies });
         if (allPolicies.some(policy => !policy.permissions))
             throw new Error("Missing policy permissions");
         const readOnly = allPolicies
-            .filter(policy => !policy.permissions?.includes(dataset_interface_js_1.G_WRITE) && policy.permissions?.includes(dataset_interface_js_1.G_READ))
+            .filter(policy => !policy.permissions?.includes(dataset_interface_js_1.GRANT_PERMISSION.G_WRITE) &&
+            policy.permissions?.includes(dataset_interface_js_1.GRANT_PERMISSION.G_READ))
             .map(policy => ({
             ...policy,
             bucket: new URL(policy.urlPrefix).host,
             prefix: new URL(policy.urlPrefix).pathname.substring(1),
         }));
         const readWrite = allPolicies
-            .filter(policy => policy.permissions?.includes(dataset_interface_js_1.G_WRITE) && policy.permissions?.includes(dataset_interface_js_1.G_READ))
+            .filter(policy => policy.permissions?.includes(dataset_interface_js_1.GRANT_PERMISSION.G_WRITE) &&
+            policy.permissions?.includes(dataset_interface_js_1.GRANT_PERMISSION.G_READ))
             .map(policy => ({
             ...policy,
             bucket: new URL(policy.urlPrefix).host,
             prefix: new URL(policy.urlPrefix).pathname.substring(1),
         }));
         const writeOnly = allPolicies
-            .filter(policy => policy.permissions?.includes(dataset_interface_js_1.G_WRITE) && !policy.permissions?.includes(dataset_interface_js_1.G_READ))
+            .filter(policy => policy.permissions?.includes(dataset_interface_js_1.GRANT_PERMISSION.G_WRITE) &&
+            !policy.permissions?.includes(dataset_interface_js_1.GRANT_PERMISSION.G_READ))
             .map(policy => ({
             ...policy,
             bucket: new URL(policy.urlPrefix).host,
