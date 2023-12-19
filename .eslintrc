@@ -7,7 +7,12 @@
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended"
   ],
-  "ignorePatterns": ["**/tests/*.ts", "jest.config.js", "tsconfig.json"],
+  "ignorePatterns": [
+    "**/tests/*.ts",
+    "jest.config.js",
+    "tsconfig.json",
+    "src/integration/boilingdata/dataset.interface-ti.ts"
+  ],
   "rules": {
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-unused-vars": [
