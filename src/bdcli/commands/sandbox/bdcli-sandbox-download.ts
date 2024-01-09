@@ -35,7 +35,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
     spinnerSuccess();
 
-    updateSpinnerText("Downloading sandbox IaC template");
+    updateSpinnerText(`Downloading sandbox IaC template of ${options.name}`);
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdSandbox = new BDSandbox({ logger, authToken: token });
     const template = await bdSandbox.downloadTemplate(options.name);

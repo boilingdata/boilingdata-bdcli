@@ -19,10 +19,21 @@ export class BDSandbox {
     this.cognitoIdToken = this.params.authToken;
   }
 
-  public async downloadTemplate(templateName: string): Promise<string> {
+  public async destroySandbox(sandboxName: string): Promise<void> {
     const headers = await getReqHeaders(this.cognitoIdToken);
     this.logger.debug({ sandboxUrl, headers });
-    const res = await fetch(sandboxUrl + "/" + templateName, { method: "GET", headers });
+    const res = await fetch(sandboxUrl + "/" + sandboxName, { method: "DELETE", headers });
+    const respBody = await res.json();
+    this.logger.debug({ DeleteSandbox: { respBody } });
+    if (!respBody.ResponseCode || !respBody.ResponseText) {
+      throw new Error("Malformed response from BD API");
+    }
+  }
+
+  public async downloadTemplate(sandboxName: string): Promise<string> {
+    const headers = await getReqHeaders(this.cognitoIdToken);
+    this.logger.debug({ sandboxUrl, headers });
+    const res = await fetch(sandboxUrl + "/" + sandboxName, { method: "GET", headers });
     const respBody = await res.json();
     this.logger.debug({ DownloadSandbox: { respBody } });
     if (!respBody.ResponseCode || !respBody.ResponseText) {
@@ -31,26 +42,13 @@ export class BDSandbox {
     return respBody?.template;
   }
 
-  public async uploadTemplate(templateFilename: string, validateOnly = false): Promise<string> {
-    const headers = await getReqHeaders(this.cognitoIdToken);
-    this.logger.debug({ sandboxUrl, headers });
-    const template = Buffer.from(await fs.readFile(templateFilename)).toString("base64");
-    const body = JSON.stringify({ validateOnly, template });
-    this.logger.debug({ body });
-    const res = await fetch(sandboxUrl, { method: "PUT", headers, body });
-    const respBody = await res.json();
-    this.logger.debug({ ValidateSandbox: { respBody } });
-    if (!respBody.ResponseCode || !respBody.ResponseText) {
-      throw new Error("Malformed response from BD API");
-    }
-    if (validateOnly && (!respBody?.isValidateOnly || respBody.validationResults != "OK")) {
-      throw new Error(`Validation failed: ${respBody.validationResults}`);
-    }
-    return respBody.isValidateOnly;
+  public async uploadTemplate(templateFilename: string): Promise<string> {
+    return this._uploadTemplate(templateFilename);
   }
 
   public async validateTemplate(templateFilename: string): Promise<string> {
-    return this.uploadTemplate(templateFilename, true);
+    const validateOnly = true;
+    return this._uploadTemplate(templateFilename, validateOnly);
   }
 
   public async listSandboxes(): Promise<Array<{ name: string; status: string }>> {
@@ -68,5 +66,58 @@ export class BDSandbox {
       return body.sandboxList;
     }
     throw new Error("Failed to list sandboxes");
+  }
+
+  public async planSandbox(sandboxName: string): Promise<string> {
+    const planOnly = true;
+    const diffOnly = false;
+    return this._deploySandbox(sandboxName, planOnly, diffOnly);
+  }
+
+  public async diffSandbox(sandboxName: string): Promise<string> {
+    const planOnly = false;
+    const diffOnly = true;
+    return this._deploySandbox(sandboxName, planOnly, diffOnly);
+  }
+
+  public async deploySandbox(sandboxName: string): Promise<string> {
+    return this._deploySandbox(sandboxName);
+  }
+
+  // ---- private ----
+
+  private async _uploadTemplate(templateFilename: string, validateOnly = false): Promise<string> {
+    const headers = await getReqHeaders(this.cognitoIdToken);
+    this.logger.debug({ sandboxUrl, headers });
+    const template = Buffer.from(await fs.readFile(templateFilename)).toString("base64");
+    const body = JSON.stringify({ validateOnly, template });
+    this.logger.debug({ body });
+    const res = await fetch(sandboxUrl, { method: "PUT", headers, body });
+    const respBody = await res.json();
+    this.logger.debug({ ValidateSandbox: { respBody } });
+    if (!respBody.ResponseCode || !respBody.ResponseText) {
+      throw new Error("Malformed response from BD API");
+    }
+    if (validateOnly && (!respBody?.isValidateOnly || respBody.validationResults != "OK")) {
+      throw new Error(`Validation failed: ${respBody.validationResults}`);
+    }
+    return respBody.isValidateOnly;
+  }
+
+  private async _deploySandbox(sandboxName: string, planOnly = false, diffOnly = false): Promise<string> {
+    const action = planOnly ? "plan" : diffOnly ? "diff" : "deploy";
+    const headers = await getReqHeaders(this.cognitoIdToken);
+    this.logger.debug({ sandboxUrl, headers });
+    const body = JSON.stringify({ planOnly, diffOnly });
+    const res = await fetch(sandboxUrl + "/" + sandboxName, { method: "PUT", headers, body });
+    const respBody = await res.json();
+    this.logger.debug({ listSandboxes: { body: respBody } });
+    if (!respBody.ResponseCode || !respBody.ResponseText) {
+      throw new Error("Malformed response from BD API");
+    }
+    if (respBody.ResponseCode != "00") {
+      throw new Error(`Failed to ${action} ${sandboxName}`);
+    }
+    return respBody;
   }
 }
