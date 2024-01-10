@@ -17,6 +17,16 @@ export interface IBDConfig {
   logger: ILogger;
 }
 
+export interface ITapTokenResp {
+  bdTapToken: string;
+  cached: boolean;
+  expiresIn: string;
+  tokenLifetimeMins: number;
+  username: string;
+  email: string;
+  sharingUser: string;
+}
+
 interface IAPIAccountDetails {
   AccountAwsAccount: string;
   AccountExtId: string;
@@ -128,14 +138,14 @@ export class BDAccount {
     return humanReadable.toISOString();
   }
 
-  private checkExp(exp: number): boolean {
-    const twoMinsAgo = new Date();
-    twoMinsAgo.setTime(Date.now() - 2 * 60 * 1000);
-    const diff = exp * 1000 - twoMinsAgo.getTime();
+  private checkExp(exp: number, minutesAgo = 2): boolean {
+    const minsAgo = new Date();
+    minsAgo.setTime(Date.now() - minutesAgo * 60 * 1000);
+    const diff = exp * 1000 - minsAgo.getTime();
     this.logger.debug({
       exp,
       diff,
-      twoMinsAgo: twoMinsAgo.toISOString(),
+      twoMinsAgo: minsAgo.toISOString(),
       expiresIn: this.getHumanReadable(exp),
     });
     if (diff < 0) return false;
@@ -197,27 +207,30 @@ export class BDAccount {
     throw new Error("Failed to unshare token");
   }
 
-  private async getTapTokenResp(): Promise<
-    { bdTapToken: string; cached: boolean; expiresIn: string; tokenLifetimeMins: number } | undefined
-  > {
+  private async getTapTokenResp(updateConfigFile = true): Promise<ITapTokenResp | undefined> {
     this.decodeTapToken();
     this.dumpTapToken();
     if (!this.decodedTapToken || !this.bdTapToken) throw new Error("Unable to decode TAP token");
     const exp = this.decodedTapToken["payload"].exp;
     const iat = this.decodedTapToken["payload"].iat;
+    const aud = this.decodedTapToken["payload"].aud;
     const tapTokenLifetimeMins = Math.floor((exp - iat) / 60);
-    if (exp && this.checkExp(exp)) {
+    const oneHourMin = 60;
+    if (exp && this.checkExp(exp, oneHourMin)) {
       this.logger.debug({ cachedBdTapToken: true });
       // we clean up expired tokens at the same time
       // clean first as we use deepmerge that merges lists and would otherwise cause duplicates
       const credentials = { bdTapToken: this.bdTapToken };
-      await updateConfig({ credentials }); // local config file
+      if (updateConfigFile) await updateConfig({ credentials }); // local config file
       // NOTE: Even if the tokenLifetime would be different from the request, we return non-expired token
       return {
         bdTapToken: this.bdTapToken,
-        cached: true,
+        cached: updateConfigFile != true,
         expiresIn: this.getHumanReadable(exp),
         tokenLifetimeMins: tapTokenLifetimeMins,
+        username: aud?.[0],
+        email: aud?.[1],
+        sharingUser: aud?.[2],
       };
     }
     return; // expired
@@ -249,9 +262,14 @@ export class BDAccount {
     tokenLifetime: string,
     sharingUser?: string,
   ): Promise<{ bdTapToken: string; cached: boolean }> {
-    if (this.bdTapToken) return { bdTapToken: this.bdTapToken, cached: true };
     const creds = await getConfigCredentials();
     this.bdTapToken = creds.bdTapToken;
+    if (this.bdTapToken) {
+      const cachedToken = await this.getTapTokenResp(false);
+      if (cachedToken && ((sharingUser && cachedToken?.sharingUser === sharingUser) || !sharingUser)) {
+        return cachedToken; // disk cached token is not yet expired..
+      }
+    }
     // channel("undici:request:create").subscribe(console.log);
     // channel("undici:request:headers").subscribe(console.log);
     const headers = await getReqHeaders(this.cognitoIdToken); // , { tokenLifetime, vendingSchedule, shareId });
@@ -273,7 +291,7 @@ export class BDAccount {
     }
     this.bdTapToken = resBody.bdTapToken;
 
-    const resp = await this.getTapTokenResp();
+    const resp = await this.getTapTokenResp(true);
     if (resp) return resp;
     throw new Error(`Failed to get fresh TAP token from BD API`);
   }

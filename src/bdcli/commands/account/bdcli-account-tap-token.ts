@@ -46,8 +46,7 @@ const program = new cmd.Command("bdcli account tap-token")
   .addOption(
     new cmd.Option(
       "--sharing-user <emailOfTapSharingUser>",
-      "A user has shared Tap for you so that you can write to it." +
-        "\n\tExpects 'module: boilingdata' entry and upserts its config.token value",
+      "A user has shared Tap for you so that you can write to it.",
     ),
   )
   .action(async (options, command) => await show(options, command));
