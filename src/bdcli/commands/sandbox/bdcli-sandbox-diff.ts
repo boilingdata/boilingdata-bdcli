@@ -27,9 +27,9 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     updateSpinnerText(`Checking diff between template and deployment for sandbox ${options.name}`);
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdSandbox = new BDSandbox({ logger, authToken: token });
-    const diff = await bdSandbox.diffSandbox(options.name);
+    const results = await bdSandbox.diffSandbox(options.name);
     spinnerSuccess();
-    await outputResults(diff, options.disableSpinner);
+    await outputResults(results?.diffResults, options.disableSpinner);
   } catch (err: any) {
     try {
       // cleanup

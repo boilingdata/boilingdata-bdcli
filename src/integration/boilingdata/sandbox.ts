@@ -19,7 +19,7 @@ export class BDSandbox {
     this.cognitoIdToken = this.params.authToken;
   }
 
-  public async destroySandbox(sandboxName: string): Promise<void> {
+  public async destroySandbox(sandboxName: string): Promise<any> {
     const headers = await getReqHeaders(this.cognitoIdToken);
     this.logger.debug({ sandboxUrl, headers });
     const res = await fetch(sandboxUrl + "/" + sandboxName, { method: "DELETE", headers });
@@ -28,6 +28,7 @@ export class BDSandbox {
     if (!respBody.ResponseCode || !respBody.ResponseText) {
       throw new Error("Malformed response from BD API");
     }
+    return respBody;
   }
 
   public async downloadTemplate(sandboxName: string): Promise<string> {
@@ -68,19 +69,19 @@ export class BDSandbox {
     throw new Error("Failed to list sandboxes");
   }
 
-  public async planSandbox(sandboxName: string): Promise<string> {
+  public async planSandbox(sandboxName: string): Promise<any> {
     const planOnly = true;
     const diffOnly = false;
     return this._deploySandbox(sandboxName, planOnly, diffOnly);
   }
 
-  public async diffSandbox(sandboxName: string): Promise<string> {
+  public async diffSandbox(sandboxName: string): Promise<any> {
     const planOnly = false;
     const diffOnly = true;
     return this._deploySandbox(sandboxName, planOnly, diffOnly);
   }
 
-  public async deploySandbox(sandboxName: string): Promise<string> {
+  public async deploySandbox(sandboxName: string): Promise<any> {
     return this._deploySandbox(sandboxName);
   }
 

@@ -5,6 +5,7 @@ import { addGlobalOptions } from "../../utils/options_util.js";
 import { combineOptsWithSettings, hasValidConfig, profile } from "../../utils/config_util.js";
 import { getIdToken } from "../../utils/auth_util.js";
 import { BDSandbox } from "../../../integration/boilingdata/sandbox.js";
+import { outputResults } from "../../utils/output_util.js";
 
 const logger = getLogger("bdcli-sandbox-destroy");
 
@@ -24,8 +25,9 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     updateSpinnerText(`Destroying sandbox ${options.name}`);
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdSandbox = new BDSandbox({ logger, authToken: token });
-    await bdSandbox.destroySandbox(options.name);
+    const results = await bdSandbox.destroySandbox(options.name);
     spinnerSuccess();
+    await outputResults(results?.destroyResults, options.disableSpinner);
   } catch (err: any) {
     spinnerError(err?.message);
   }

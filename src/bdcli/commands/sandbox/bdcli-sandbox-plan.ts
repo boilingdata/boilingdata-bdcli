@@ -27,7 +27,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     const bdSandbox = new BDSandbox({ logger, authToken: token });
     const results = await bdSandbox.planSandbox(options.name);
     spinnerSuccess();
-    await outputResults(results, options.disableSpinner);
+    await outputResults(results?.planResults, options.disableSpinner);
   } catch (err: any) {
     spinnerError(err?.message);
   }

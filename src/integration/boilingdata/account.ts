@@ -7,7 +7,7 @@ import {
 } from "../../bdcli/utils/config_util.js";
 import { ILogger } from "../../bdcli/utils/logger_util.js";
 import { spinnerError } from "../../bdcli/utils/spinner_util.js";
-import { accountUrl, getReqHeaders, tokenShareUrl, tokenUrl } from "./boilingdata_api.js";
+import { accountUrl, getReqHeaders, tokenShareUrl, stsTokenUrl, tapTokenUrl } from "./boilingdata_api.js";
 import * as jwt from "jsonwebtoken";
 
 // import { channel } from "node:diagnostics_channel";
@@ -25,9 +25,11 @@ interface IAPIAccountDetails {
 export class BDAccount {
   private cognitoIdToken: string;
   private bdStsToken: string | undefined;
+  private bdTapToken: string | undefined;
   private sharedTokens: IDecodedSession[];
   private selectedToken: string | undefined;
   private decodedToken!: jwt.JwtPayload | null;
+  private decodedTapToken!: jwt.JwtPayload | null;
   private logger: ILogger;
   private accountDetails!: IAPIAccountDetails;
 
@@ -101,12 +103,23 @@ export class BDAccount {
       this.decodedToken = jwt.decode(this.bdStsToken, { complete: true });
       this.selectedToken = this.bdStsToken;
     }
-    if (!this.decodedToken || !this.selectedToken) throw new Error(`Could not find token (share id ${shareId})`);
+    if (!this.decodedToken || !this.selectedToken) throw new Error(`Could not find STS token (share id ${shareId})`);
   }
 
   private dumpSelectedToken(): void {
     if (!this.selectedToken) throw new Error("No selected BD STS token");
     this.logger.debug({ bdStsToken: this.selectedToken, decodedToken: this.decodedToken });
+  }
+
+  private decodeTapToken(): void {
+    if (!this.bdTapToken) throw new Error("No BD TAP token");
+    this.decodedTapToken = jwt.decode(this.bdTapToken, { complete: true });
+    if (!this.decodedTapToken) throw new Error(`Could not find TAP token`);
+  }
+
+  private dumpTapToken(): void {
+    if (!this.bdTapToken) throw new Error("No BD TAP token");
+    this.logger.debug({ bdTapToken: this.bdTapToken, decodedToken: this.decodedTapToken });
   }
 
   private getHumanReadable(exp: number): string {
@@ -184,17 +197,43 @@ export class BDAccount {
     throw new Error("Failed to unshare token");
   }
 
+  private async getTapTokenResp(): Promise<
+    { bdTapToken: string; cached: boolean; expiresIn: string; tokenLifetimeMins: number } | undefined
+  > {
+    this.decodeTapToken();
+    this.dumpTapToken();
+    if (!this.decodedTapToken || !this.bdTapToken) throw new Error("Unable to decode TAP token");
+    const exp = this.decodedTapToken["payload"].exp;
+    const iat = this.decodedTapToken["payload"].iat;
+    const tapTokenLifetimeMins = Math.floor((exp - iat) / 60);
+    if (exp && this.checkExp(exp)) {
+      this.logger.debug({ cachedBdTapToken: true });
+      // we clean up expired tokens at the same time
+      // clean first as we use deepmerge that merges lists and would otherwise cause duplicates
+      const credentials = { bdTapToken: this.bdTapToken };
+      await updateConfig({ credentials }); // local config file
+      // NOTE: Even if the tokenLifetime would be different from the request, we return non-expired token
+      return {
+        bdTapToken: this.bdTapToken,
+        cached: true,
+        expiresIn: this.getHumanReadable(exp),
+        tokenLifetimeMins: tapTokenLifetimeMins,
+      };
+    }
+    return; // expired
+  }
+
   private async getTokenResp(
     shareId?: string,
   ): Promise<{ bdStsToken: string; cached: boolean; expiresIn: string; tokenLifetimeMins: number } | undefined> {
     this.selectAndDecodeToken(shareId);
     this.dumpSelectedToken();
-    if (!this.decodedToken || !this.selectedToken) throw new Error("Unable to select/decode token");
+    if (!this.decodedToken || !this.selectedToken) throw new Error("Unable to select/decode STS token");
     const exp = this.decodedToken["payload"].exp;
     const iat = this.decodedToken["payload"].iat;
     const tokenLifetimeMins = Math.floor((exp - iat) / 60);
     if (exp && this.checkExp(exp)) {
-      this.logger.debug({ cachedBdStstToken: true });
+      this.logger.debug({ cachedBdStsToken: true });
       // we clean up expired tokens at the same time
       // clean first as we use deepmerge that merges lists and would otherwise cause duplicates
       await updateConfig({ credentials: { sharedTokens: undefined } });
@@ -206,7 +245,40 @@ export class BDAccount {
     return; // expired
   }
 
-  public async getToken(tokenLifetime: string, shareId?: string): Promise<{ bdStsToken: string; cached: boolean }> {
+  public async getTapToken(
+    tokenLifetime: string,
+    sharingUser?: string,
+  ): Promise<{ bdTapToken: string; cached: boolean }> {
+    if (this.bdTapToken) return { bdTapToken: this.bdTapToken, cached: true };
+    const creds = await getConfigCredentials();
+    this.bdTapToken = creds.bdTapToken;
+    // channel("undici:request:create").subscribe(console.log);
+    // channel("undici:request:headers").subscribe(console.log);
+    const headers = await getReqHeaders(this.cognitoIdToken); // , { tokenLifetime, vendingSchedule, shareId });
+    const method = "POST";
+    const body = JSON.stringify({ tokenLifetime, sharingUser });
+    this.logger.debug({ method, tapTokenUrl, headers, body });
+    const res = await fetch(tapTokenUrl, { method, headers, body });
+    const resBody = await res.json();
+    this.logger.debug({ getTapToken: { body: resBody } });
+    if (!resBody.ResponseCode || !resBody.ResponseText) {
+      throw new Error("Malformed response from BD API");
+    }
+    if (resBody.ResponseCode != "00") {
+      spinnerError(resBody.ResponseText);
+      throw new Error(`Failed to fetch token: ${resBody.ResponseText}`);
+    }
+    if (!resBody.bdTapToken) {
+      throw new Error("Missing bdStsToken in BD API Response");
+    }
+    this.bdTapToken = resBody.bdTapToken;
+
+    const resp = await this.getTapTokenResp();
+    if (resp) return resp;
+    throw new Error(`Failed to get fresh TAP token from BD API`);
+  }
+
+  public async getStsToken(tokenLifetime: string, shareId?: string): Promise<{ bdStsToken: string; cached: boolean }> {
     if (this.bdStsToken && !shareId) {
       this.selectedToken = this.bdStsToken;
       return { bdStsToken: this.bdStsToken, cached: true };
@@ -233,8 +305,8 @@ export class BDAccount {
       method = "POST";
       body = JSON.stringify({ tokenLifetime, shareId });
     }
-    this.logger.debug({ method, tokenUrl, headers, body });
-    const res = await fetch(tokenUrl, { method, headers, body });
+    this.logger.debug({ method, tokenUrl: stsTokenUrl, headers, body });
+    const res = await fetch(stsTokenUrl, { method, headers, body });
     const resBody = await res.json();
     this.logger.debug({ getStsToken: { body: resBody } });
     if (!resBody.ResponseCode || !resBody.ResponseText) {
@@ -261,6 +333,6 @@ export class BDAccount {
 
     const resp = await this.getTokenResp(shareId);
     if (resp) return resp;
-    throw new Error(`Failed to get fresh token from BD API (with share id ${shareId})`);
+    throw new Error(`Failed to get fresh STS token from BD API (with share id ${shareId})`);
   }
 }

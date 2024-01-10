@@ -4,12 +4,14 @@ import * as id from "amazon-cognito-identity-js";
 export const baseApiUrl = "https://rest.api.test.boilingdata.com";
 export const dataSetsPath = "/data-sets";
 export const accountPath = "/account";
-export const tokenPath = "/token";
+export const stsTokenPath = "/token";
+export const tapTokenPath = "/taptoken";
 export const sharePath = "/share";
 export const sandboxPath = "/sandbox";
 export const dataSetsUrl = baseApiUrl + dataSetsPath;
 export const accountUrl = baseApiUrl + accountPath;
-export const tokenUrl = baseApiUrl + tokenPath;
+export const stsTokenUrl = baseApiUrl + stsTokenPath;
+export const tapTokenUrl = baseApiUrl + tapTokenPath;
 export const tokenShareUrl = baseApiUrl + sharePath;
 export const sandboxUrl = baseApiUrl + sandboxPath;
 // FIXME: get from bdAccount API
