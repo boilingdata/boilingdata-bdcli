@@ -25,7 +25,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     updateSpinnerText("Listing sandboxes");
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdSandbox = new BDSandbox({ logger, authToken: token });
-    const list = await bdSandbox.listSandboxes();
+    const list = await bdSandbox.listSandboxes(options.listDeleted, options.listVersions);
     spinnerSuccess();
     await outputResults(list, options.disableSpinner);
   } catch (err: any) {
@@ -35,6 +35,8 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
 
 const program = new cmd.Command("bdcli sandbox list")
   .addOption(new cmd.Option("--region <region>", "AWS region (by default eu-west-1").default("eu-west-1"))
+  .addOption(new cmd.Option("--list-deleted", "List also deleted templates"))
+  .addOption(new cmd.Option("--list-versions", "List all template versions"))
   .action(async (options, command) => await show(options, command));
 
 (async () => {

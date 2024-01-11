@@ -33,6 +33,11 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
   }
 }
 
+// TODO:
+//  - If the template is updated, like changing the name of a resource, it needs to be replaced?
+//    Like if the Tap name is changed the Lambda needs to be deleted and created again and then
+//    also the ingest URL changes.
+
 const program = new cmd.Command("bdcli sandbox plan")
   .addOption(new cmd.Option("--name <sandboxName>", "sandbox name").makeOptionMandatory())
   .addOption(new cmd.Option("--region <region>", "AWS region (by default eu-west-1").default("eu-west-1"))

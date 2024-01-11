@@ -38,7 +38,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     updateSpinnerText(`Downloading sandbox IaC template of ${options.name}`);
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdSandbox = new BDSandbox({ logger, authToken: token });
-    const template = await bdSandbox.downloadTemplate(options.name);
+    const template = await bdSandbox.downloadTemplate(options.name, options.version);
     await fs.writeFile(filename, template);
     spinnerSuccess();
   } catch (err: any) {
@@ -48,6 +48,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
 
 const program = new cmd.Command("bdcli sandbox download")
   .addOption(new cmd.Option("--name <templateName>", "template name from listing").makeOptionMandatory())
+  .addOption(new cmd.Option("--version <version>", "Download specific version from listing"))
   .action(async (options, command) => await show(options, command));
 
 (async () => {

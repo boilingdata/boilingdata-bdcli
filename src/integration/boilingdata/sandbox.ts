@@ -19,8 +19,14 @@ export class BDSandbox {
     this.cognitoIdToken = this.params.authToken;
   }
 
-  public async destroySandbox(sandboxName: string): Promise<any> {
+  public async destroySandbox(
+    sandboxName: string,
+    destroyAlsoInterfaces: boolean,
+    finallyDeleteTemplate: boolean,
+  ): Promise<any> {
     const headers = await getReqHeaders(this.cognitoIdToken);
+    headers["x-bd-destroy-also-interfaces"] = `${destroyAlsoInterfaces}`;
+    headers["x-bd-finally-delete-template"] = `${finallyDeleteTemplate}`;
     this.logger.debug({ sandboxUrl, headers });
     const res = await fetch(sandboxUrl + "/" + sandboxName, { method: "DELETE", headers });
     const respBody = await res.json();
@@ -28,11 +34,13 @@ export class BDSandbox {
     if (!respBody.ResponseCode || !respBody.ResponseText) {
       throw new Error("Malformed response from BD API");
     }
+    if (respBody.ResponseCode != "00") throw new Error(respBody.ResponseText);
     return respBody;
   }
 
-  public async downloadTemplate(sandboxName: string): Promise<string> {
+  public async downloadTemplate(sandboxName: string, version: string): Promise<string> {
     const headers = await getReqHeaders(this.cognitoIdToken);
+    headers["x-bd-template-version"] = version;
     this.logger.debug({ sandboxUrl, headers });
     const res = await fetch(sandboxUrl + "/" + sandboxName, { method: "GET", headers });
     const respBody = await res.json();
@@ -52,10 +60,15 @@ export class BDSandbox {
     return this._uploadTemplate(templateFilename, validateOnly);
   }
 
-  public async listSandboxes(): Promise<Array<{ name: string; status: string }>> {
+  public async listSandboxes(
+    listDeleted: boolean,
+    listVersions: boolean,
+  ): Promise<Array<{ name: string; status: string }>> {
     // channel("undici:request:create").subscribe(console.log);
     // channel("undici:request:headers").subscribe(console.log);
     const headers = await getReqHeaders(this.cognitoIdToken);
+    headers["x-bd-list-deleted"] = `${listDeleted}`;
+    headers["x-bd-list-versions"] = `${listVersions}`;
     this.logger.debug({ sandboxUrl, headers });
     const res = await fetch(sandboxUrl, { method: "GET", headers });
     const body = await res.json();
@@ -99,10 +112,10 @@ export class BDSandbox {
     if (!respBody.ResponseCode || !respBody.ResponseText) {
       throw new Error("Malformed response from BD API");
     }
-    if (validateOnly && (!respBody?.isValidateOnly || respBody.validationResults != "OK")) {
+    if (respBody.ResponseCode != "00") {
       throw new Error(`Validation failed: ${respBody.validationResults}`);
     }
-    return respBody.isValidateOnly;
+    return respBody;
   }
 
   private async _deploySandbox(sandboxName: string, planOnly = false, diffOnly = false): Promise<string> {

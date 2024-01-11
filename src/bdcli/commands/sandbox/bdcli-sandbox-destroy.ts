@@ -25,7 +25,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     updateSpinnerText(`Destroying sandbox ${options.name}`);
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdSandbox = new BDSandbox({ logger, authToken: token });
-    const results = await bdSandbox.destroySandbox(options.name);
+    const results = await bdSandbox.destroySandbox(options.name, options.destroyAlsoInterfaces, options.deleteTemplate);
     spinnerSuccess();
     await outputResults(results?.destroyResults, options.disableSpinner);
   } catch (err: any) {
@@ -35,6 +35,13 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
 
 const program = new cmd.Command("bdcli sandbox destroy")
   .addOption(new cmd.Option("--name <sandboxName>", "sandbox name").makeOptionMandatory())
+  .addOption(new cmd.Option("--destroy-also-interfaces", "Also delete interfaces like Tap URLs"))
+  .addOption(
+    new cmd.Option(
+      "--delete-template",
+      "Finally, delete template if all resources were destroyed, including interfaces",
+    ),
+  )
   .addOption(new cmd.Option("--region <region>", "AWS region (by default eu-west-1").default("eu-west-1"))
   .action(async (options, command) => await show(options, command));
 
