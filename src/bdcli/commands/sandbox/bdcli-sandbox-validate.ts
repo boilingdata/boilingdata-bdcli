@@ -25,16 +25,28 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     updateSpinnerText("Validating sandbox IaC template");
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdSandbox = new BDSandbox({ logger, authToken: token });
-    const results = await bdSandbox.validateTemplate(options.template);
+    await bdSandbox.validateTemplate(options.template, options.warningsAsErrors);
     spinnerSuccess();
-    await outputResults(results, options.disableSpinner);
-  } catch (err: any) {
-    spinnerError(err?.message);
+  } catch (origErr: any) {
+    // try to decode the message
+    try {
+      spinnerError(origErr?.message, false);
+      await outputResults(
+        JSON.parse(origErr?.message)
+          ?.message?.split(";")
+          ?.map((msg: string) => msg.trim()),
+        false,
+      );
+    } catch (err: any) {
+      spinnerError(origErr?.message, false);
+      console.error(err);
+    }
   }
 }
 
 const program = new cmd.Command("bdcli sandbox validate")
   .addOption(new cmd.Option("--template <templateFile>", "sandbox IaC file").makeOptionMandatory())
+  .addOption(new cmd.Option("--warnings-as-errors", "Treat any warning as an error"))
   .action(async (options, command) => await show(options, command));
 
 (async () => {

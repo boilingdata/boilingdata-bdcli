@@ -55,9 +55,9 @@ export class BDSandbox {
     return this._uploadTemplate(templateFilename);
   }
 
-  public async validateTemplate(templateFilename: string): Promise<string> {
+  public async validateTemplate(templateFilename: string, warningsAsErrors = false): Promise<string> {
     const validateOnly = true;
-    return this._uploadTemplate(templateFilename, validateOnly);
+    return this._uploadTemplate(templateFilename, validateOnly, warningsAsErrors);
   }
 
   public async listSandboxes(
@@ -100,11 +100,15 @@ export class BDSandbox {
 
   // ---- private ----
 
-  private async _uploadTemplate(templateFilename: string, validateOnly = false): Promise<string> {
+  private async _uploadTemplate(
+    templateFilename: string,
+    validateOnly = false,
+    warningsAsErrors = false,
+  ): Promise<string> {
     const headers = await getReqHeaders(this.cognitoIdToken);
     this.logger.debug({ sandboxUrl, headers });
     const template = Buffer.from(await fs.readFile(templateFilename)).toString("base64");
-    const body = JSON.stringify({ validateOnly, template });
+    const body = JSON.stringify({ validateOnly, warningsAsErrors, template });
     this.logger.debug({ body });
     const res = await fetch(sandboxUrl, { method: "PUT", headers, body });
     const respBody = await res.json();
@@ -113,7 +117,7 @@ export class BDSandbox {
       throw new Error("Malformed response from BD API");
     }
     if (respBody.ResponseCode != "00") {
-      throw new Error(`Validation failed: ${respBody.validationResults}`);
+      throw new Error(respBody?.validationResults ?? respBody);
     }
     return respBody;
   }

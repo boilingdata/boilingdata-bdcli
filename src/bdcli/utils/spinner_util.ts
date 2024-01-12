@@ -39,9 +39,9 @@ export function spinnerWarn(message?: string): void {
   spinner.warn(message ? warning(message) : warning(spinner.text));
 }
 
-export function spinnerError(message?: string): void {
+export function spinnerError(message?: string, forceExit = true): void {
   if (isEnabled) spinner.fail(message ? error(message) : undefined);
-  process.exit(1); // error
+  if (forceExit) process.exit(1); // error
 }
 
 export function spinnerSuccess(message?: string): void {
