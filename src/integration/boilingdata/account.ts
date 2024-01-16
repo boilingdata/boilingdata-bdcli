@@ -30,6 +30,8 @@ export interface ITapTokenResp {
 interface IAPIAccountDetails {
   AccountAwsAccount: string;
   AccountExtId: string;
+  AccountUsername: string;
+  AccountEmail: string;
 }
 
 export class BDAccount {
@@ -78,11 +80,21 @@ export class BDAccount {
     if (!body.ResponseCode || !body.ResponseText) {
       throw new Error("Malformed response from BD API");
     }
-    if (!body.AccountDetails?.AccountAwsAccount || !body.AccountDetails?.AccountExtId) {
-      throw new Error("Missing AccountDetails from BD API Response");
+    if (
+      !body.AccountDetails?.AccountAwsAccount ||
+      !body.AccountDetails?.AccountExtId ||
+      !body.AccountDetails?.AccountUsername ||
+      !body.AccountDetails?.AccountEmail
+    ) {
+      throw new Error("Missing some or all of AccountDetails from BD API Response");
     }
     this.accountDetails = <IAPIAccountDetails>body.AccountDetails;
     this.logger.debug({ accountDetails: this.accountDetails });
+  }
+
+  public async getUsername(): Promise<string> {
+    await this._getAccountDetails();
+    return this.accountDetails.AccountUsername;
   }
 
   public async getAssumeAwsAccount(): Promise<string> {

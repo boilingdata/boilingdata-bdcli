@@ -37,13 +37,13 @@ describe("BDIntegration", () => {
     bdDataSets.readConfig("./example_datasource_config.yaml");
     const assumeCondExternalId = await bdAccount.getExtId(); // FIXME: This calls real API
     const assumeAwsAccount = await bdAccount.getAssumeAwsAccount();
-    const uniqNamePart = await bdDataSets.getUniqueNamePart();
+    const username = await bdAccount.getUsername();
     const bdRole = new BDIamRole({
       logger: roleLogger,
       region,
       iamClient,
       stsClient,
-      uniqNamePart,
+      username,
       assumeAwsAccount,
       assumeCondExternalId,
     });
@@ -83,13 +83,13 @@ describe("BDIntegration", () => {
     bdDataSets.readConfig("./example_datasource_config.yaml");
     const assumeCondExternalId = await bdAccount.getExtId(); // FIXME: This calls real API
     const assumeAwsAccount = await bdAccount.getAssumeAwsAccount();
-    const uniqNamePart = await bdDataSets.getUniqueNamePart();
+    const username = await bdAccount.getUsername();
     const bdRole = new BDIamRole({
       logger: roleLogger,
       region,
       iamClient,
       stsClient,
-      uniqNamePart,
+      username,
       assumeAwsAccount,
       assumeCondExternalId,
     });

@@ -17,18 +17,6 @@ export class BDDataSourceConfig {
     this.logger = this.params.logger;
   }
 
-  public async getUniqueNamePart(): Promise<string> {
-    if (!this._dataSourcesConfig || this._dataSourcesConfig.dataSources.length <= 0) {
-      throw new Error("Set datasources config first");
-    }
-    const uniqName =
-      this._dataSourcesConfig.uniqNamePart ??
-      this._dataSourcesConfig.dataSources[this._dataSourcesConfig.dataSources.length - 1]?.name ??
-      "bdIamRole";
-    this.logger.debug({ uniqName });
-    return uniqName;
-  }
-
   public isDataSetsConfig(dataSourcesConfig: unknown): dataSourcesConfig is IDataSources {
     try {
       const { IDataSources } = createCheckers(DataSetInterfaceTI);
