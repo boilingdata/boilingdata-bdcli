@@ -18,12 +18,11 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     }
 
     updateSpinnerText("Authenticating");
-    const { idToken: token, cached: idCached, region: region } = await getIdToken(logger);
+    const { idToken: token, cached: idCached } = await getIdToken(logger);
     updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
     spinnerSuccess();
 
     updateSpinnerText(`Deploying sandbox ${options.name}`);
-    if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdSandbox = new BDSandbox({ logger, authToken: token });
     const results = await bdSandbox.deploySandbox(options.name);
     spinnerSuccess();
@@ -35,7 +34,6 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
 
 const program = new cmd.Command("bdcli sandbox deploy")
   .addOption(new cmd.Option("--name <sandboxName>", "sandbox name").makeOptionMandatory())
-  .addOption(new cmd.Option("--region <region>", "AWS region (by default eu-west-1").default("eu-west-1"))
   .action(async (options, command) => await show(options, command));
 
 (async () => {

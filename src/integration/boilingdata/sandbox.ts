@@ -1,6 +1,10 @@
+import * as fs from "fs/promises";
+import * as yaml from "js-yaml";
 import { ILogger } from "../../bdcli/utils/logger_util.js";
 import { getReqHeaders, sandboxUrl } from "./boilingdata_api.js";
-import * as fs from "fs/promises";
+import { createCheckers } from "ts-interface-checker";
+import sandboxTemplateTI from "./sandbox-template.types-ti.js";
+import { ITemplate } from "./sandbox-template.types.js";
 
 // import { channel } from "node:diagnostics_channel";
 
@@ -17,6 +21,17 @@ export class BDSandbox {
     this.logger = this.params.logger;
     // this.logger.debug(this.params);
     this.cognitoIdToken = this.params.authToken;
+  }
+
+  public isSandboxConfig(sandboxTemplate: unknown): sandboxTemplate is ITemplate {
+    try {
+      const { ITemplate } = createCheckers(sandboxTemplateTI);
+      ITemplate?.check(sandboxTemplate);
+      return true;
+    } catch (err) {
+      this.logger.error({ err });
+      return false;
+    }
   }
 
   public async destroySandbox(
@@ -52,11 +67,18 @@ export class BDSandbox {
   }
 
   public async uploadTemplate(templateFilename: string): Promise<string> {
+    // local validation
+    const sandboxTemplateConfig = <object>yaml.load(await fs.readFile(templateFilename, "utf8"));
+    if (!this.isSandboxConfig(sandboxTemplateConfig)) throw new Error("sandbox template config schema not validated");
     return this._uploadTemplate(templateFilename);
   }
 
   public async validateTemplate(templateFilename: string, warningsAsErrors = false): Promise<string> {
+    // local validation
+    const sandboxTemplateConfig = <object>yaml.load(await fs.readFile(templateFilename, "utf8"));
+    if (!this.isSandboxConfig(sandboxTemplateConfig)) throw new Error("sandbox template config schema not validated");
     const validateOnly = true;
+    // remote validation
     return this._uploadTemplate(templateFilename, validateOnly, warningsAsErrors);
   }
 
