@@ -10,9 +10,10 @@ export enum EPermission {
 
 export interface ITemplateSandbox {
   name: string;
-  urlPrefix: string;
-  uniqNamePart?: string;
-  permissions: EPermission[];
+  permissions: Array<{
+    urlPrefix: string;
+    accessRights?: EPermission[];
+  }>;
 }
 
 export interface ITemplateTap {
@@ -49,7 +50,7 @@ export interface ITemplate {
   environment: string;
   region: string;
   resources: {
-    sandboxes?: ITemplateSandbox[];
+    sandbox: ITemplateSandbox;
     taps?: ITemplateTap[];
     flows?: ITemplateFlow[];
     shares?: ITemplateShare[];

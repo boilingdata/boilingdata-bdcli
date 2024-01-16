@@ -17,9 +17,10 @@ export const EPermission = t.enumtype({
 
 export const ITemplateSandbox = t.iface([], {
   "name": "string",
-  "urlPrefix": "string",
-  "uniqNamePart": t.opt("string"),
-  "permissions": t.array("EPermission"),
+  "permissions": t.array(t.iface([], {
+    "urlPrefix": "string",
+    "accessRights": t.opt(t.array("EPermission")),
+  })),
 });
 
 export const ITemplateTap = t.iface([], {
@@ -56,7 +57,7 @@ export const ITemplate = t.iface([], {
   "environment": "string",
   "region": "string",
   "resources": t.iface([], {
-    "sandboxes": t.opt(t.array("ITemplateSandbox")),
+    "sandbox": "ITemplateSandbox",
     "taps": t.opt(t.array("ITemplateTap")),
     "flows": t.opt(t.array("ITemplateFlow")),
     "shares": t.opt(t.array("ITemplateShare")),

@@ -39,7 +39,7 @@
   },
   "scripts": {
     "release": "standard-version -a",
-    "prebuild": "rm -rf dist/ && node generateVersionFile.js && npx ts-interface-builder src/integration/boilingdata/dataset.interface.ts && npx ts-interface-builder src/integration/boilingdata/template.types.ts",
+    "prebuild": "rm -rf dist/ && node generateVersionFile.js && npx ts-interface-builder src/integration/boilingdata/dataset.interface.ts && npx ts-interface-builder src/integration/boilingdata/sandbox-template.types.ts",
     "build": "rm -rf dist/ && tsc -p tsconfig.json && tsc -p tsconfig-cjs.json && chmod 755 dist/esm/index.js",
     "prettier": "prettier --check 'src/**/*.{js,ts}'",
     "prettier:fix": "prettier --write 'src/**/*.{js,ts}'",

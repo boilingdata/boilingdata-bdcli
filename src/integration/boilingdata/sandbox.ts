@@ -25,8 +25,9 @@ export class BDSandbox {
 
   public isSandboxConfig(sandboxTemplate: unknown): sandboxTemplate is ITemplate {
     try {
-      const { ITemplate } = createCheckers(sandboxTemplateTI);
-      ITemplate?.check(sandboxTemplate);
+      const { ITemplate: ITemplateChecker } = createCheckers(sandboxTemplateTI);
+      if (!ITemplateChecker) throw new Error("ts-interface-check checker MISSING");
+      ITemplateChecker.check(sandboxTemplate);
       return true;
     } catch (err) {
       this.logger.error({ err });
