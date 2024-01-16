@@ -157,7 +157,7 @@ When you want to use Boiling to read your data on your S3 Bucket, you need these
     {
       "Sid": "MinimalBoilingS3Policy",
       "Effect": "Allow",
-      "Action": ["s3:GetObject", "s3:ListBucket", "s3:GetBucketLocation"],
+      "Action": ["s3:GetObject", "s3:ListBucket", "s3:GetBucketLocation", "s3:GetBucketRequestPayment"],
       "Resource": ["arn:aws:s3:::YOURBUCKET", "arn:aws:s3:::YOURBUCKET/YOURPREFIX*"],
       "Condition": {
         "StringEquals": {
@@ -168,8 +168,8 @@ When you want to use Boiling to read your data on your S3 Bucket, you need these
     {
       "Sid": "MinimalBoilingIAMPolicy",
       "Effect": "Allow",
-      "Action": ["iam:CreateRole", "iam:TagRole", "iam:ListPolicies"],
-      "Resource": "*"
+      "Action": ["iam:CreateRole", "iam:TagRole", "iam:ListPolicies", "iam:PassRole", "iam:GetRole"],
+      "Resource": "arn:aws:iam::YOURAWSACCOUNT:role/boilingdata/*"
     }
   ]
 }
