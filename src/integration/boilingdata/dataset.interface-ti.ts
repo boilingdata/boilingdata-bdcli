@@ -39,9 +39,8 @@ export const ULayout = t.union(t.enumlit("LAYOUT", "HIVE"), t.enumlit("LAYOUT", 
 export const UFileType = t.union(t.enumlit("FILE_TYPE", "PARQUET"), t.enumlit("FILE_TYPE", "JSON"), t.enumlit("FILE_TYPE", "CSV"));
 
 export const IStatement = t.iface([], {
-  "id": "string",
   "urlPrefix": "string",
-  "permissions": t.opt(t.array("UGrant")),
+  "accessRights": t.opt(t.array("UGrant")),
 });
 
 export const IStatementExt = t.iface(["IStatement"], {
@@ -58,16 +57,13 @@ export const IDataSet = t.iface([], {
 
 export const IDataSource = t.iface([], {
   "name": "string",
-  "accessPolicy": t.array("IStatement"),
-  "type": t.opt("EDataSetType"),
-  "dataSets": t.opt(t.array("IDataSet")),
-  "sessionType": t.opt("USessionType"),
+  "permissions": t.array("IStatement"),
 });
 
 export const IDataSources = t.iface([], {
   "version": t.opt(t.union("string", "number")),
   "uniqNamePart": t.opt("string"),
-  "dataSources": t.array("IDataSource"),
+  "dataSources": "IDataSource",
 });
 
 const exportedTypeSuite: t.ITypeSuite = {

@@ -51,23 +51,17 @@ export class BDIntegration {
 
   public getGroupedBuckets(): IGroupedDataSources {
     const dataSourcesConfig = this.bdDatasets.getDatasourcesConfig();
-    const allPolicies = dataSourcesConfig.dataSources
-      .map(d => {
-        console.log(d);
-        d.accessPolicy = d.accessPolicy.map(pol => {
-          if (!pol.permissions) pol.permissions = [GRANT_PERMISSION.G_READ]; // default
-          return pol;
-        });
-        return d.accessPolicy;
-      })
-      .flat();
+    const allPolicies = dataSourcesConfig.dataSources.permissions.map(perm => {
+      if (!perm.accessRights) perm.accessRights = [GRANT_PERMISSION.G_READ]; // default
+      return perm;
+    });
     this.logger.debug({ allPolicies });
-    if (allPolicies.some(policy => !policy.permissions)) throw new Error("Missing policy permissions");
+    if (allPolicies.some(policy => !policy.accessRights)) throw new Error("Missing policy permissions");
     const readOnly = allPolicies
       .filter(
         policy =>
-          !policy.permissions?.includes(GRANT_PERMISSION.G_WRITE) &&
-          policy.permissions?.includes(GRANT_PERMISSION.G_READ),
+          !policy.accessRights?.includes(GRANT_PERMISSION.G_WRITE) &&
+          policy.accessRights?.includes(GRANT_PERMISSION.G_READ),
       )
       .map(policy => ({
         ...policy,
@@ -77,8 +71,8 @@ export class BDIntegration {
     const readWrite = allPolicies
       .filter(
         policy =>
-          policy.permissions?.includes(GRANT_PERMISSION.G_WRITE) &&
-          policy.permissions?.includes(GRANT_PERMISSION.G_READ),
+          policy.accessRights?.includes(GRANT_PERMISSION.G_WRITE) &&
+          policy.accessRights?.includes(GRANT_PERMISSION.G_READ),
       )
       .map(policy => ({
         ...policy,
@@ -88,8 +82,8 @@ export class BDIntegration {
     const writeOnly = allPolicies
       .filter(
         policy =>
-          policy.permissions?.includes(GRANT_PERMISSION.G_WRITE) &&
-          !policy.permissions?.includes(GRANT_PERMISSION.G_READ),
+          policy.accessRights?.includes(GRANT_PERMISSION.G_WRITE) &&
+          !policy.accessRights?.includes(GRANT_PERMISSION.G_READ),
       )
       .map(policy => ({
         ...policy,
@@ -100,7 +94,8 @@ export class BDIntegration {
     return { readOnly, readWrite, writeOnly };
   }
 
-  public async getPolicyDocument(): Promise<any> {
+  public async getPolicyDocument(haveListBucketsPolicy = true): Promise<any> {
+    this.logger.debug({ haveListBucketsPolicy });
     const grouped = this.getGroupedBuckets();
     const allDatasets = [...grouped.readOnly, ...grouped.readWrite, ...grouped.writeOnly];
     const Statements = [];
@@ -108,11 +103,14 @@ export class BDIntegration {
     Statements.push(this.getStatement(grouped.readWrite, RW_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
     Statements.push(this.getStatement(grouped.writeOnly, WO_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
     Statements.push(this.getStatement(allDatasets, BUCKET_ACTIONS, this.mapDatasetsToUniqBuckets.bind(this)));
-    Statements.push({
-      Effect: "Allow",
-      Action: "s3:ListAllMyBuckets",
-      Resource: "*",
-    });
+    if (haveListBucketsPolicy) {
+      // This is so that you can run: SELECT * FROM list('s3://')
+      Statements.push({
+        Effect: "Allow",
+        Action: "s3:ListAllMyBuckets",
+        Resource: "*",
+      });
+    }
     const finalPolicy = { Version: "2012-10-17", Statement: Statements.filter(s => s?.Resource?.length) };
     this.logger.debug({ getPolicyDocument: JSON.stringify(finalPolicy) });
     return finalPolicy;

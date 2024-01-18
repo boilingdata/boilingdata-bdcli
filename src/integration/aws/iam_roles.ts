@@ -55,13 +55,15 @@ export class BDIamRole {
     const env = this.params.environment ?? "noenv";
     const tmplName = this.params.templateName ?? "notmplname";
     const username = this.params.username.replaceAll("-", "");
-    const nameLenSoFar =
-      prefix.length + regionShort.length + env.length + tmplName.length + username.length + type.length;
-    const roomLeft = 64 - nameLenSoFar - 5; // 5 '-' chars
-    if (roomLeft < 0) {
-      throw new Error(`${type} name too long, reduce prefix/env/tmplName lengths (roomLeft ${roomLeft})`);
+    const name = [prefix, regionShort, env, tmplName, username].join("-");
+    if (name.length > 64) {
+      throw new Error(
+        `${type} name (${name}) too long (${name.length}), reduce prefix/env/tmplname lengths (roomLeft ${
+          64 - name.length
+        })`,
+      );
     }
-    return [prefix, regionShort, env, tmplName, username, type].join("-");
+    return name;
   }
 
   public async getAwsAccountId(): Promise<string> {
@@ -216,6 +218,7 @@ export class BDIamRole {
 
   public async upsertRole(policyDocument: string): Promise<string> {
     let arn: string;
+    this.logger.debug({ policyDocument });
     try {
       const resp = await this.getRole();
       if (!resp.Arn) throw new Error("Could not find role ARN");

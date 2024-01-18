@@ -1,4 +1,5 @@
 import * as fs from "fs/promises";
+import * as fsSync from "fs";
 import * as yaml from "js-yaml";
 import { ILogger } from "../../bdcli/utils/logger_util.js";
 import { getReqHeaders, sandboxUrl } from "./boilingdata_api.js";
@@ -16,11 +17,25 @@ export interface IBDConfig {
 export class BDSandbox {
   private cognitoIdToken: string;
   private logger: ILogger;
+  private _tmpl!: ITemplate;
 
   constructor(private params: IBDConfig) {
     this.logger = this.params.logger;
     // this.logger.debug(this.params);
     this.cognitoIdToken = this.params.authToken;
+  }
+
+  public get tmpl(): ITemplate {
+    return this._tmpl;
+  }
+
+  public get region(): string | undefined {
+    return this._tmpl.region;
+  }
+
+  public withTemplate(templateFilename: string): this {
+    this.validateTemplateLocal(templateFilename);
+    return this;
   }
 
   public isSandboxConfig(sandboxTemplate: unknown): sandboxTemplate is ITemplate {
@@ -67,19 +82,20 @@ export class BDSandbox {
     return respBody?.template;
   }
 
-  public async uploadTemplate(templateFilename: string): Promise<string> {
-    // local validation
-    const sandboxTemplateConfig = <object>yaml.load(await fs.readFile(templateFilename, "utf8"));
+  public validateTemplateLocal(templateFilename: string): void {
+    const sandboxTemplateConfig = <object>yaml.load(fsSync.readFileSync(templateFilename, "utf8"));
     if (!this.isSandboxConfig(sandboxTemplateConfig)) throw new Error("sandbox template config schema not validated");
+    this._tmpl = sandboxTemplateConfig;
+  }
+
+  public async uploadTemplate(templateFilename: string): Promise<string> {
+    this.validateTemplateLocal(templateFilename);
     return this._uploadTemplate(templateFilename);
   }
 
   public async validateTemplate(templateFilename: string, warningsAsErrors = false): Promise<string> {
-    // local validation
-    const sandboxTemplateConfig = <object>yaml.load(await fs.readFile(templateFilename, "utf8"));
-    if (!this.isSandboxConfig(sandboxTemplateConfig)) throw new Error("sandbox template config schema not validated");
+    this.validateTemplateLocal(templateFilename);
     const validateOnly = true;
-    // remote validation
     return this._uploadTemplate(templateFilename, validateOnly, warningsAsErrors);
   }
 

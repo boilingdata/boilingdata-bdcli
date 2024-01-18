@@ -30,9 +30,8 @@ export type ULayout = LAYOUT.HIVE | LAYOUT.FOLDER | LAYOUT.FILE;
 export type UFileType = FILE_TYPE.PARQUET | FILE_TYPE.JSON | FILE_TYPE.CSV;
 
 export interface IStatement {
-  id: string;
   urlPrefix: string;
-  permissions?: UGrant[];
+  accessRights?: UGrant[];
 }
 
 export interface IStatementExt extends IStatement {
@@ -49,14 +48,11 @@ export interface IDataSet {
 
 export interface IDataSource {
   name: string;
-  accessPolicy: Array<IStatement>;
-  type?: EDataSetType;
-  dataSets?: Array<IDataSet>;
-  sessionType?: USessionType;
+  permissions: Array<IStatement>;
 }
 
 export interface IDataSources {
   version?: string | number;
   uniqNamePart?: string;
-  dataSources: Array<IDataSource>;
+  dataSources: IDataSource;
 }

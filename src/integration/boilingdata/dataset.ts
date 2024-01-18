@@ -38,6 +38,11 @@ export class BDDataSourceConfig {
     return { ...this._dataSourcesConfig }; // make copy
   }
 
+  public withConfig(config: object): void {
+    if (!this.isDataSetsConfig(config)) throw new Error("datasources config schema not validated");
+    this._dataSourcesConfig = config;
+  }
+
   public async readConfig(filename: string): Promise<IDataSources> {
     if (this._dataSourcesConfig) return this._dataSourcesConfig;
     try {

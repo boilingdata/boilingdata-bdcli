@@ -18,12 +18,11 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     }
 
     updateSpinnerText("Authenticating");
-    const { idToken: token, cached: idCached, region: region } = await getIdToken(logger);
+    const { idToken: token, cached: idCached } = await getIdToken(logger);
     updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
     spinnerSuccess();
 
     updateSpinnerText(`Planning deployment for sandbox ${options.name}`);
-    if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdSandbox = new BDSandbox({ logger, authToken: token });
     const results = await bdSandbox.planSandbox(options.name);
     spinnerSuccess();

@@ -3,6 +3,7 @@ import { Command } from "commander";
 const program = new Command("bdcli sandbox")
   .executableDir("sandbox")
   .command("list", "List deployed sandboxes")
+  .command("create-role", "Create Sandbox IAM Role with your AWS credentials")
   .command("validate", "Validate *local* sandbox template")
   .command("upload", "Upload sandbox template")
   .command("download", "Download the *uploaded* sandbox template")
