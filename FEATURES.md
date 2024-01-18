@@ -37,7 +37,8 @@ You can run SQL queries and output the results into S3.
 ```sql
 CREATE TABLE t WITH (
     FORMAT 'Parquet',
-    COMPRESSION 'ZSTD'
+    COMPRESSION 'ZSTD',
+    EXTERNAL_LOCATION 's3://boilingdata-demo/upload/out.parquet'
 ) AS SELECT col1, col2 FROM parquet_scan('s3://buck/year=2024/month=01/day=01/');
 ```
 
