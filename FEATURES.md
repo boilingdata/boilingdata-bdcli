@@ -24,6 +24,8 @@ User sharing the data and user consuming the data can be in different organisati
 
 You can run SQL queries and output the results into S3.
 
+> **NOTE**: If you need to download lots of data to e.g. browser, this is the best way of doing it. First, Boiling will create the data set for you into Parquet format that is about 5x compressed data and thus much faster to download. Secondly, you can use Boiling to further query these results if you like, or e.g. query them directly with DuckDB WASM in your Browser from your S3 Bucket.
+
 ```sql
 CREATE TABLE t WITH (
     FORMAT 'Parquet',
@@ -41,7 +43,6 @@ You can run [`boilingdata-http-gw`](https://github.com/boilingdata/boilingdata-h
 - [Python SDK](https://github.com/boilingdata/py-boilingdata)
 
 Our [Demo GUI](https://app.boilingdata.com) uses the NodeJS/JS SDK for running queries on Boiling.
-
 
 ## 6. (experimental) You can use DBT and DuckDB itself to run queries on Boiling (cloud side)
 
