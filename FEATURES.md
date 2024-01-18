@@ -2,7 +2,7 @@
 
 ## 1. Query data from S3
 
-If you have your own S3 data, you define access to it and grant it for Boiling through IAM Roles (best practice security within AWS cloud). If you don't have AWS account, you can still query data shared to you (see below).
+If you have your own S3 data, you define access to it and grant it for Boiling through IAM Roles (best practice security within AWS cloud). If you don't have an AWS account, you can query data shared to you with your Boiling account (see below).
 
 You can run SQL queries over your data on S3 in Parquet format. You can use S3 folders, Glue Tables, or just list of files as input in your SQL.
 
