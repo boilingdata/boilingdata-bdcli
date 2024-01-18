@@ -14,7 +14,7 @@ Every query runs in AWS Lambda functions that have maximum capacity and run only
 
 > **NOTE**: Boiling Data is a distributed SQL engine running in AWS Lambda functions on top of S3 Data. We have 100% support for e.g. TCP-H kind of queries. When Boiling reads data from S3, it splits the data into even chunks and then loads into AWS Lambda memory. This way, for example search/filter queries are very fast because there are tens/hundreds of CPU cores filtering the data in the CPU memory at the same time. On the other hand distributed queries, like heavy JOINs and aggregations requiring full scans over the whole column are slower due to the distributed manner compared to scenario where you have all the data in a single big instance. For this reason, we are planning to add support for adding your own `workers` that will join Boiling Data fabric. This way you can have single big instance experience and speed with queries that are not easily/naturally distributable. Boiling will take care of the query routing.
 
-## 2. Share data for others and query data shared to you, cross AWS Accounts
+## 2. Share data for others and query data shared to you, across AWS Accounts
 
 You can share data (SQL VIEWs) for other Boiling users. You can create these data shares with `bdcli`. You can list data shared from/to you with `bdcli`. Then you know if you have been shared some data or not, or if you have shared data for others. You can query data shared to you, like
 
@@ -23,6 +23,8 @@ SELECT * FROM share('dforsber@gmail.com:taxi_locations');
 ```
 
 User sharing the data and user consuming the data can be in different organisations and AWS accounts completely.
+
+> **NOTE**: One Big Table (OBT) design is quite natural when accompanied with user specific shares. This way the whole data set is kept in memory when queried, but each of the shares only sees data visible through the SQL VIEW. This way you have row and column based security on top of S3. Boiling improves the security furthermore by allowing you to have cron like expression on when the share is accessible and how long at a time (e.g. during the week from 10am to 2pm).
 
 ## 3. Output SQL query results onto S3 (ETL)
 
