@@ -16,7 +16,7 @@ The JWT token is valid for a short term, and in essence, like AWS STS credential
 bdcli account sts-token --lifetime '8h'
 ```
 
-### TODO: Column, Row, Time, and SQL level security
+### Column, Row, Time, and SQL level security
 
 You can further limit the scope of the token by giving an optional SQL clause and choose the validity period (default is `1h`). The SQL clause can also be a group by or any aggregation that Boiling supports in general. It basically defines what data is heated up from S3 for your queries.
 
@@ -38,7 +38,7 @@ SELECT * FROM pcounts();
 
 > NOTE! This way you can generate short lived views with both row and column level security - like segmenting data access for customers/partners, but also providing limited access (permanent or temporary) to various roles in your company. When using the token and trying to query columns that are beyond the scope, Boiling reports an error like "column not found", or "no results", like with any Table.
 
-## TODO: Data Sharing
+## Data Sharing
 
 To make these tokens useful in practice you can create and share tokens for other users. A shared token is bound to target users/groups - meaning that only those specific target users are able to use the token within the time period you specified (e.g. 8 hours starting now).
 
