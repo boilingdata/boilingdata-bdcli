@@ -35,11 +35,21 @@ You can run SQL queries and output the results into S3.
 > **NOTE**: If you need to download lots of data to e.g. browser, this is the best way of doing it. First, Boiling will create the data set for you into Parquet format that is about 5x compressed data and thus much faster to download. Secondly, you can use Boiling to further query these results if you like, or e.g. query them directly with DuckDB WASM in your Browser from your S3 Bucket.
 
 ```sql
-CREATE TABLE t WITH (
+COPY (
+    SELECT * FROM parquet_scan('s3://boilingdata-demo/test.parquet')
+)
+TO 's3://isecurefi-dev-test/tmp/asdfasdf.parquet' (
+    FORMAT 'parquet',
+    COMPRESSION 'zstd'
+);
+```
+
+```sql
+CREATE TABLE dummy WITH (
     FORMAT 'Parquet',
     COMPRESSION 'ZSTD',
-    EXTERNAL_LOCATION 's3://boilingdata-demo/upload/out.parquet'
-) AS SELECT col1, col2 FROM parquet_scan('s3://buck/year=2024/month=01/day=01/');
+    EXTERNAL_LOCATION 's3://isecurefi-dev-test/tmp/asdfasdf.parquet'
+) AS SELECT * FROM parquet_scan('s3://boilingdata-demo/test.parquet');
 ```
 
 ## 4. Connect with Presto compatible BI Tool
