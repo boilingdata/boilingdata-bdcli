@@ -99,26 +99,13 @@ A YAML configuration file is used to create the IAM Role.
 
 ```yaml
 version: 1.0
-uniqNamePart: myBdIamRoleOptionalParam # opt. deterministic uniq role id
 dataSources:
   - name: demo
-    type: s3 # "s3" only supported for now
-    sessionType: assumeRole # "assumeRole" only supported for now
-    accessPolicy:
-      - id: bd-demo-policy # unique statement id
-        urlPrefix: s3://boilingdata-demo/demo # string, for now must be S3 URL
-        permissions: # list: "read", "write"
-          - read
-      - id: nyc-policy
-        urlPrefix: s3://isecurefi-dev-test/nyc-tlc/
-        permissions:
+    permissions:
+      - urlPrefix: s3://my-bucket/and/prefix
+        accessRights:
           - read
           - write
-  - name: logs
-    type: s3
-    accessPolicy:
-      - id: logs-policy
-        urlPrefix: s3://logs-bucket/
 ```
 
 ## Direct access from DuckDB
