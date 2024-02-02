@@ -3,3 +3,4 @@ node_modules/
 package.json
 src/VERSION.ts
 src/integration/boilingdata/dataset.interface-ti.ts
+src/integration/boilingdata/sandbox-template.types-ti.ts
