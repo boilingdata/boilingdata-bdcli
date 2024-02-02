@@ -4,16 +4,15 @@ dataSources:
   - name: demo
     type: s3
     sessionType: assumeRole
-    accessPolicy:
-      - id: bd-demo-policy
-        badKey: yesTrue
+    permissions:
+      - badKey: yesTrue
         urlPrefix: s3://boilingdata-demo/demo
-        permissions:
+        accessRights:
           - read
       - id: nyc-policy
         dummy: hereAndThere
         urlPrefix: s3://isecurefi-dev-test/nyc-tlc/
-        permissions:
+        accessRights:
           - read
           - write
     dataSets:
@@ -27,7 +26,7 @@ dataSources:
         filetype: parquet
   - name: logs
     type: s3
-    accessPolicy:
+    permissions:
       - id: logs-policy
         urlPrefix: s3://logs-bucket/
     dataSets:

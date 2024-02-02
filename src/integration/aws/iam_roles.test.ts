@@ -25,7 +25,7 @@ const roleParams: IBDIamRole = {
   iamClient: new IAMClient({ region }),
   stsClient: new STSClient({ region }),
   region,
-  uniqNamePart: "boilingdata-demo-isecurefi-dev-and-all-the-rest-of-the-buckets",
+  username: "aac5c1d9-a0a9-4855-b896-0f3998b2f16b",
   assumeAwsAccount: "123123123123",
   assumeCondExternalId: "abcdef123123",
 };
@@ -48,17 +48,17 @@ describe("iamRole", () => {
 
   it("getIamRoleName", async () => {
     const role = new BDIamRole(roleParams);
-    expect(role.iamRoleName).toEqual("bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-11843e6abe8afd6");
+    expect(role.iamRoleName).toEqual("bd-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
   });
 
   it("getIamRoleName with own prefix", async () => {
-    const role = new BDIamRole({ ...roleParams, roleNamePrefix: "myPrefix" });
-    expect(role.iamRoleName).toEqual("myPrefix-ue1-boilingdata-demo-isecurefi-dev-and--1232b7ccb3bac8a");
+    const role = new BDIamRole({ ...roleParams, roleNamePrefix: "my" });
+    expect(role.iamRoleName).toEqual("my-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
   });
 
   it("getIamRoleName with own path and prefix", async () => {
-    const role = new BDIamRole({ ...roleParams, roleNamePrefix: "myPrefix", path: "/bd-service/demo/" });
-    expect(role.iamRoleName).toEqual("myPrefix-ue1-boilingdata-demo-isecurefi-dev-and--2cca7b8bb91fa2f");
+    const role = new BDIamRole({ ...roleParams, roleNamePrefix: "my", path: "/bd-service/demo/" });
+    expect(role.iamRoleName).toEqual("my-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
   });
 
   it("getRole", async () => {
@@ -75,7 +75,7 @@ describe("iamRole", () => {
           PolicyName: "bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-acff8dae429911f",
           Arn:
             "arn:aws:iam::123123123123:policy/" +
-            "boilingdata/bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-acff8dae429911f",
+            "boilingdata/bd-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b-policy",
           Path: "/boilingdata/",
           DefaultVersionId: "v123",
           AttachmentCount: 1,
@@ -115,7 +115,7 @@ describe("iamRole", () => {
           PolicyName: "bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-acff8dae429911f",
           Arn:
             "arn:aws:iam::123123123123:policy/" +
-            "boilingdata/bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-acff8dae429911f",
+            "boilingdata/bd-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b-policy",
           Path: "/boilingdata/",
           DefaultVersionId: "v100",
           AttachmentCount: 1,

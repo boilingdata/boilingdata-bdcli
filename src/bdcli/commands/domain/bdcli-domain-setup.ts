@@ -39,7 +39,6 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
       logger,
       iamClient: new iam.IAMClient({ region }),
       stsClient: new sts.STSClient({ region }),
-      uniqNamePart: await bdDataSources.getUniqueNamePart(),
       assumeAwsAccount: await bdAccount.getAssumeAwsAccount(),
       assumeCondExternalId: await bdAccount.getExtId(),
     });

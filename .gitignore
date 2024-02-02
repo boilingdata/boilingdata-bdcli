@@ -6,3 +6,6 @@ dist/
 datasource_config.yaml
 bdcli
 !bdcli/
+bd_querylog_config.yaml
+boilingQueryLog_v2.yaml
+boilingdata_user_x.yaml
