@@ -1,6 +1,6 @@
 {
   "name": "@boilingdata/boilingdata-bdcli",
-  "version": "1.0.29",
+  "version": "1.0.30",
   "description": "BoilingData command-line client - bdcli",
   "exports": {
     "import": "./dist/esm/index.js",

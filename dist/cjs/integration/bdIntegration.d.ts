@@ -23,6 +23,6 @@ export declare class BDIntegration {
     private mapAccessPolicyToS3Resource;
     private getStatement;
     getGroupedBuckets(): IGroupedDataSources;
-    getPolicyDocument(): Promise<any>;
+    getPolicyDocument(haveListBucketsPolicy?: boolean): Promise<any>;
 }
 export {};

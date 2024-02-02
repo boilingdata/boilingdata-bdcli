@@ -2,12 +2,16 @@ import * as id from "amazon-cognito-identity-js";
 export declare const baseApiUrl = "https://rest.api.test.boilingdata.com";
 export declare const dataSetsPath = "/data-sets";
 export declare const accountPath = "/account";
-export declare const tokenPath = "/token";
+export declare const stsTokenPath = "/token";
+export declare const tapTokenPath = "/taptoken";
 export declare const sharePath = "/share";
+export declare const sandboxPath = "/sandbox";
 export declare const dataSetsUrl: string;
 export declare const accountUrl: string;
-export declare const tokenUrl: string;
+export declare const stsTokenUrl: string;
+export declare const tapTokenUrl: string;
 export declare const tokenShareUrl: string;
+export declare const sandboxUrl: string;
 export declare const bdAWSAccount = "589434896614";
 export declare const UserPoolId = "eu-west-1_0GLV9KO1p";
 export declare const poolData: {

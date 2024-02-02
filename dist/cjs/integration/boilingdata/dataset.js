@@ -39,16 +39,6 @@ class BDDataSourceConfig {
         this.params = params;
         this.logger = this.params.logger;
     }
-    async getUniqueNamePart() {
-        if (!this._dataSourcesConfig || this._dataSourcesConfig.dataSources.length <= 0) {
-            throw new Error("Set datasources config first");
-        }
-        const uniqName = this._dataSourcesConfig.uniqNamePart ??
-            this._dataSourcesConfig.dataSources[this._dataSourcesConfig.dataSources.length - 1]?.name ??
-            "bdIamRole";
-        this.logger.debug({ uniqName });
-        return uniqName;
-    }
     isDataSetsConfig(dataSourcesConfig) {
         try {
             const { IDataSources } = (0, ts_interface_checker_1.createCheckers)(dataset_interface_ti_js_1.default);
@@ -68,6 +58,11 @@ class BDDataSourceConfig {
         if (!this._dataSourcesConfig)
             throw new Error("Please read the configuration file first with readConfig()");
         return { ...this._dataSourcesConfig }; // make copy
+    }
+    withConfig(config) {
+        if (!this.isDataSetsConfig(config))
+            throw new Error("datasources config schema not validated");
+        this._dataSourcesConfig = config;
     }
     async readConfig(filename) {
         if (this._dataSourcesConfig)

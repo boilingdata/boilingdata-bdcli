@@ -3,35 +3,19 @@
  */
 import * as t from "ts-interface-checker";
 // tslint:disable:object-literal-key-quotes
-export const EDataSetType = t.enumtype({
-    "S3": "s3",
-});
 export const GRANT_PERMISSION = t.enumtype({
     "G_WRITE": "write",
     "G_READ": "read",
-});
-export const SESSION_TYPE = t.enumtype({
-    "STS": "sts",
-    "ASSUME_ROLE": "assumeRole",
-});
-export const LAYOUT = t.enumtype({
-    "HIVE": "hive",
-    "FOLDER": "folder",
-    "FILE": "file",
 });
 export const FILE_TYPE = t.enumtype({
     "PARQUET": "parquet",
     "JSON": "json",
     "CSV": "csv",
 });
-export const USessionType = t.union(t.enumlit("SESSION_TYPE", "STS"), t.enumlit("SESSION_TYPE", "ASSUME_ROLE"));
 export const UGrant = t.union(t.enumlit("GRANT_PERMISSION", "G_READ"), t.enumlit("GRANT_PERMISSION", "G_WRITE"));
-export const ULayout = t.union(t.enumlit("LAYOUT", "HIVE"), t.enumlit("LAYOUT", "FOLDER"), t.enumlit("LAYOUT", "FILE"));
-export const UFileType = t.union(t.enumlit("FILE_TYPE", "PARQUET"), t.enumlit("FILE_TYPE", "JSON"), t.enumlit("FILE_TYPE", "CSV"));
 export const IStatement = t.iface([], {
-    "id": "string",
     "urlPrefix": "string",
-    "permissions": t.opt(t.array("UGrant")),
+    "accessRights": t.opt(t.array("UGrant")),
 });
 export const IStatementExt = t.iface(["IStatement"], {
     "bucket": "string",
@@ -40,15 +24,10 @@ export const IStatementExt = t.iface(["IStatement"], {
 export const IDataSet = t.iface([], {
     "name": "string",
     "urlPrefix": "string",
-    "layout": t.opt("ULayout"),
-    "filetype": t.opt("UFileType"),
 });
 export const IDataSource = t.iface([], {
     "name": "string",
-    "accessPolicy": t.array("IStatement"),
-    "type": t.opt("EDataSetType"),
-    "dataSets": t.opt(t.array("IDataSet")),
-    "sessionType": t.opt("USessionType"),
+    "permissions": t.array("IStatement"),
 });
 export const IDataSources = t.iface([], {
     "version": t.opt(t.union("string", "number")),
@@ -56,15 +35,9 @@ export const IDataSources = t.iface([], {
     "dataSources": t.array("IDataSource"),
 });
 const exportedTypeSuite = {
-    EDataSetType,
     GRANT_PERMISSION,
-    SESSION_TYPE,
-    LAYOUT,
     FILE_TYPE,
-    USessionType,
     UGrant,
-    ULayout,
-    UFileType,
     IStatement,
     IStatementExt,
     IDataSet,

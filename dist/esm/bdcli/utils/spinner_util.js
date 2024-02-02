@@ -38,10 +38,11 @@ export function spinnerWarn(message) {
         return;
     spinner.warn(message ? warning(message) : warning(spinner.text));
 }
-export function spinnerError(message) {
+export function spinnerError(message, forceExit = true) {
     if (isEnabled)
         spinner.fail(message ? error(message) : undefined);
-    process.exit(1); // error
+    if (forceExit)
+        process.exit(1); // error
 }
 export function spinnerSuccess(message) {
     if (!isEnabled)

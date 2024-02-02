@@ -50,10 +50,11 @@ function spinnerWarn(message) {
     spinner.warn(message ? warning(message) : warning(spinner.text));
 }
 exports.spinnerWarn = spinnerWarn;
-function spinnerError(message) {
+function spinnerError(message, forceExit = true) {
     if (isEnabled)
         spinner.fail(message ? error(message) : undefined);
-    process.exit(1); // error
+    if (forceExit)
+        process.exit(1); // error
 }
 exports.spinnerError = spinnerError;
 function spinnerSuccess(message) {

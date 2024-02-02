@@ -1,7 +1,6 @@
 import * as iam from "@aws-sdk/client-iam";
-import * as crypto from "crypto";
 import * as sts from "@aws-sdk/client-sts";
-import { getRegionShortName } from "./util.js";
+import { getAwsRegionShortName } from "./aws-region.js";
 var ENameType;
 (function (ENameType) {
     ENameType["ROLE"] = "role";
@@ -30,22 +29,15 @@ export class BDIamRole {
     }
     getName(type) {
         const prefix = this.params.roleNamePrefix ?? "bd";
-        const regionShort = getRegionShortName(this.params.region ?? process.env["AWS_REGION"] ?? "eu-west-2");
-        const hash = crypto
-            .createHash("md5")
-            .update(type +
-            this.path +
-            prefix +
-            regionShort +
-            this.params.uniqNamePart +
-            this.params.assumeAwsAccount +
-            this.params.assumeCondExternalId +
-            `${this.params.maxSessionDuration ?? "N/A"}`);
-        const reducedHashLength = 15;
-        const nameLenSoFar = prefix.length + regionShort.length + reducedHashLength;
-        const roomLeft = 64 - nameLenSoFar - 3; // "-" chars
-        const dataSetShort = this.params.uniqNamePart.substring(0, roomLeft);
-        return [prefix, regionShort, dataSetShort, hash.digest("hex").substring(0, 15)].join("-");
+        const regionShort = getAwsRegionShortName(this.params.region ?? process.env["AWS_REGION"] ?? "eu-west-1");
+        const env = this.params.environment ?? "noenv";
+        const tmplName = this.params.templateName ?? "notmplname";
+        const username = this.params.username.replaceAll("-", "");
+        const name = [prefix, regionShort, env, tmplName, username].join("-");
+        if (name.length > 64) {
+            throw new Error(`${type} name (${name}) too long (${name.length}), reduce prefix/env/tmplname lengths (roomLeft ${64 - name.length})`);
+        }
+        return name;
     }
     async getAwsAccountId() {
         if (this.awsAccountId)
@@ -62,16 +54,18 @@ export class BDIamRole {
         if (this._iamRoleName)
             return this._iamRoleName;
         this._iamRoleName = this.getName(ENameType.ROLE);
-        if (this._iamRoleName.length > 64)
-            throw new Error("Role name too long, bugger in code.");
+        if (this._iamRoleName.length > 64) {
+            throw new Error(`Role name too long, bugger in code (${this._iamRoleName})`);
+        }
         return this._iamRoleName;
     }
     get iamManagedPolicyName() {
         if (this._iamManagedPolicyName)
             return this._iamManagedPolicyName;
         this._iamManagedPolicyName = this.getName(ENameType.POLICY);
-        if (this._iamManagedPolicyName.length > 64)
-            throw new Error("Role name too long, bugger in code.");
+        if (this._iamManagedPolicyName.length > 64) {
+            throw new Error(`Policy name too long, bugger in code (${this._iamManagedPolicyName})`);
+        }
         return this._iamManagedPolicyName;
     }
     getAssumeRolePolicyDocument() {
@@ -173,8 +167,10 @@ export class BDIamRole {
             Tags: [...(this.params.tags ?? []), ...this.boilingDataTags],
         };
         const resp = await this.iamClient.send(new iam.CreatePolicyCommand(commandParams));
-        if (!resp?.Policy?.Arn)
+        if (!resp?.Policy?.Arn) {
+            this.logger.error({ resp });
             throw new Error("Policy creation failed");
+        }
     }
     async upsertBdAccessPolicy(PolicyDocument) {
         try {
@@ -196,6 +192,7 @@ export class BDIamRole {
     }
     async upsertRole(policyDocument) {
         let arn;
+        this.logger.debug({ policyDocument });
         try {
             const resp = await this.getRole();
             if (!resp.Arn)

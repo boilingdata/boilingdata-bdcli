@@ -8,9 +8,9 @@ export declare class BDDataSourceConfig {
     private logger;
     private _dataSourcesConfig?;
     constructor(params: IBDDataSourceConfig);
-    getUniqueNamePart(): Promise<string>;
     isDataSetsConfig(dataSourcesConfig: unknown): dataSourcesConfig is IDataSources;
     hasValidUrlPrefixes(_dataSourcesConfig: IDataSources): boolean;
     getDatasourcesConfig(): IDataSources;
+    withConfig(config: object): void;
     readConfig(filename: string): Promise<IDataSources>;
 }

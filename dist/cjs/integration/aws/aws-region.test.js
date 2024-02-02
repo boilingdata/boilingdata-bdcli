@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const util_js_1 = require("./util.js");
+const aws_region_js_1 = require("./aws-region.js");
 const aws_regions = [
     "us-east-2",
     "us-east-1",
@@ -34,36 +34,36 @@ const aws_regions = [
 ];
 describe("utils", () => {
     it("util", () => {
-        expect(aws_regions.map(util_js_1.getRegionShortName)).toEqual([
-            "ue2",
-            "ue1",
-            "uw1",
-            "uw2",
-            "as1",
-            "ae1",
-            "as2",
-            "ase3",
-            "ase4",
-            "as1",
-            "ane3",
-            "ane2",
-            "ase1",
-            "ase2",
-            "ane1",
-            "cc1",
-            "ec1",
-            "ew1",
-            "ew2",
-            "es1",
-            "ew3",
-            "es2",
-            "en1",
-            "ec2",
-            "ms1",
-            "mc1",
-            "se1",
-            "uge1",
-            "ugw1",
+        expect(aws_regions.map(aws_region_js_1.getAwsRegionShortName)).toEqual([
+            "use2",
+            "use1",
+            "usw1",
+            "usw2",
+            "afs1",
+            "ape1",
+            "aps2",
+            "apse3",
+            "apse4",
+            "aps1",
+            "apne3",
+            "apne2",
+            "apse1",
+            "apse2",
+            "apne1",
+            "cac1",
+            "euc1",
+            "euw1",
+            "euw2",
+            "eus1",
+            "euw3",
+            "eus2",
+            "eun1",
+            "euc2",
+            "mes1",
+            "mec1",
+            "sae1",
+            "usge1",
+            "usgw1",
         ]);
     });
 });

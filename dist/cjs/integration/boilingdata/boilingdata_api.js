@@ -23,18 +23,22 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getReqHeaders = exports.getApiKey = exports.apiKey = exports.Pool = exports.poolData = exports.UserPoolId = exports.bdAWSAccount = exports.tokenShareUrl = exports.tokenUrl = exports.accountUrl = exports.dataSetsUrl = exports.sharePath = exports.tokenPath = exports.accountPath = exports.dataSetsPath = exports.baseApiUrl = void 0;
+exports.getReqHeaders = exports.getApiKey = exports.apiKey = exports.Pool = exports.poolData = exports.UserPoolId = exports.bdAWSAccount = exports.sandboxUrl = exports.tokenShareUrl = exports.tapTokenUrl = exports.stsTokenUrl = exports.accountUrl = exports.dataSetsUrl = exports.sandboxPath = exports.sharePath = exports.tapTokenPath = exports.stsTokenPath = exports.accountPath = exports.dataSetsPath = exports.baseApiUrl = void 0;
 const id = __importStar(require("amazon-cognito-identity-js"));
 // FIXME: switch to prod as default
 exports.baseApiUrl = "https://rest.api.test.boilingdata.com";
 exports.dataSetsPath = "/data-sets";
 exports.accountPath = "/account";
-exports.tokenPath = "/token";
+exports.stsTokenPath = "/token";
+exports.tapTokenPath = "/taptoken";
 exports.sharePath = "/share";
+exports.sandboxPath = "/sandbox";
 exports.dataSetsUrl = exports.baseApiUrl + exports.dataSetsPath;
 exports.accountUrl = exports.baseApiUrl + exports.accountPath;
-exports.tokenUrl = exports.baseApiUrl + exports.tokenPath;
+exports.stsTokenUrl = exports.baseApiUrl + exports.stsTokenPath;
+exports.tapTokenUrl = exports.baseApiUrl + exports.tapTokenPath;
 exports.tokenShareUrl = exports.baseApiUrl + exports.sharePath;
+exports.sandboxUrl = exports.baseApiUrl + exports.sandboxPath;
 // FIXME: get from bdAccount API
 exports.bdAWSAccount = "589434896614";
 exports.UserPoolId = "eu-west-1_0GLV9KO1p";

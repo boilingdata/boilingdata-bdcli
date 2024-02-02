@@ -10,7 +10,9 @@ export interface IBDIamRole {
     iamClient: iam.IAMClient;
     stsClient: sts.STSClient;
     region: string;
-    uniqNamePart: string;
+    username: string;
+    environment?: string;
+    templateName?: string;
     assumeCondExternalId: string;
     assumeAwsAccount: string;
     path?: string;

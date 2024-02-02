@@ -60,7 +60,7 @@ async function iamrole(options, _command) {
             logger,
             iamClient: new iam.IAMClient({ region }),
             stsClient: new sts.STSClient({ region }),
-            uniqNamePart: await bdDataSources.getUniqueNamePart(),
+            username: await bdAccount.getUsername(),
             assumeAwsAccount: await bdAccount.getAssumeAwsAccount(),
             assumeCondExternalId: await bdAccount.getExtId(),
         });
