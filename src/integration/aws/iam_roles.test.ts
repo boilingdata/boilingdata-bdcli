@@ -48,17 +48,17 @@ describe("iamRole", () => {
 
   it("getIamRoleName", async () => {
     const role = new BDIamRole(roleParams);
-    expect(role.iamRoleName).toEqual("bd-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b-role");
+    expect(role.iamRoleName).toEqual("bd-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
   });
 
   it("getIamRoleName with own prefix", async () => {
     const role = new BDIamRole({ ...roleParams, roleNamePrefix: "my" });
-    expect(role.iamRoleName).toEqual("my-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b-role");
+    expect(role.iamRoleName).toEqual("my-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
   });
 
   it("getIamRoleName with own path and prefix", async () => {
     const role = new BDIamRole({ ...roleParams, roleNamePrefix: "my", path: "/bd-service/demo/" });
-    expect(role.iamRoleName).toEqual("my-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b-role");
+    expect(role.iamRoleName).toEqual("my-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
   });
 
   it("getRole", async () => {

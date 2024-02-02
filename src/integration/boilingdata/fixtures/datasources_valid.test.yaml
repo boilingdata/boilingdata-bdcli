@@ -2,16 +2,12 @@ version: 1.0
 uniqNamePart: demo2
 dataSources:
   - name: demo
-    type: s3
-    sessionType: assumeRole
-    accessPolicy:
-      - id: bd-demo-policy
-        urlPrefix: s3://boilingdata-demo/demo
-        permissions:
+    permissions:
+      - urlPrefix: s3://boilingdata-demo/demo
+        accessRights:
           - read
-      - id: nyc-policy
-        urlPrefix: s3://isecurefi-dev-test/nyc-tlc/
-        permissions:
+      - urlPrefix: s3://isecurefi-dev-test/nyc-tlc/
+        accessRights:
           - read
           - write
     dataSets:
@@ -24,8 +20,7 @@ dataSources:
         layout: hive
         filetype: parquet
   - name: logs
-    type: s3
-    accessPolicy:
+    permissions:
       - id: logs-policy
         urlPrefix: s3://logs-bucket/
     dataSets:

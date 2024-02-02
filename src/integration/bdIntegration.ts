@@ -1,7 +1,7 @@
 import { ILogger } from "../bdcli/utils/logger_util.js";
 import { BDIamRole } from "./aws/iam_roles.js";
 import { BDAccount } from "./boilingdata/account.js";
-import { GRANT_PERMISSION, IStatementExt } from "./boilingdata/dataset.interface.js";
+import { GRANT_PERMISSION, IStatement, IStatementExt } from "./boilingdata/dataset.interface.js";
 import { BDDataSourceConfig } from "./boilingdata/dataset.js";
 
 const RO_ACTIONS = ["s3:GetObject"];
@@ -51,10 +51,13 @@ export class BDIntegration {
 
   public getGroupedBuckets(): IGroupedDataSources {
     const dataSourcesConfig = this.bdDatasets.getDatasourcesConfig();
-    const allPolicies = dataSourcesConfig.dataSources.permissions.map(perm => {
-      if (!perm.accessRights) perm.accessRights = [GRANT_PERMISSION.G_READ]; // default
-      return perm;
-    });
+    const allPolicies: IStatement[] = [];
+    dataSourcesConfig.dataSources.forEach(ds =>
+      ds.permissions.forEach(perm => {
+        if (!perm.accessRights) perm.accessRights = [GRANT_PERMISSION.G_READ]; // default
+        allPolicies.push(perm);
+      }),
+    );
     this.logger.debug({ allPolicies });
     if (allPolicies.some(policy => !policy.accessRights)) throw new Error("Missing policy permissions");
     const readOnly = allPolicies
