@@ -15,7 +15,7 @@ export const EPermission = t.enumtype({
   "WRITE": "write",
 });
 
-export const ITemplateSandbox = t.iface([], {
+export const ITemplateStorage = t.iface([], {
   "name": "string",
   "permissions": t.array(t.iface([], {
     "urlPrefix": "string",
@@ -32,18 +32,16 @@ export const ITemplateTap = t.iface([], {
   }))),
 });
 
-export const ITemplateFlow = t.iface([], {
+export const ITemplatePipe = t.iface([], {
   "name": "string",
-  "input": t.union("string", t.array("string")),
+  "input": "string",
   "keys": t.opt(t.array("string")),
-  "transformJs": t.opt("string"),
   "transformSql": t.opt("string"),
-  "prefixFunc": t.opt("string"),
   "output": t.opt(t.union("string", t.array("string"))),
   "errors": t.opt("string"),
 });
 
-export const ITemplateShare = t.iface([], {
+export const ITemplateACL = t.iface([], {
   "name": "string",
   "users": t.array("string"),
   "sql": t.opt("string"),
@@ -53,24 +51,24 @@ export const ITemplateShare = t.iface([], {
 
 export const ITemplate = t.iface([], {
   "version": t.union("string", "number"),
-  "name": "string",
+  "id": "string",
   "environment": "string",
   "region": "string",
   "resources": t.iface([], {
-    "sandbox": "ITemplateSandbox",
+    "storage": "ITemplateStorage",
     "taps": t.opt(t.array("ITemplateTap")),
-    "flows": t.opt(t.array("ITemplateFlow")),
-    "shares": t.opt(t.array("ITemplateShare")),
+    "pipes": t.opt(t.array("ITemplatePipe")),
+    "acls": t.opt(t.array("ITemplateACL")),
   }),
 });
 
 const exportedTypeSuite: t.ITypeSuite = {
   EModelFormat,
   EPermission,
-  ITemplateSandbox,
+  ITemplateStorage,
   ITemplateTap,
-  ITemplateFlow,
-  ITemplateShare,
+  ITemplatePipe,
+  ITemplateACL,
   ITemplate,
 };
 export default exportedTypeSuite;

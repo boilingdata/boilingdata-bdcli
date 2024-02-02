@@ -37,14 +37,14 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     const region = bdSandbox.region;
     const bdAccount = new BDAccount({ logger, authToken: token });
     const bdDataSources = new BDDataSourceConfig({ logger });
-    bdDataSources.withConfig({ dataSources: bdSandbox.tmpl.resources.sandbox });
+    bdDataSources.withConfig({ dataSources: bdSandbox.tmpl.resources.storage });
     const bdRole = new BDIamRole({
       ...options,
       logger,
       iamClient: new iam.IAMClient({ region }),
       stsClient: new sts.STSClient({ region }),
       environment: bdSandbox.tmpl.environment,
-      templateName: bdSandbox.tmpl.name,
+      templateName: bdSandbox.tmpl.id,
       username: await bdAccount.getUsername(),
       assumeAwsAccount: await bdAccount.getAssumeAwsAccount(),
       assumeCondExternalId: await bdAccount.getExtId(),

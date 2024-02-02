@@ -8,7 +8,7 @@ export enum EPermission {
   WRITE = "write",
 }
 
-export interface ITemplateSandbox {
+export interface ITemplateStorage {
   name: string;
   permissions: Array<{
     urlPrefix: string;
@@ -25,18 +25,16 @@ export interface ITemplateTap {
   }>;
 }
 
-export interface ITemplateFlow {
+export interface ITemplatePipe {
   name: string;
-  input: string | string[];
+  input: string;
   keys?: string[];
-  transformJs?: string;
   transformSql?: string;
-  prefixFunc?: string;
   output?: string | string[];
   errors?: string;
 }
 
-export interface ITemplateShare {
+export interface ITemplateACL {
   name: string;
   users: string[];
   sql?: string;
@@ -46,13 +44,13 @@ export interface ITemplateShare {
 
 export interface ITemplate {
   version: string | number;
-  name: string;
+  id: string;
   environment: string;
   region: string;
   resources: {
-    sandbox: ITemplateSandbox;
+    storage: ITemplateStorage;
     taps?: ITemplateTap[];
-    flows?: ITemplateFlow[];
-    shares?: ITemplateShare[];
+    pipes?: ITemplatePipe[];
+    acls?: ITemplateACL[];
   };
 }

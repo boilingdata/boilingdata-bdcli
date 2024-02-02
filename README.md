@@ -19,6 +19,7 @@ Commands:
   account         Setup and configure your BoilingData account
   aws             Setup and configure your AWS account integration with BoilingData
   domain          Admin setup and configuration for your domain (.e.g @boilingdata.com, @mycompany.com)
+  sandbox         Managa Boiling S3 Sandboxes with IaC templates
   help [command]  display help for command
 ```
 
@@ -158,3 +159,7 @@ npm run build
 npm install -g .
 bdcli -h
 ```
+
+### TODO
+
+- [_] Add shell auto completion with [omelette](https://github.com/f/omelette).

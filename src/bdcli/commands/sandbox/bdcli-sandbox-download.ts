@@ -37,7 +37,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
 
     updateSpinnerText(`Downloading sandbox IaC template of ${options.name}`);
     const bdSandbox = new BDSandbox({ logger, authToken: token });
-    const template = await bdSandbox.downloadTemplate(options.name, options.version);
+    const template = await bdSandbox.downloadTemplate(options.name, options.version, options?.status ?? "uploaded");
     await fs.writeFile(filename, template);
     spinnerSuccess();
   } catch (err: any) {
@@ -47,6 +47,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
 
 const program = new cmd.Command("bdcli sandbox download")
   .addOption(new cmd.Option("--name <templateName>", "template name from listing").makeOptionMandatory())
+  .addOption(new cmd.Option("--status <status>", "Download 'uploaded' (default) or 'deployed' template"))
   .addOption(new cmd.Option("--version <version>", "Download specific version from listing"))
   .action(async (options, command) => await show(options, command));
 

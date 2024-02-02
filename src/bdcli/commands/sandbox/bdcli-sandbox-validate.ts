@@ -37,8 +37,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
         false,
       );
     } catch (err: any) {
-      spinnerError(origErr?.message, false);
-      console.error(err);
+      if (err?.message && !origErr?.message) spinnerError(err?.message, false);
     }
   }
 }
