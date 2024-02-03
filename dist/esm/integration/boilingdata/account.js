@@ -226,14 +226,15 @@ export class BDAccount {
         return; // expired
     }
     async getTapToken(tokenLifetime, sharingUser) {
-        const creds = await getConfigCredentials();
-        this.bdTapToken = creds.bdTapToken;
-        if (this.bdTapToken) {
-            const cachedToken = await this.getTapTokenResp(false);
-            if (cachedToken && ((sharingUser && cachedToken?.sharingUser === sharingUser) || !sharingUser)) {
-                return cachedToken; // disk cached token is not yet expired..
-            }
-        }
+        // NOTE: Get fresh tap token every time for now.
+        // const creds = await getConfigCredentials();
+        // this.bdTapToken = creds.bdTapToken;
+        // if (this.bdTapToken) {
+        //   const cachedToken = await this.getTapTokenResp(false);
+        //   if (cachedToken && ((sharingUser && cachedToken?.sharingUser === sharingUser) || !sharingUser)) {
+        //     return cachedToken; // disk cached token is not yet expired..
+        //   }
+        // }
         // channel("undici:request:create").subscribe(console.log);
         // channel("undici:request:headers").subscribe(console.log);
         const headers = await getReqHeaders(this.cognitoIdToken); // , { tokenLifetime, vendingSchedule, shareId });

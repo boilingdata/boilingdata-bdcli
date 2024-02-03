@@ -29,11 +29,11 @@ class BDIntegration {
     getGroupedBuckets() {
         const dataSourcesConfig = this.bdDatasets.getDatasourcesConfig();
         const allPolicies = [];
-        dataSourcesConfig.dataSources.forEach(ds => ds.permissions.forEach(perm => {
+        dataSourcesConfig.dataSources.permissions.forEach(perm => {
             if (!perm.accessRights)
                 perm.accessRights = [dataset_interface_js_1.GRANT_PERMISSION.G_READ]; // default
             allPolicies.push(perm);
-        }));
+        });
         this.logger.debug({ allPolicies });
         if (allPolicies.some(policy => !policy.accessRights))
             throw new Error("Missing policy permissions");

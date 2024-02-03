@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.31](https://github.com/boilingdata/boilingdata-bdcli/compare/v1.0.30...v1.0.31) (2024-02-03)
+
 ### [1.0.30](https://github.com/boilingdata/boilingdata-bdcli/compare/v1.0.29...v1.0.30) (2024-02-02)
 
 ### [1.0.29](https://github.com/boilingdata/boilingdata-bdcli/compare/v1.0.28...v1.0.29) (2023-12-19)
