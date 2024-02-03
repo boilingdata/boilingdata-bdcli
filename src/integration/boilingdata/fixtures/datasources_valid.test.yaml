@@ -1,28 +1,12 @@
 version: 1.0
 uniqNamePart: demo2
 dataSources:
-  - name: demo
-    permissions:
-      - urlPrefix: s3://boilingdata-demo/demo
-        accessRights:
-          - read
-      - urlPrefix: s3://isecurefi-dev-test/nyc-tlc/
-        accessRights:
-          - read
-          - write
-    dataSets:
-      - name: demo
-        urlPrefix: s3://boilingdata-demo/demo.parquet
-      - name: demo2
-        urlPrefix: s3://boilingdata-demo/demo2.parquet
-      - name: nyc
-        urlPrefix: s3://isecurefi-dev-test/nyc-tlc/trip_data/
-        layout: hive
-        filetype: parquet
-  - name: logs
-    permissions:
-      - id: logs-policy
-        urlPrefix: s3://logs-bucket/
-    dataSets:
-      - name: s3AccessLogs
-        urlPrefix: s3://logs-bucket/s3_access/
+  name: demo
+  permissions:
+    - urlPrefix: s3://boilingdata-demo/demo
+      accessRights:
+        - read
+    - urlPrefix: s3://isecurefi-dev-test/nyc-tlc/
+      accessRights:
+        - read
+        - write
