@@ -40,7 +40,7 @@ export const IDataSource = t.iface([], {
 export const IDataSources = t.iface([], {
   "version": t.opt(t.union("string", "number")),
   "uniqNamePart": t.opt("string"),
-  "dataSources": t.array("IDataSource"),
+  "dataSources": "IDataSource",
 });
 
 const exportedTypeSuite: t.ITypeSuite = {

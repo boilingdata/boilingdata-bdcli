@@ -52,12 +52,10 @@ export class BDIntegration {
   public getGroupedBuckets(): IGroupedDataSources {
     const dataSourcesConfig = this.bdDatasets.getDatasourcesConfig();
     const allPolicies: IStatement[] = [];
-    dataSourcesConfig.dataSources.forEach(ds =>
-      ds.permissions.forEach(perm => {
-        if (!perm.accessRights) perm.accessRights = [GRANT_PERMISSION.G_READ]; // default
-        allPolicies.push(perm);
-      }),
-    );
+    dataSourcesConfig.dataSources.permissions.forEach(perm => {
+      if (!perm.accessRights) perm.accessRights = [GRANT_PERMISSION.G_READ]; // default
+      allPolicies.push(perm);
+    });
     this.logger.debug({ allPolicies });
     if (allPolicies.some(policy => !policy.accessRights)) throw new Error("Missing policy permissions");
     const readOnly = allPolicies

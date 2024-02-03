@@ -1,23 +1,12 @@
 version: 1.0
 uniqNamePart: bd-demo-iam-role
 dataSources:
-  - name: demo
-    type: s3
-    sessionType: assumeRole
-    accessPolicy:
-      - id: bd-demo-policy
-        urlPrefix: s3://boilingdata-demo/demo
-        permissions:
-          - read
-      - id: nyc-policy
-        urlPrefix: s3://isecurefi-dev-test/nyc-tlc/
-        permissions:
-          - read
-          - write
-  - name: logs
-    type: s3
-    accessPolicy:
-      - id: logs-policy
-        urlPrefix: s3://logs-bucket/
-        permissions:
-          - read
+  name: demo
+  permissions:
+    - urlPrefix: s3://boilingdata-demo/demo
+      accessRights:
+        - read
+    - urlPrefix: s3://isecurefi-dev-test/nyc-tlc/
+      accessRights:
+        - read
+        - write
