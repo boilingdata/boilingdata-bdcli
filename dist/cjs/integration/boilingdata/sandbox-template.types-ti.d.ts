@@ -7,7 +7,7 @@ export declare const EPermission: t.TEnumType;
 export declare const ITemplateStorage: t.TIface;
 export declare const ITemplateTap: t.TIface;
 export declare const ITemplatePipe: t.TIface;
-export declare const ITemplateACL: t.TIface;
+export declare const ITemplateShare: t.TIface;
 export declare const ITemplate: t.TIface;
 declare const exportedTypeSuite: t.ITypeSuite;
 export default exportedTypeSuite;

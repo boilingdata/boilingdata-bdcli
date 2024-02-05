@@ -30,7 +30,7 @@ export interface ITemplatePipe {
     output?: string | string[];
     errors?: string;
 }
-export interface ITemplateACL {
+export interface ITemplateShare {
     name: string;
     users: string[];
     sql?: string;
@@ -46,6 +46,6 @@ export interface ITemplate {
         storage: ITemplateStorage;
         taps?: ITemplateTap[];
         pipes?: ITemplatePipe[];
-        acls?: ITemplateACL[];
+        shares?: ITemplateShare[];
     };
 }

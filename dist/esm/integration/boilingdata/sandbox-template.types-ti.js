@@ -35,7 +35,7 @@ export const ITemplatePipe = t.iface([], {
     "output": t.opt(t.union("string", t.array("string"))),
     "errors": t.opt("string"),
 });
-export const ITemplateACL = t.iface([], {
+export const ITemplateShare = t.iface([], {
     "name": "string",
     "users": t.array("string"),
     "sql": t.opt("string"),
@@ -51,7 +51,7 @@ export const ITemplate = t.iface([], {
         "storage": "ITemplateStorage",
         "taps": t.opt(t.array("ITemplateTap")),
         "pipes": t.opt(t.array("ITemplatePipe")),
-        "acls": t.opt(t.array("ITemplateACL")),
+        "shares": t.opt(t.array("ITemplateShare")),
     }),
 });
 const exportedTypeSuite = {
@@ -60,7 +60,7 @@ const exportedTypeSuite = {
     ITemplateStorage,
     ITemplateTap,
     ITemplatePipe,
-    ITemplateACL,
+    ITemplateShare,
     ITemplate,
 };
 export default exportedTypeSuite;
