@@ -43,7 +43,6 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
       logger,
       iamClient: new iam.IAMClient({ region }),
       stsClient: new sts.STSClient({ region }),
-      environment: bdSandbox.tmpl.environment,
       templateName: bdSandbox.tmpl.id,
       username: await bdAccount.getUsername(),
       assumeAwsAccount: await bdAccount.getAssumeAwsAccount(),

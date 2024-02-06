@@ -48,17 +48,17 @@ describe("iamRole", () => {
 
   it("getIamRoleName", async () => {
     const role = new BDIamRole(roleParams);
-    expect(role.iamRoleName).toEqual("bd-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
+    expect(role.iamRoleName).toEqual("bd-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
   });
 
   it("getIamRoleName with own prefix", async () => {
     const role = new BDIamRole({ ...roleParams, roleNamePrefix: "my" });
-    expect(role.iamRoleName).toEqual("my-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
+    expect(role.iamRoleName).toEqual("my-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
   });
 
   it("getIamRoleName with own path and prefix", async () => {
     const role = new BDIamRole({ ...roleParams, roleNamePrefix: "my", path: "/bd-service/demo/" });
-    expect(role.iamRoleName).toEqual("my-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
+    expect(role.iamRoleName).toEqual("my-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
   });
 
   it("getRole", async () => {
@@ -75,7 +75,7 @@ describe("iamRole", () => {
           PolicyName: "bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-acff8dae429911f",
           Arn:
             "arn:aws:iam::123123123123:policy/" +
-            "boilingdata/bd-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b-policy",
+            "boilingdata/bd-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b-policy",
           Path: "/boilingdata/",
           DefaultVersionId: "v123",
           AttachmentCount: 1,
@@ -115,7 +115,7 @@ describe("iamRole", () => {
           PolicyName: "bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-acff8dae429911f",
           Arn:
             "arn:aws:iam::123123123123:policy/" +
-            "boilingdata/bd-use1-noenv-notmplname-aac5c1d9a0a94855b8960f3998b2f16b-policy",
+            "boilingdata/bd-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b-policy",
           Path: "/boilingdata/",
           DefaultVersionId: "v100",
           AttachmentCount: 1,

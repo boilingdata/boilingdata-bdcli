@@ -19,7 +19,6 @@ export interface IBDIamRole {
   stsClient: sts.STSClient;
   region: string;
   username: string;
-  environment?: string;
   templateName?: string;
   assumeCondExternalId: string;
   assumeAwsAccount: string;
@@ -52,13 +51,12 @@ export class BDIamRole {
   private getName(type: string): string {
     const prefix = this.params.roleNamePrefix ?? "bd";
     const regionShort = getAwsRegionShortName(this.params.region ?? process.env["AWS_REGION"] ?? "eu-west-1");
-    const env = this.params.environment ?? "noenv";
     const tmplName = this.params.templateName ?? "notmplname";
     const username = this.params.username.replaceAll("-", "");
-    const name = [prefix, regionShort, env, tmplName, username].join("-");
+    const name = [prefix, regionShort, tmplName, username].join("-");
     if (name.length > 64) {
       throw new Error(
-        `${type} name (${name}) too long (${name.length}), reduce prefix/env/tmplname lengths (roomLeft ${
+        `${type} name (${name}) too long (${name.length}), reduce prefix/tmplname lengths (roomLeft ${
           64 - name.length
         })`,
       );
