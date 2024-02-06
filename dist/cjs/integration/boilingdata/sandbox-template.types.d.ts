@@ -40,7 +40,6 @@ export interface ITemplateShare {
 export interface ITemplate {
     version: string | number;
     id: string;
-    environment: string;
     region: string;
     resources: {
         storage: ITemplateStorage;

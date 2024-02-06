@@ -71,7 +71,6 @@ exports.ITemplateShare = t.iface([], {
 exports.ITemplate = t.iface([], {
     "version": t.union("string", "number"),
     "id": "string",
-    "environment": "string",
     "region": "string",
     "resources": t.iface([], {
         "storage": "ITemplateStorage",

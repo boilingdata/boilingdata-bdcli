@@ -30,12 +30,11 @@ export class BDIamRole {
     getName(type) {
         const prefix = this.params.roleNamePrefix ?? "bd";
         const regionShort = getAwsRegionShortName(this.params.region ?? process.env["AWS_REGION"] ?? "eu-west-1");
-        const env = this.params.environment ?? "noenv";
         const tmplName = this.params.templateName ?? "notmplname";
         const username = this.params.username.replaceAll("-", "");
-        const name = [prefix, regionShort, env, tmplName, username].join("-");
+        const name = [prefix, regionShort, tmplName, username].join("-");
         if (name.length > 64) {
-            throw new Error(`${type} name (${name}) too long (${name.length}), reduce prefix/env/tmplname lengths (roomLeft ${64 - name.length})`);
+            throw new Error(`${type} name (${name}) too long (${name.length}), reduce prefix/tmplname lengths (roomLeft ${64 - name.length})`);
         }
         return name;
     }

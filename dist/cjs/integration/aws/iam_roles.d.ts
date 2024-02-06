@@ -11,7 +11,6 @@ export interface IBDIamRole {
     stsClient: sts.STSClient;
     region: string;
     username: string;
-    environment?: string;
     templateName?: string;
     assumeCondExternalId: string;
     assumeAwsAccount: string;

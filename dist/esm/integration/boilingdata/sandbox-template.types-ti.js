@@ -45,7 +45,6 @@ export const ITemplateShare = t.iface([], {
 export const ITemplate = t.iface([], {
     "version": t.union("string", "number"),
     "id": "string",
-    "environment": "string",
     "region": "string",
     "resources": t.iface([], {
         "storage": "ITemplateStorage",
