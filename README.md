@@ -4,7 +4,7 @@ See [ONBOARDING.md](ONBOARDING.md) for step by step walk through.
 
 ## TL;DR
 
-You can use BDCLI to fully managed your BoilingData account, [deploy and manage Data Taps](https://www.taps.boilingdata.com/), including integration with your AWS Account (if you have one), share and consume data sets to/from other users. See also our demo application [app.boilingdata.com](https://app.boilingdata.com).
+You can use BDCLI to fully managed your BoilingData account, [deploy and manage Data Taps](https://www.taps.boilingdata.com/) (`bdcli sandbox`), including integration with your AWS Account (if you have one), share and consume data sets to/from other users. See also our demo application [app.boilingdata.com](https://app.boilingdata.com).
 
 ```shell
 % npm install -g @boilingdata/boilingdata-bdcli
