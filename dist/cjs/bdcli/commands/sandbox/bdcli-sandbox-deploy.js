@@ -49,6 +49,8 @@ async function show(options, _command) {
         await (0, output_util_js_1.outputResults)(results?.deployResults, options.disableSpinner);
     }
     catch (err) {
+        if (err?.message.includes("Busy to"))
+            return (0, spinner_util_js_1.spinnerWarn)("Deployment busy, try again");
         (0, spinner_util_js_1.spinnerError)(err?.message);
     }
 }

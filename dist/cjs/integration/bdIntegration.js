@@ -3,9 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BDIntegration = void 0;
 const dataset_interface_js_1 = require("./boilingdata/dataset.interface.js");
 const RO_ACTIONS = ["s3:GetObject"];
-const WO_ACTIONS = ["s3:PutObject"];
-const RW_ACTIONS = ["s3:PutObject", "s3:GetObject"];
-const BUCKET_ACTIONS = ["s3:ListBucket", "s3:GetBucketLocation", "s3:GetBucketRequestPayment"];
+const WO_ACTIONS = ["s3:PutObject", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts"];
+const RW_ACTIONS = [...RO_ACTIONS, ...WO_ACTIONS];
+const BUCKET_ACTIONS = [
+    "s3:ListBucket",
+    "s3:GetBucketLocation",
+    "s3:GetBucketRequestPayment",
+    "s3:ListBucketMultipartUploads",
+];
 class BDIntegration {
     params;
     logger;

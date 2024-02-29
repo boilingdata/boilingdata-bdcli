@@ -55,6 +55,9 @@ export class BDSandbox {
         if (!respBody.ResponseCode || !respBody.ResponseText) {
             throw new Error("Malformed response from BD API");
         }
+        if (respBody.ResponseCode == "01" && respBody.ResponseText == "Integration failure") {
+            throw new Error(`Busy to destroy sandbox`);
+        }
         if (respBody.ResponseCode != "00")
             throw new Error(respBody.ResponseText);
         return respBody;
@@ -69,6 +72,9 @@ export class BDSandbox {
         this.logger.debug({ DownloadSandbox: { respBody } });
         if (!respBody.ResponseCode || !respBody.ResponseText) {
             throw new Error("Malformed response from BD API");
+        }
+        if (respBody.ResponseCode == "01" && respBody.ResponseText == "Integration failure") {
+            throw new Error(`Busy to download template`);
         }
         if (respBody.ResponseCode != "00") {
             throw new Error(respBody.ResponseText);
@@ -117,6 +123,9 @@ export class BDSandbox {
         if (!body.ResponseCode || !body.ResponseText) {
             throw new Error("Malformed response from BD API");
         }
+        if (body.ResponseCode == "01" && body.ResponseText == "Integration failure") {
+            throw new Error(`Busy to list sandboxes`);
+        }
         if (Array.isArray(body.sandboxList)) {
             return body.sandboxList;
         }
@@ -135,7 +144,27 @@ export class BDSandbox {
     async deploySandbox(sandboxName) {
         return this._deploySandbox(sandboxName);
     }
+    async updateSandbox(sandboxName) {
+        return this._updateSandbox(sandboxName);
+    }
     // ---- private ----
+    async _updateSandbox(sandboxName) {
+        const headers = await getReqHeaders(this.cognitoIdToken);
+        this.logger.debug({ sandboxUrl, headers });
+        const res = await fetch(sandboxUrl + "/" + sandboxName, { method: "PATCH", headers });
+        const respBody = await res.json();
+        this.logger.debug({ updateSandboxe: { body: respBody } });
+        if (!respBody.ResponseCode || !respBody.ResponseText) {
+            throw new Error("Malformed response from BD API");
+        }
+        if (respBody.ResponseCode == "01" && respBody.ResponseText == "Integration failure") {
+            throw new Error(`Busy to update ${sandboxName}`);
+        }
+        if (respBody.ResponseCode != "00") {
+            throw new Error(`Failed to patch ${sandboxName}`);
+        }
+        return respBody;
+    }
     async _uploadTemplate(templateFilename, validateOnly = false, warningsAsErrors = false, allowChangedFilename = false) {
         const headers = await getReqHeaders(this.cognitoIdToken);
         this.logger.debug({ sandboxUrl, headers });
@@ -154,6 +183,9 @@ export class BDSandbox {
         if (!respBody.ResponseCode || !respBody.ResponseText) {
             throw new Error("Malformed response from BD API");
         }
+        if (respBody.ResponseCode == "01" && respBody.ResponseText == "Integration failure") {
+            throw new Error(`Busy to validate and upload template`);
+        }
         if (respBody.ResponseCode != "00") {
             throw new Error(respBody?.validationResults ?? respBody);
         }
@@ -166,9 +198,12 @@ export class BDSandbox {
         const body = JSON.stringify({ planOnly, diffOnly });
         const res = await fetch(sandboxUrl + "/" + sandboxName, { method: "PUT", headers, body });
         const respBody = await res.json();
-        this.logger.debug({ listSandboxes: { body: respBody } });
+        this.logger.debug({ deploySandbox: { body: respBody } });
         if (!respBody.ResponseCode || !respBody.ResponseText) {
             throw new Error("Malformed response from BD API");
+        }
+        if (respBody.ResponseCode == "01" && respBody.ResponseText == "Integration failure") {
+            throw new Error(`Busy to ${action} ${sandboxName}`);
         }
         if (respBody.ResponseCode != "00") {
             throw new Error(`Failed to ${action} ${sandboxName}`);

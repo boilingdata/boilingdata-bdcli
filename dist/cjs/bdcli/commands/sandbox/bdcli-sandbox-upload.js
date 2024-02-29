@@ -55,6 +55,8 @@ async function show(options, _command) {
                 ?.map((msg) => msg.trim()), false);
         }
         catch (err) {
+            if (err?.message.includes("Busy to"))
+                return (0, spinner_util_js_1.spinnerWarn)("Deployment busy, try again");
             if (err?.message && !origErr?.message)
                 (0, spinner_util_js_1.spinnerError)(err?.message, false);
         }

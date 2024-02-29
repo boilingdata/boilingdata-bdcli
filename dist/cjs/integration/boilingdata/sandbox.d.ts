@@ -28,6 +28,8 @@ export declare class BDSandbox {
     planSandbox(sandboxName: string): Promise<any>;
     diffSandbox(sandboxName: string): Promise<any>;
     deploySandbox(sandboxName: string): Promise<any>;
+    updateSandbox(sandboxName: string): Promise<any>;
+    private _updateSandbox;
     private _uploadTemplate;
     private _deploySandbox;
 }
