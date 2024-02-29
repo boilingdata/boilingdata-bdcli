@@ -1,6 +1,6 @@
 import * as cmd from "commander";
 import { getLogger } from "../../utils/logger_util.js";
-import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
+import { spinnerError, spinnerSuccess, spinnerWarn, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
 import { combineOptsWithSettings, hasValidConfig, profile } from "../../utils/config_util.js";
 import { getIdToken } from "../../utils/auth_util.js";
@@ -37,6 +37,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
         false,
       );
     } catch (err: any) {
+      if (err?.message.includes("Busy to")) return spinnerWarn("Deployment busy, try again");
       if (err?.message && !origErr?.message) spinnerError(err?.message, false);
     }
   }

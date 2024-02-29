@@ -7,7 +7,7 @@ import { BDSandbox } from "../../../integration/boilingdata/sandbox.js";
 import { getIdToken } from "../../utils/auth_util.js";
 import { outputResults } from "../../utils/output_util.js";
 
-const logger = getLogger("bdcli-sandbox-plan");
+const logger = getLogger("bdcli-sandbox-update");
 
 async function show(options: any, _command: cmd.Command): Promise<void> {
   try {
@@ -22,25 +22,19 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
     spinnerSuccess();
 
-    updateSpinnerText(`Planning deployment for sandbox ${options.name}`);
+    updateSpinnerText(`Updating sandbox ${options.name}`);
     const bdSandbox = new BDSandbox({ logger, authToken: token });
-    const results = await bdSandbox.planSandbox(options.name);
+    const results = await bdSandbox.updateSandbox(options.name);
     spinnerSuccess();
-    await outputResults(results?.planResults, options.disableSpinner);
+    await outputResults(results?.deployResults, options.disableSpinner);
   } catch (err: any) {
     if (err?.message.includes("Busy to")) return spinnerWarn("Deployment busy, try again");
     spinnerError(err?.message);
   }
 }
 
-// TODO:
-//  - If the template is updated, like changing the name of a resource, it needs to be replaced?
-//    Like if the Tap name is changed the Lambda needs to be deleted and created again and then
-//    also the ingest URL changes.
-
-const program = new cmd.Command("bdcli sandbox plan")
+const program = new cmd.Command("bdcli sandbox update")
   .addOption(new cmd.Option("--name <sandboxName>", "sandbox name").makeOptionMandatory())
-  .addOption(new cmd.Option("--region <region>", "AWS region (by default eu-west-1").default("eu-west-1"))
   .action(async (options, command) => await show(options, command));
 
 (async () => {

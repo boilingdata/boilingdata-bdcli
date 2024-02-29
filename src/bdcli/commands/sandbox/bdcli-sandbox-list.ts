@@ -1,6 +1,6 @@
 import * as cmd from "commander";
 import { getLogger } from "../../utils/logger_util.js";
-import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
+import { spinnerError, spinnerSuccess, spinnerWarn, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
 import { combineOptsWithSettings, hasValidConfig, profile } from "../../utils/config_util.js";
 import { BDSandbox } from "../../../integration/boilingdata/sandbox.js";
@@ -28,6 +28,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     spinnerSuccess();
     await outputResults(list, options.disableSpinner);
   } catch (err: any) {
+    if (err?.message.includes("Busy to")) return spinnerWarn("Deployment busy, try again");
     spinnerError(err?.message);
   }
 }

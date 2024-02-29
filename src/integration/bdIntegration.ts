@@ -5,9 +5,14 @@ import { GRANT_PERMISSION, IStatement, IStatementExt } from "./boilingdata/datas
 import { BDDataSourceConfig } from "./boilingdata/dataset.js";
 
 const RO_ACTIONS = ["s3:GetObject"];
-const WO_ACTIONS = ["s3:PutObject"];
-const RW_ACTIONS = ["s3:PutObject", "s3:GetObject"];
-const BUCKET_ACTIONS = ["s3:ListBucket", "s3:GetBucketLocation", "s3:GetBucketRequestPayment"];
+const WO_ACTIONS = ["s3:PutObject", "s3:AbortMultipartUpload", "s3:ListMultipartUploadParts"];
+const RW_ACTIONS = [...RO_ACTIONS, ...WO_ACTIONS];
+const BUCKET_ACTIONS = [
+  "s3:ListBucket",
+  "s3:GetBucketLocation",
+  "s3:GetBucketRequestPayment",
+  "s3:ListBucketMultipartUploads",
+];
 
 export interface IBDIntegration {
   logger: ILogger;
