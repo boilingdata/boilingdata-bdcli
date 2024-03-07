@@ -99,7 +99,7 @@ A YAML configuration file is used to create the IAM Role.
 
 ```yaml
 version: 1.0
-ataSources:
+dataSource:
   name: demo
   permissions:
     - urlPrefix: s3://my-bucket/and/prefix
