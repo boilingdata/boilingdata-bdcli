@@ -60,7 +60,7 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
   }
 }
 
-const program = new cmd.Command("bdcli setup iam-role")
+const program = new cmd.Command("bdcli aws iam")
   .addHelpText(
     "beforeAll",
     "If you have an AWS account, you can use this command to create BoilingData assumable AWS IAM Role into " +
