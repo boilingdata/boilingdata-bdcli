@@ -57,7 +57,7 @@ async function show(options, _command) {
         const region = bdSandbox.region;
         const bdAccount = new account_js_1.BDAccount({ logger, authToken: token });
         const bdDataSources = new dataset_js_1.BDDataSourceConfig({ logger });
-        bdDataSources.withConfig({ dataSources: bdSandbox.tmpl.resources.storage });
+        bdDataSources.withConfig({ dataSource: bdSandbox.tmpl.resources.storage });
         const bdRole = new iam_roles_js_1.BDIamRole({
             ...options,
             logger,
