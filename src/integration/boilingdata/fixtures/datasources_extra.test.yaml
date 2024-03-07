@@ -1,6 +1,6 @@
 version: 1.0
 uniqNamePart: demo2
-dataSources:
+dataSource:
   name: demo
   type: s3
   sessionType: assumeRole

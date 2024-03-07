@@ -27,13 +27,13 @@ You can create BoilingData assumable IAM role into your AWS account with clear s
 
 ```shell
 % echo "version: 1.0
-dataSources:
-  - name: demo
-    permissions:
-      - urlPrefix: s3://my-bucket/and/prefix
-        accessRights:
-          - read
-          - write
+dataSource:
+  name: demo
+  permissions:
+    - urlPrefix: s3://my-bucket/and/prefix
+      accessRights:
+        - read
+        - write
 " > datasource_config.yaml
 
 % bdcli aws iam -c datasource_config.yaml --region eu-west-1 --create-role-only

@@ -1,6 +1,6 @@
 version: 1.0
 uniqNamePart: bd-demo-iam-role
-dataSources:
+dataSource:
   name: demo
   permissions:
     - urlPrefix: s3://boilingdata-demo/demo

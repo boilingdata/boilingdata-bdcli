@@ -1,6 +1,6 @@
 version: 1.0
 uniqNamePart: demo2
-dataSources:
+dataSource:
   name: demo
   permions:
     - urlPrefix: s3://boilingdata-demo/demo
