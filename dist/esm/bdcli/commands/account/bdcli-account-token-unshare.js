@@ -2,7 +2,7 @@ import * as cmd from "commander";
 import { getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
-import { getIdToken } from "../../utils/auth_util.js";
+import { authSpinnerWithConfigCheck, getIdToken } from "../../utils/auth_util.js";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
 import { combineOptsWithSettings } from "../../utils/config_util.js";
 const logger = getLogger("bdcli-account-token-unshare");
@@ -11,7 +11,8 @@ async function show(options, _command) {
         options = await combineOptsWithSettings(options, logger);
         if (options.id.length != 40)
             throw new Error("Invalid share id");
-        updateSpinnerText("Authenticating");
+        if (!authSpinnerWithConfigCheck())
+            return;
         const { idToken: token, cached: idCached, region } = await getIdToken(logger);
         updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
         spinnerSuccess();

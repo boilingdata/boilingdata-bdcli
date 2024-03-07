@@ -45,7 +45,8 @@ async function iamrole(options, _command) {
             (0, spinner_util_js_1.spinnerWarn)("Not implemented yet. Please delete the IAM Role from AWS Console");
             return;
         }
-        (0, spinner_util_js_1.updateSpinnerText)("Authenticating");
+        if (!(0, auth_util_js_1.authSpinnerWithConfigCheck)())
+            return;
         const { idToken: token, cached, region } = await (0, auth_util_js_1.getIdToken)(logger);
         (0, spinner_util_js_1.updateSpinnerText)(cached ? "Authenticating: cached" : "Authenticating: success");
         (0, spinner_util_js_1.spinnerSuccess)();

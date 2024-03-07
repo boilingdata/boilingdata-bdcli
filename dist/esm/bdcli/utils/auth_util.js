@@ -1,13 +1,21 @@
 import * as id from "amazon-cognito-identity-js";
-import { getConfigCredentials, updateConfig } from "./config_util.js";
+import { getConfigCredentials, hasValidConfig, updateConfig, profile } from "./config_util.js";
 import { Pool } from "../../integration/boilingdata/boilingdata_api.js";
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 import prompts from "prompts";
 import qrcode from "qrcode";
-import { resumeSpinner, spinnerInfo, stopSpinner } from "./spinner_util.js";
+import { resumeSpinner, spinnerError, spinnerInfo, stopSpinner, updateSpinnerText } from "./spinner_util.js";
 import ms from "ms";
 const userPoolId = "eu-west-1_0GLV9KO1p"; // eu-west-1 preview
 const clientId = "6timr8knllr4frovfvq8r2o6oo"; // eu-west-1 preview
+export async function authSpinnerWithConfigCheck() {
+    updateSpinnerText("Authenticating");
+    if (!(await hasValidConfig())) {
+        spinnerError(`No valid bdcli configuration found for "${profile}" profile`);
+        return false;
+    }
+    return true;
+}
 export async function validateTokenLifetime(lifetime, logger) {
     const lifetimeInMs = ms(`${lifetime}`);
     logger?.debug({ lifetimeInMs });

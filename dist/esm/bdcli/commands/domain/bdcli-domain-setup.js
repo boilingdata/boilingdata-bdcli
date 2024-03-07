@@ -4,7 +4,7 @@ import * as cmd from "commander";
 import { ELogLevel, getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerSuccess, spinnerWarn, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
-import { getIdToken } from "../../utils/auth_util.js";
+import { authSpinnerWithConfigCheck, getIdToken } from "../../utils/auth_util.js";
 import { BDIamRole } from "../../../integration/aws/iam_roles.js";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
 import { BDDataSourceConfig } from "../../../integration/boilingdata/dataset.js";
@@ -20,7 +20,8 @@ async function iamrole(options, _command) {
             spinnerWarn("Not implemented yet. Please delete the IAM Role from AWS Console");
             return;
         }
-        updateSpinnerText("Authenticating");
+        if (!authSpinnerWithConfigCheck())
+            return;
         const { idToken: token, cached, region } = await getIdToken(logger);
         updateSpinnerText(cached ? "Authenticating: cached" : "Authenticating: success");
         spinnerSuccess();

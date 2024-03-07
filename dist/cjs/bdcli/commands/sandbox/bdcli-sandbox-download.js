@@ -36,9 +36,6 @@ async function show(options, _command) {
     try {
         options = await (0, config_util_js_1.combineOptsWithSettings)(options, logger);
         const filename = options.name + ".yaml";
-        if (!(await (0, config_util_js_1.hasValidConfig)())) {
-            return (0, spinner_util_js_1.spinnerError)(`No valid bdcli configuration found for "${config_util_js_1.profile}" profile`);
-        }
         let fileAlreadyExists = false;
         try {
             if (await fs.lstat(filename)) {
@@ -51,7 +48,8 @@ async function show(options, _command) {
         if (fileAlreadyExists) {
             (0, spinner_util_js_1.spinnerError)(`Local file ${filename} already exists`);
         }
-        (0, spinner_util_js_1.updateSpinnerText)("Authenticating");
+        if (!(0, auth_util_js_1.authSpinnerWithConfigCheck)())
+            return;
         const { idToken: token, cached: idCached } = await (0, auth_util_js_1.getIdToken)(logger);
         (0, spinner_util_js_1.updateSpinnerText)(`Authenticating: ${idCached ? "cached" : "success"}`);
         (0, spinner_util_js_1.spinnerSuccess)();

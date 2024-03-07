@@ -55,7 +55,7 @@ async function iamrole(options, _command) {
         spinnerError(err?.message);
     }
 }
-const program = new cmd.Command("bdcli setup iam-role")
+const program = new cmd.Command("bdcli aws iam")
     .addHelpText("beforeAll", "If you have an AWS account, you can use this command to create BoilingData assumable AWS IAM Role into " +
     "your AWS account. It is fully owned and controlled by you. The IAM Policy is based on YAML configuration " +
     "file that you need to create. It describes S3 bucket(s) and prefixe(s) that you want to make available " +

@@ -104,9 +104,9 @@ async function getConfig(logger) {
         if (config.credentials && exports.profile === "default")
             return config; // no profiles
         logger?.debug({ profile: exports.profile, keys: Object.keys(config) });
-        if (Object.keys(config).includes(exports.profile)) {
-            return Object.values(config).at(Object.keys(config).indexOf(exports.profile));
-        }
+        if (!Object.keys(config).includes(exports.profile))
+            return;
+        return Object.values(config).at(Object.keys(config).indexOf(exports.profile));
     }
     catch (err) {
         logger?.debug({ err });

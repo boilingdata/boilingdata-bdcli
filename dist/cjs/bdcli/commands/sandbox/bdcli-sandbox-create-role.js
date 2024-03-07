@@ -40,15 +40,13 @@ const logger = (0, logger_util_js_1.getLogger)("bdcli-sandbox-create-role");
 async function show(options, _command) {
     try {
         options = await (0, config_util_js_1.combineOptsWithSettings)(options, logger);
-        if (!(await (0, config_util_js_1.hasValidConfig)())) {
-            return (0, spinner_util_js_1.spinnerError)(`No valid bdcli configuration found for "${config_util_js_1.profile}" profile`);
-        }
         if (options.delete) {
             (0, spinner_util_js_1.updateSpinnerText)("Not implemented yet. Please delete the IAM Role from AWS Console");
             (0, spinner_util_js_1.spinnerWarn)("Not implemented yet. Please delete the IAM Role from AWS Console");
             return;
         }
-        (0, spinner_util_js_1.updateSpinnerText)("Authenticating");
+        if (!(0, auth_util_js_1.authSpinnerWithConfigCheck)())
+            return;
         const { idToken: token, cached: idCached } = await (0, auth_util_js_1.getIdToken)(logger);
         (0, spinner_util_js_1.updateSpinnerText)(`Authenticating: ${idCached ? "cached" : "success"}`);
         (0, spinner_util_js_1.spinnerSuccess)();

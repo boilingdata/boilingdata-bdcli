@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getIdToken = exports.setupMfa = exports.recoverPassword = exports.updatePassword = exports.registerToBoilingData = exports.confirmEmailToBoilingData = exports.getPw = exports.getEmail = exports.validateTokenLifetime = void 0;
+exports.getIdToken = exports.setupMfa = exports.recoverPassword = exports.updatePassword = exports.registerToBoilingData = exports.confirmEmailToBoilingData = exports.getPw = exports.getEmail = exports.validateTokenLifetime = exports.authSpinnerWithConfigCheck = void 0;
 const id = __importStar(require("amazon-cognito-identity-js"));
 const config_util_js_1 = require("./config_util.js");
 const boilingdata_api_js_1 = require("../../integration/boilingdata/boilingdata_api.js");
@@ -37,6 +37,15 @@ const spinner_util_js_1 = require("./spinner_util.js");
 const ms_1 = __importDefault(require("ms"));
 const userPoolId = "eu-west-1_0GLV9KO1p"; // eu-west-1 preview
 const clientId = "6timr8knllr4frovfvq8r2o6oo"; // eu-west-1 preview
+async function authSpinnerWithConfigCheck() {
+    (0, spinner_util_js_1.updateSpinnerText)("Authenticating");
+    if (!(await (0, config_util_js_1.hasValidConfig)())) {
+        (0, spinner_util_js_1.spinnerError)(`No valid bdcli configuration found for "${config_util_js_1.profile}" profile`);
+        return false;
+    }
+    return true;
+}
+exports.authSpinnerWithConfigCheck = authSpinnerWithConfigCheck;
 async function validateTokenLifetime(lifetime, logger) {
     const lifetimeInMs = (0, ms_1.default)(`${lifetime}`);
     logger?.debug({ lifetimeInMs });

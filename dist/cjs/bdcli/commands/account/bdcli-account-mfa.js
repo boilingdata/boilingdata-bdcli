@@ -33,7 +33,8 @@ const logger = (0, logger_util_js_1.getLogger)("bdcli-account-enable-mfa");
 async function show(_options, _command) {
     try {
         _options = await (0, config_util_js_1.combineOptsWithSettings)(_options, logger);
-        (0, spinner_util_js_1.updateSpinnerText)("Authenticating");
+        if (!(0, auth_util_js_1.authSpinnerWithConfigCheck)())
+            return;
         const { cached } = await (0, auth_util_js_1.getIdToken)(logger);
         (0, spinner_util_js_1.updateSpinnerText)(cached ? "Authenticating: cached" : "Authenticating: success");
         (0, spinner_util_js_1.spinnerSuccess)();

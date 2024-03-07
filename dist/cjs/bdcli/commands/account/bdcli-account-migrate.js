@@ -33,6 +33,9 @@ async function show(_options, _command) {
     try {
         _options = await (0, config_util_js_1.combineOptsWithSettings)(_options, logger);
         (0, spinner_util_js_1.spinnerWarn)("Not supported yet.");
+        if (!(await (0, config_util_js_1.hasValidConfig)())) {
+            return (0, spinner_util_js_1.spinnerError)(`No valid bdcli configuration found for "${config_util_js_1.profile}" profile`);
+        }
     }
     catch (err) {
         (0, spinner_util_js_1.spinnerError)(err?.message);

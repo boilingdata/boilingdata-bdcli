@@ -2,7 +2,7 @@ import * as cmd from "commander";
 import { getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
-import { getIdToken, validateTokenLifetime } from "../../utils/auth_util.js";
+import { authSpinnerWithConfigCheck, getIdToken, validateTokenLifetime } from "../../utils/auth_util.js";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
 import * as fs from "fs/promises";
 import path from "path";
@@ -39,7 +39,8 @@ async function show(options, _command) {
         const encodings = options.duckdbrcDisableEncode != true;
         if (options.lifetime)
             await validateTokenLifetime(options.lifetime);
-        updateSpinnerText("Authenticating");
+        if (!authSpinnerWithConfigCheck())
+            return;
         const { idToken: token, cached: idCached, region } = await getIdToken(logger);
         updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
         spinnerSuccess();

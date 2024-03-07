@@ -55,7 +55,8 @@ async function show(options, _command) {
             logger.debug({ nextDate: parsed.getNextDate(new Date()) });
         }
         const users = options.users.split(",");
-        (0, spinner_util_js_1.updateSpinnerText)("Authenticating");
+        if (!(0, auth_util_js_1.authSpinnerWithConfigCheck)())
+            return;
         const { idToken: token, cached: idCached, region } = await (0, auth_util_js_1.getIdToken)(logger);
         (0, spinner_util_js_1.updateSpinnerText)(`Authenticating: ${idCached ? "cached" : "success"}`);
         (0, spinner_util_js_1.spinnerSuccess)();

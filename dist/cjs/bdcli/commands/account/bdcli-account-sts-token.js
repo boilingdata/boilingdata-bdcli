@@ -67,7 +67,8 @@ async function show(options, _command) {
         const encodings = options.duckdbrcDisableEncode != true;
         if (options.lifetime)
             await (0, auth_util_js_1.validateTokenLifetime)(options.lifetime);
-        (0, spinner_util_js_1.updateSpinnerText)("Authenticating");
+        if (!(0, auth_util_js_1.authSpinnerWithConfigCheck)())
+            return;
         const { idToken: token, cached: idCached, region } = await (0, auth_util_js_1.getIdToken)(logger);
         (0, spinner_util_js_1.updateSpinnerText)(`Authenticating: ${idCached ? "cached" : "success"}`);
         (0, spinner_util_js_1.spinnerSuccess)();

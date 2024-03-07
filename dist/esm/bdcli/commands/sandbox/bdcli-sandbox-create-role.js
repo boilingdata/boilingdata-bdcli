@@ -4,8 +4,8 @@ import * as cmd from "commander";
 import { getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerSuccess, spinnerWarn, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
-import { combineOptsWithSettings, hasValidConfig, profile } from "../../utils/config_util.js";
-import { getIdToken } from "../../utils/auth_util.js";
+import { combineOptsWithSettings } from "../../utils/config_util.js";
+import { authSpinnerWithConfigCheck, getIdToken } from "../../utils/auth_util.js";
 import { BDSandbox } from "../../../integration/boilingdata/sandbox.js";
 import { BDIamRole } from "../../../integration/aws/iam_roles.js";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
@@ -15,15 +15,13 @@ const logger = getLogger("bdcli-sandbox-create-role");
 async function show(options, _command) {
     try {
         options = await combineOptsWithSettings(options, logger);
-        if (!(await hasValidConfig())) {
-            return spinnerError(`No valid bdcli configuration found for "${profile}" profile`);
-        }
         if (options.delete) {
             updateSpinnerText("Not implemented yet. Please delete the IAM Role from AWS Console");
             spinnerWarn("Not implemented yet. Please delete the IAM Role from AWS Console");
             return;
         }
-        updateSpinnerText("Authenticating");
+        if (!authSpinnerWithConfigCheck())
+            return;
         const { idToken: token, cached: idCached } = await getIdToken(logger);
         updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
         spinnerSuccess();

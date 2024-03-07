@@ -1,4 +1,5 @@
 import { ILogger } from "./logger_util.js";
+export declare function authSpinnerWithConfigCheck(): Promise<boolean>;
 export declare function validateTokenLifetime(lifetime: string, logger?: ILogger): Promise<void>;
 export declare function getEmail(): Promise<string>;
 export declare function getPw(message: string): Promise<string>;
