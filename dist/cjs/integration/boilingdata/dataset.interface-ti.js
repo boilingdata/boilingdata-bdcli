@@ -58,7 +58,7 @@ exports.IDataSource = t.iface([], {
 exports.IDataSources = t.iface([], {
     "version": t.opt(t.union("string", "number")),
     "uniqNamePart": t.opt("string"),
-    "dataSources": "IDataSource",
+    "dataSource": "IDataSource",
 });
 const exportedTypeSuite = {
     GRANT_PERMISSION: exports.GRANT_PERMISSION,

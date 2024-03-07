@@ -27,5 +27,5 @@ export interface IDataSource {
 export interface IDataSources {
     version?: string | number;
     uniqNamePart?: string;
-    dataSources: IDataSource;
+    dataSource: IDataSource;
 }

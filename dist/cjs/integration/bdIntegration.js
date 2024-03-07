@@ -34,7 +34,7 @@ class BDIntegration {
     getGroupedBuckets() {
         const dataSourcesConfig = this.bdDatasets.getDatasourcesConfig();
         const allPolicies = [];
-        dataSourcesConfig.dataSources.permissions.forEach(perm => {
+        dataSourcesConfig.dataSource.permissions.forEach(perm => {
             if (!perm.accessRights)
                 perm.accessRights = [dataset_interface_js_1.GRANT_PERMISSION.G_READ]; // default
             allPolicies.push(perm);
