@@ -54,15 +54,13 @@ D SELECT * FROM boilingdata('SELECT id, first_name FROM parquet_scan(''s3://boil
 As an example, create `boilingdata_user_x.yaml` file similar to this, where you replace `x` with the user and have correct S3 Bucket and Prefix in place.
 
 ```yaml
-dataSources:
-  - name: demo
-    type: s3
-    accessPolicy:
-      - id: user-x-policy
-        urlPrefix: s3://users-bucket/users/x/
-        permissions:
-          - read
-          - write
+dataSourcs:
+  name: demo
+  accessPolicy:
+    - urlPrefix: s3://users-bucket/users/x/
+      permissions:
+        - read
+        - write
 ```
 
 Create the needed IAM Role for the user.

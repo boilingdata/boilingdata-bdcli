@@ -37,7 +37,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     const region = bdSandbox.region;
     const bdAccount = new BDAccount({ logger, authToken: token });
     const bdDataSources = new BDDataSourceConfig({ logger });
-    bdDataSources.withConfig({ dataSources: bdSandbox.tmpl.resources.storage });
+    bdDataSources.withConfig({ dataSource: bdSandbox.tmpl.resources.storage });
     const bdRole = new BDIamRole({
       ...options,
       logger,

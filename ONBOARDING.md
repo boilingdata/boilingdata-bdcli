@@ -137,11 +137,13 @@ First, you create a YAML file that describes the S3 Bucket (and optionally a Pre
 Here is a minimal YAML configuration example that grants Boiling read access on `s3://YOURBUCKET/YOURPREFIX*`. See [example_datasource_config.yaml](example_datasource_config.yaml) for a more thorough example.
 
 ```yaml
-dataSources:
-  - name: YOURDATASOURCENAME
-    accessPolicy:
-      - id: your-user-policy
-        urlPrefix: s3://YOURBUCKET/YOURPREFIX
+dataSource:
+  name: YOURDATASOURCENAME
+  permissions:
+    - urlPrefix: s3://YOURBUCKET/YOURPREFIX
+      accessRights:
+        - read
+        - write
 ```
 
 ### Your user's minimal AWS IAM Polify for using Boiling
