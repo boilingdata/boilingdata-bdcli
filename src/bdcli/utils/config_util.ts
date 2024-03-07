@@ -99,9 +99,8 @@ export async function getConfig(logger?: ILogger): Promise<IConfig | undefined> 
     const config = <IConfig | IConfigProfiles>yaml.load(configFileData, { filename: configFile });
     if (config.credentials && profile === "default") return <IConfig>config; // no profiles
     logger?.debug({ profile, keys: Object.keys(config) });
-    if (Object.keys(config).includes(profile)) {
-      return Object.values(config).at(Object.keys(config).indexOf(profile));
-    }
+    if (!Object.keys(config).includes(profile)) return;
+    return Object.values(config).at(Object.keys(config).indexOf(profile));
   } catch (err) {
     logger?.debug({ err });
   }

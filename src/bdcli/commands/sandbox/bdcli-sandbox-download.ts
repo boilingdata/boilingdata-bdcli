@@ -2,8 +2,8 @@ import * as cmd from "commander";
 import { getLogger } from "../../utils/logger_util.js";
 import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
-import { combineOptsWithSettings, hasValidConfig, profile } from "../../utils/config_util.js";
-import { getIdToken } from "../../utils/auth_util.js";
+import { combineOptsWithSettings } from "../../utils/config_util.js";
+import { authSpinnerWithConfigCheck, getIdToken } from "../../utils/auth_util.js";
 import { BDSandbox } from "../../../integration/boilingdata/sandbox.js";
 import * as fs from "fs/promises";
 
@@ -13,10 +13,6 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
   try {
     options = await combineOptsWithSettings(options, logger);
     const filename = options.name + ".yaml";
-
-    if (!(await hasValidConfig())) {
-      return spinnerError(`No valid bdcli configuration found for "${profile}" profile`);
-    }
 
     let fileAlreadyExists = false;
     try {
@@ -30,7 +26,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
       spinnerError(`Local file ${filename} already exists`);
     }
 
-    updateSpinnerText("Authenticating");
+    if (!authSpinnerWithConfigCheck()) return;
     const { idToken: token, cached: idCached } = await getIdToken(logger);
     updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
     spinnerSuccess();

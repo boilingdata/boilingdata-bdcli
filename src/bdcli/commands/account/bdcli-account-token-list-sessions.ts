@@ -1,11 +1,10 @@
 import * as cmd from "commander";
 import { getLogger } from "../../utils/logger_util.js";
-import { spinnerError, spinnerSuccess, updateSpinnerText } from "../../utils/spinner_util.js";
+import { spinnerError, spinnerSuccess } from "../../utils/spinner_util.js";
 import { addGlobalOptions } from "../../utils/options_util.js";
-// import { getIdToken } from "../../utils/auth_util.js";
-// import { BDAccount } from "../../../integration/boilingdata/account.js";
 import { combineOptsWithSettings, getCachedTokenSessions } from "../../utils/config_util.js";
 import { outputResults } from "../../utils/output_util.js";
+import { authSpinnerWithConfigCheck } from "../../utils/auth_util.js";
 
 const logger = getLogger("bdcli-account-token-list-sessions");
 
@@ -13,13 +12,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
   try {
     options = await combineOptsWithSettings(options, logger);
 
-    // updateSpinnerText("Authenticating");
-    // const { idToken: token, cached: idCached, region: region } = await getIdToken(logger);
-    // updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
-    // spinnerSuccess();
-
-    updateSpinnerText("Listing token cached/local sessions");
-    // if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
+    if (!authSpinnerWithConfigCheck()) return;
     const list = await getCachedTokenSessions(logger, options.showExpired);
     spinnerSuccess();
     await outputResults(list, options.disableSpinner);
