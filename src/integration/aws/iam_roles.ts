@@ -118,6 +118,7 @@ export class BDIamRole {
       const commandParams: iam.CreateRoleRequest = {
         Path: this.path,
         RoleName: this.iamRoleName,
+        MaxSessionDuration: 12 * 60 * 60, // 12h in seconds, the max!
         AssumeRolePolicyDocument: JSON.stringify(this.getAssumeRolePolicyDocument()),
         Tags: [...this.boilingDataTags, ...(this.params.tags ?? [])],
       };
