@@ -92,6 +92,7 @@ export class BDIamRole {
             const commandParams = {
                 Path: this.path,
                 RoleName: this.iamRoleName,
+                MaxSessionDuration: 12 * 60 * 60,
                 AssumeRolePolicyDocument: JSON.stringify(this.getAssumeRolePolicyDocument()),
                 Tags: [...this.boilingDataTags, ...(this.params.tags ?? [])],
             };

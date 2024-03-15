@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getIdToken = exports.setupMfa = exports.recoverPassword = exports.updatePassword = exports.registerToBoilingData = exports.confirmEmailToBoilingData = exports.getPw = exports.getEmail = exports.validateTokenLifetime = exports.authSpinnerWithConfigCheck = void 0;
+exports.getIdToken = exports.setupMfa = exports.recoverPassword = exports.updatePassword = exports.registerToBoilingData = exports.confirmEmailToBoilingData = exports.getPw = exports.getEmail = exports.validateTokenLifetime = exports.authSpinnerWithConfigCheck = exports.clientId = exports.userPoolId = void 0;
 const id = __importStar(require("amazon-cognito-identity-js"));
 const config_util_js_1 = require("./config_util.js");
 const boilingdata_api_js_1 = require("../../integration/boilingdata/boilingdata_api.js");
@@ -35,8 +35,8 @@ const prompts_1 = __importDefault(require("prompts"));
 const qrcode_1 = __importDefault(require("qrcode"));
 const spinner_util_js_1 = require("./spinner_util.js");
 const ms_1 = __importDefault(require("ms"));
-const userPoolId = "eu-west-1_0GLV9KO1p"; // eu-west-1 preview
-const clientId = "6timr8knllr4frovfvq8r2o6oo"; // eu-west-1 preview
+exports.userPoolId = "eu-west-1_0GLV9KO1p"; // eu-west-1 preview
+exports.clientId = "6timr8knllr4frovfvq8r2o6oo"; // eu-west-1 preview
 async function authSpinnerWithConfigCheck() {
     (0, spinner_util_js_1.updateSpinnerText)("Authenticating");
     if (!(await (0, config_util_js_1.hasValidConfig)())) {
@@ -150,7 +150,7 @@ async function registerToBoilingData(optsRegion, optsEnvironment, optsEmail, opt
     attributeList.push(new id.CognitoUserAttribute(dataEmail));
     // const dataPhoneNumber = { Name: "phone_number", Value: "+15555555555" };
     // attributeList.push(new id.CognitoUserAttribute(dataPhoneNumber));
-    const userPool = new id.CognitoUserPool({ UserPoolId: userPoolId, ClientId: clientId });
+    const userPool = new id.CognitoUserPool({ UserPoolId: exports.userPoolId, ClientId: exports.clientId });
     return new Promise((resolve, reject) => {
         userPool.signUp(email, password, attributeList, [], (err, result) => {
             if (err)
@@ -293,7 +293,7 @@ async function getIdToken(logger) {
     const { email: Username, password: Password, idToken, region } = creds;
     // check if idToken is still valid..
     if (idToken) {
-        const verifier = aws_jwt_verify_1.CognitoJwtVerifier.create({ userPoolId, clientId, tokenUse: "id" });
+        const verifier = aws_jwt_verify_1.CognitoJwtVerifier.create({ userPoolId: exports.userPoolId, clientId: exports.clientId, tokenUse: "id" });
         try {
             const idTokenPayload = await verifier.verify(idToken);
             logger?.debug({ idTokenPayload });
