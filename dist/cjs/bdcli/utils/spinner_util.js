@@ -51,8 +51,8 @@ function spinnerWarn(message) {
 }
 exports.spinnerWarn = spinnerWarn;
 function spinnerError(message, forceExit = true) {
-    if (isEnabled)
-        spinner.fail(message ? error(message) : undefined);
+    // We show errors regardless whether the spinner is disabled
+    spinner.fail(message ? error(message) : undefined);
     if (forceExit)
         process.exit(1); // error
 }
