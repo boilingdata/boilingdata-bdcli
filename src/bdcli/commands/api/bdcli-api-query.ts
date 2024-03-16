@@ -29,7 +29,7 @@ async function query(options: any, _command: cmd.Command): Promise<void> {
 }
 
 const program = new cmd.Command("bdcli api query")
-  .addOption(new cmd.Option("--sql <sqlQuery>", "SQL clause").makeOptionMandatory())
+  .addOption(new cmd.Option("-s, --sql <sqlQuery>", "SQL clause").makeOptionMandatory())
   .action(async (options, command) => await query(options, command));
 
 (async () => {

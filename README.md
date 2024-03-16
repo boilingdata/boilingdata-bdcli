@@ -4,7 +4,13 @@ See [ONBOARDING.md](ONBOARDING.md) for step by step walk through.
 
 ## TL;DR
 
-You can use BDCLI to fully managed your BoilingData account, [deploy and manage Data Taps](https://www.taps.boilingdata.com/) (`bdcli sandbox`), including integration with your AWS Account (if you have one), share and consume data sets to/from other users. See also our demo application [app.boilingdata.com](https://app.boilingdata.com).
+You can use BDCLI to:
+
+- Register and managed your BoilingData account
+- [Deploy and manage Data Taps](https://www.taps.boilingdata.com/) (`bdcli sandbox`), including integration with your AWS Account (if you have one), share and consume data sets to/from other users
+- Run Boiling API queries, get signed WSS URL for using e.g. with `wscat` or other tools able to connect to WebSockets (like [Mosaic duckdb-server](https://uwdata.github.io/mosaic/duckdb/))
+
+> See also our simple stateless demo application [app.boilingdata.com](https://app.boilingdata.com).
 
 ```shell
 % npm install -g @boilingdata/boilingdata-bdcli
@@ -20,7 +26,17 @@ Commands:
   aws             Setup and configure your AWS account integration with BoilingData
   domain          Admin setup and configuration for your domain (.e.g @boilingdata.com, @mycompany.com)
   sandbox         Managa Boiling S3 Sandboxes with IaC templates
+  api             Boiling query API operations: run SQL, get signed WSS URL etc.
   help [command]  display help for command
+
+% bdcli api query -s "SELECT * FROM parquet_scan('s3://boilingdata-demo/test.parquet') LIMIT 2;" --disable-spinner
+[
+  {
+    "id": 1,
+    "first_name": "Amanda",
+    "last_name": "Jordan"
+  }
+]
 ```
 
 You can create BoilingData assumable IAM role into your AWS account with clear scope. The IAM Role is in your AWS account, you can review, and modify it if you like.

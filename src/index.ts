@@ -12,6 +12,6 @@ program
   .command("aws", "Setup and configure your AWS account integration with BoilingData")
   .command("domain", "Admin setup and configuration for your domain (.e.g @boilingdata.com, @mycompany.com)")
   .command("sandbox", "Managa Boiling S3 Sandboxes with IaC templates")
-  .command("api", "Get signed WSS URL etc.");
+  .command("api", "Boiling query API operations: run SQL, get signed WSS URL etc.");
 
 program.parse(process.argv);

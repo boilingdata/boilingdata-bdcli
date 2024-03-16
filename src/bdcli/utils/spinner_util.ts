@@ -40,7 +40,8 @@ export function spinnerWarn(message?: string): void {
 }
 
 export function spinnerError(message?: string, forceExit = true): void {
-  if (isEnabled) spinner.fail(message ? error(message) : undefined);
+  // We show errors regardless whether the spinner is disabled
+  spinner.fail(message ? error(message) : undefined);
   if (forceExit) process.exit(1); // error
 }
 
