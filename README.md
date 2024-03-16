@@ -8,7 +8,7 @@ You can use BDCLI to:
 
 - Register and managed your BoilingData account
 - [Deploy and manage Data Taps](https://www.taps.boilingdata.com/) (`bdcli sandbox`), including integration with your AWS Account (if you have one), share and consume data sets to/from other users
-- Run Boiling API queries, get signed WSS URL for using e.g. with `wscat` or other tools able to connect to WebSockets (like [Mosaic duckdb-server](https://uwdata.github.io/mosaic/duckdb/))
+- Run Boiling API queries, get signed WSS URL for using e.g. with `wscat` or other tools able to connect to WebSockets (like [Mosaic duckdb-server](https://uwdata.github.io/mosaic/duckdb/)). However, we recommend using SDKs or direct signed WSS URL to interact with Boiling API to keep the WebSocket connection open during session.
 
 > See also our simple stateless demo application [app.boilingdata.com](https://app.boilingdata.com).
 
