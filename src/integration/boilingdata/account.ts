@@ -7,7 +7,14 @@ import {
 } from "../../bdcli/utils/config_util.js";
 import { ILogger } from "../../bdcli/utils/logger_util.js";
 import { spinnerError } from "../../bdcli/utils/spinner_util.js";
-import { accountUrl, getReqHeaders, tokenShareUrl, stsTokenUrl, tapTokenUrl } from "./boilingdata_api.js";
+import {
+  accountUrl,
+  getReqHeaders,
+  tokenShareUrl,
+  stsTokenUrl,
+  tapTokenUrl,
+  tapMasterSecretUrl,
+} from "./boilingdata_api.js";
 import * as jwt from "jsonwebtoken";
 
 // import { channel } from "node:diagnostics_channel";
@@ -38,6 +45,7 @@ export class BDAccount {
   private cognitoIdToken: string;
   private bdStsToken: string | undefined;
   private bdTapToken: string | undefined;
+  private bdTapMasterSecret: string | undefined;
   private sharedTokens: IDecodedSession[];
   private selectedToken: string | undefined;
   private decodedToken!: jwt.JwtPayload | null;
@@ -52,7 +60,25 @@ export class BDAccount {
     this.sharedTokens = [];
   }
 
-  public async setIamRoleWithPayload(IamRoleArn: string, payload: any): Promise<void> {
+  public async setTapsIamRoleWithPayload(_IamRoleArn: string): Promise<any> {
+    // const body = JSON.stringify({ IamRoleArn });
+    // this.logger.debug({ body });
+    // const res = await fetch(accountUrl + "/tapsiamrole", {
+    //   method: "PUT",
+    //   headers: await getReqHeaders(this.cognitoIdToken),
+    //   body,
+    // });
+    // const respBody = await res.json();
+    // this.logger.info("\n" + JSON.stringify(respBody));
+    // if (res.status != 200 && res.status != 201) {
+    //   this.logger.error({ status: res.status, statusText: res.statusText, respBody });
+    //   throw new Error(
+    //     `Failed to configure Taps IAM Role (${IamRoleArn}) into BoilingData - ${res.status} ${res.statusText}: ${respBody?.ResponseText}; ${respBody?.RequestId}`,
+    //   );
+    // }
+  }
+
+  public async setS3IamRoleWithPayload(IamRoleArn: string, payload: any): Promise<void> {
     // channel("undici:request:create").subscribe(console.log);
     const body = JSON.stringify({ IamRoleArn, ...payload });
     this.logger.debug({ body });
@@ -307,6 +333,29 @@ export class BDAccount {
     const resp = await this.getTapTokenResp(true);
     if (resp) return resp;
     throw new Error(`Failed to get fresh TAP token from BD API`);
+  }
+
+  public async getTapMasterSecret(): Promise<{ bdTapMasterSecret: string; cached: boolean }> {
+    if (this.bdTapMasterSecret) return { bdTapMasterSecret: this.bdTapMasterSecret, cached: true };
+    const headers = await getReqHeaders(this.cognitoIdToken); // , { tokenLifetime, vendingSchedule, shareId });
+    const method = "POST";
+    const body = JSON.stringify({});
+    this.logger.debug({ method, tapMasterSecretUrl, headers, body });
+    const res = await fetch(tapMasterSecretUrl, { method, headers, body });
+    const resBody = await res.json();
+    this.logger.debug({ getTapToken: { body: resBody } });
+    if (!resBody.ResponseCode || !resBody.ResponseText) {
+      throw new Error("Malformed response from BD API");
+    }
+    if (resBody.ResponseCode != "00") {
+      spinnerError(resBody.ResponseText);
+      throw new Error(`Failed to fetch token: ${resBody.ResponseText}`);
+    }
+    if (!resBody.bdTapMasterSecret) {
+      throw new Error("Missing bdTapMasterSecret in BD API Response");
+    }
+    this.bdTapMasterSecret = resBody.bdTapMasterSecret;
+    return { bdTapMasterSecret: resBody.bdTapMasterSecret, cached: false };
   }
 
   public async getStsToken(tokenLifetime: string, shareId?: string): Promise<{ bdStsToken: string; cached: boolean }> {

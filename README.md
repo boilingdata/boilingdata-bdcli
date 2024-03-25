@@ -54,7 +54,7 @@ dataSource:
 
 % bdcli aws iam -c datasource_config.yaml --region eu-west-1 --create-role-only
 ✔ Authenticating: success
-✔ Creating IAM Role: arn:aws:iam::589434896614:role/boilingdata/bd-euw1-noenv-notmplname-21346bf26c314caf8e7e9832205ffdee
+✔ Creating IAM Role: arn:aws:iam::589434896614:role/boilingdata/bd-euw1-noenv-notmpl-21346bf26c314caf8e7e9832205ffdee
 
 % echo "Now you can verify the generated IAM role"
 Now you can verify the generated IAM role

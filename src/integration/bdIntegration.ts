@@ -1,5 +1,6 @@
+import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { ILogger } from "../bdcli/utils/logger_util.js";
-import { BDIamRole } from "./aws/iam_roles.js";
+import { BDIamRole } from "./aws/iam_role.js";
 import { BDAccount } from "./boilingdata/account.js";
 import { GRANT_PERMISSION, IStatement, IStatementExt } from "./boilingdata/dataset.interface.js";
 import { BDDataSourceConfig } from "./boilingdata/dataset.js";
@@ -16,9 +17,10 @@ const BUCKET_ACTIONS = [
 
 export interface IBDIntegration {
   logger: ILogger;
+  stsClient: STSClient;
   bdAccount: BDAccount;
   bdRole: BDIamRole;
-  bdDataSources: BDDataSourceConfig;
+  bdDataSources?: BDDataSourceConfig;
 }
 
 interface IGroupedDataSources {
@@ -29,11 +31,12 @@ interface IGroupedDataSources {
 
 export class BDIntegration {
   private logger: ILogger;
-  private bdDatasets: BDDataSourceConfig;
+  private bdDatasets: BDDataSourceConfig | undefined;
+  private callerIdAccount!: string | undefined;
 
   constructor(private params: IBDIntegration) {
     this.logger = this.params.logger;
-    this.bdDatasets = this.params.bdDataSources;
+    this.bdDatasets = this.params?.bdDataSources;
   }
 
   private mapDatasetsToUniqBuckets(statements: IStatementExt[]): string[] {
@@ -45,7 +48,52 @@ export class BDIntegration {
     return statements.map(stmt => `arn:aws:s3:::${stmt.bucket}/${stmt.prefix}*`);
   }
 
-  private getStatement(
+  private async getCustomerAccountId(): Promise<string> {
+    if (this.callerIdAccount) return this.callerIdAccount;
+    const cmd = new GetCallerIdentityCommand({});
+    const res = await this.params.stsClient.send(cmd);
+    this.logger.debug({ res });
+    if (!res.Account) throw new Error("Could not get caller identity AWS Account");
+    this.callerIdAccount = res.Account;
+    return res.Account;
+  }
+
+  private getTapsStatements(customerAccountId: string): any[] {
+    const logsActions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:TagResource",
+      "logs:PutSubscriptionFilter",
+    ];
+
+    const iamActions = ["iam:PassRole", "iam:CreateRole", "iam:TagRole"];
+    const iamResources = [`arn:aws:iam::${customerAccountId}:role/bd_*`];
+
+    const lambdaActions = ["lambda:*"];
+    const lambdaResources = [
+      `arn:aws:lambda:*:${customerAccountId}:function/bd_*`,
+      `arn:aws:lambda:*:${customerAccountId}:layer/bd_*`,
+    ];
+
+    return [
+      { Effect: "Allow", Action: logsActions, Resource: "*" },
+      {
+        Effect: "Allow",
+        Action: iamActions,
+        Resource: iamResources,
+      },
+      {
+        Effect: "Allow",
+        Action: lambdaActions,
+        Resource: lambdaResources,
+      },
+    ];
+  }
+
+  private getS3Statement(
     datasets: IStatementExt[],
     actions: string[],
     func: (datasets: IStatementExt[]) => string[],
@@ -55,6 +103,7 @@ export class BDIntegration {
   }
 
   public getGroupedBuckets(): IGroupedDataSources {
+    if (!this.bdDatasets) throw new Error("No bdDatasets found/passed");
     const dataSourcesConfig = this.bdDatasets.getDatasourcesConfig();
     const allPolicies: IStatement[] = [];
     dataSourcesConfig.dataSource.permissions.forEach(perm => {
@@ -100,15 +149,23 @@ export class BDIntegration {
     return { readOnly, readWrite, writeOnly };
   }
 
-  public async getPolicyDocument(haveListBucketsPolicy = true): Promise<any> {
+  public async getTapsPolicyDocument(): Promise<any> {
+    const Statements = [];
+    Statements.push(...this.getTapsStatements(await this.getCustomerAccountId()));
+    const finalPolicy = { Version: "2012-10-17", Statement: Statements.filter(s => s?.Resource?.length) };
+    this.logger.debug({ getPolicyDocument: JSON.stringify(finalPolicy) });
+    return finalPolicy;
+  }
+
+  public async getS3PolicyDocument(haveListBucketsPolicy = true): Promise<any> {
     this.logger.debug({ haveListBucketsPolicy });
     const grouped = this.getGroupedBuckets();
     const allDatasets = [...grouped.readOnly, ...grouped.readWrite, ...grouped.writeOnly];
     const Statements = [];
-    Statements.push(this.getStatement(grouped.readOnly, RO_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
-    Statements.push(this.getStatement(grouped.readWrite, RW_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
-    Statements.push(this.getStatement(grouped.writeOnly, WO_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
-    Statements.push(this.getStatement(allDatasets, BUCKET_ACTIONS, this.mapDatasetsToUniqBuckets.bind(this)));
+    Statements.push(this.getS3Statement(grouped.readOnly, RO_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
+    Statements.push(this.getS3Statement(grouped.readWrite, RW_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
+    Statements.push(this.getS3Statement(grouped.writeOnly, WO_ACTIONS, this.mapAccessPolicyToS3Resource.bind(this)));
+    Statements.push(this.getS3Statement(allDatasets, BUCKET_ACTIONS, this.mapDatasetsToUniqBuckets.bind(this)));
     if (haveListBucketsPolicy) {
       // This is so that you can run: SELECT * FROM list('s3://')
       Statements.push({

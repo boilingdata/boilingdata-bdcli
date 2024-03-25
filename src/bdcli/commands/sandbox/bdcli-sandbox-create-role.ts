@@ -7,7 +7,7 @@ import { addGlobalOptions } from "../../utils/options_util.js";
 import { combineOptsWithSettings } from "../../utils/config_util.js";
 import { authSpinnerWithConfigCheck, getIdToken } from "../../utils/auth_util.js";
 import { BDSandbox } from "../../../integration/boilingdata/sandbox.js";
-import { BDIamRole } from "../../../integration/aws/iam_roles.js";
+import { BDIamRole } from "../../../integration/aws/iam_role.js";
 import { BDAccount } from "../../../integration/boilingdata/account.js";
 import { BDIntegration } from "../../../integration/bdIntegration.js";
 import { BDDataSourceConfig } from "../../../integration/boilingdata/dataset.js";
@@ -35,21 +35,30 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     const bdAccount = new BDAccount({ logger, authToken: token });
     const bdDataSources = new BDDataSourceConfig({ logger });
     bdDataSources.withConfig({ dataSource: bdSandbox.tmpl.resources.storage });
+    const stsClient = new sts.STSClient({ region });
     const bdRole = new BDIamRole({
       ...options,
       logger,
       iamClient: new iam.IAMClient({ region }),
-      stsClient: new sts.STSClient({ region }),
+      stsClient,
       templateName: bdSandbox.tmpl.id,
       username: await bdAccount.getUsername(),
       assumeAwsAccount: await bdAccount.getAssumeAwsAccount(),
       assumeCondExternalId: await bdAccount.getExtId(),
     });
-    const bdIntegration = new BDIntegration({ logger, bdAccount, bdRole, bdDataSources });
-    const policyDocument = await bdIntegration.getPolicyDocument(options.listBucketsPermission);
-    let iamRoleArn;
-    if (!options.dryRun) iamRoleArn = await bdRole.upsertRole(JSON.stringify(policyDocument));
-    updateSpinnerText(`Creating IAM Role: ${iamRoleArn}` + (options.dryRun ? "(dry-run)" : ""));
+    const bdIntegration = new BDIntegration({ logger, bdAccount, bdRole, bdDataSources, stsClient });
+    const policyDocument = await bdIntegration.getS3PolicyDocument(options.listBucketsPermission);
+    if (options.dryRun) {
+      updateSpinnerText(`Creating IAM Role (dry-run)`);
+      spinnerSuccess();
+      return;
+    }
+    const iamRoleArn = await bdRole.upsertRole(JSON.stringify(policyDocument));
+    spinnerSuccess();
+
+    updateSpinnerText(`Registering S3 IAM Role: ${iamRoleArn}`);
+    const datasourcesConfig = bdDataSources.getDatasourcesConfig();
+    await bdAccount.setS3IamRoleWithPayload(iamRoleArn, { datasourcesConfig });
     spinnerSuccess();
   } catch (err: any) {
     // try to decode the message

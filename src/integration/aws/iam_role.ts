@@ -13,12 +13,18 @@ enum ENameType {
   "POLICY" = "policy",
 }
 
+export enum ERoleType {
+  S3 = "s3",
+  TAP = "tap",
+}
+
 export interface IBDIamRole {
   logger: ILogger;
   iamClient: iam.IAMClient;
   stsClient: sts.STSClient;
   region: string;
   username: string;
+  roleType: ERoleType;
   templateName?: string;
   assumeCondExternalId: string;
   assumeAwsAccount: string;
@@ -36,6 +42,7 @@ export class BDIamRole {
   private _iamManagedPolicyName?: string;
   private boilingDataTags: Tag[];
   private path: string;
+  private type: ERoleType;
   private awsAccountId?: string;
   private policyArn?: string;
 
@@ -43,6 +50,7 @@ export class BDIamRole {
     this.iamClient = this.params.iamClient;
     this.stsClient = this.params.stsClient;
     this.logger = this.params.logger;
+    this.type = this.params.roleType;
     this.path = this.params.path ?? "/boilingdata/";
     if (!this.path.startsWith("/") || !this.path.endsWith("/")) throw new Error("path must start and end with /");
     this.boilingDataTags = [{ Key: "service", Value: "boilingdata" }];
@@ -51,9 +59,9 @@ export class BDIamRole {
   private getName(type: string): string {
     const prefix = this.params.roleNamePrefix ?? "bd";
     const regionShort = getAwsRegionShortName(this.params.region ?? process.env["AWS_REGION"] ?? "eu-west-1");
-    const tmplName = this.params.templateName ?? "notmplname";
+    const tmplName = this.params.templateName ?? "notmpl";
     const username = this.params.username.replaceAll("-", "");
-    const name = [prefix, regionShort, tmplName, username].join("-");
+    const name = [prefix, regionShort, tmplName, username, this.type].join("-");
     if (name.length > 64) {
       throw new Error(
         `${type} name (${name}) too long (${name.length}), reduce prefix/tmplname lengths (roomLeft ${
