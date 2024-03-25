@@ -33,6 +33,7 @@ class BDAccount {
     cognitoIdToken;
     bdStsToken;
     bdTapToken;
+    bdTapMasterSecret;
     sharedTokens;
     selectedToken;
     decodedToken;
@@ -46,7 +47,24 @@ class BDAccount {
         this.cognitoIdToken = this.params.authToken;
         this.sharedTokens = [];
     }
-    async setIamRoleWithPayload(IamRoleArn, payload) {
+    async setTapsIamRoleWithPayload(_IamRoleArn) {
+        // const body = JSON.stringify({ IamRoleArn });
+        // this.logger.debug({ body });
+        // const res = await fetch(accountUrl + "/tapsiamrole", {
+        //   method: "PUT",
+        //   headers: await getReqHeaders(this.cognitoIdToken),
+        //   body,
+        // });
+        // const respBody = await res.json();
+        // this.logger.info("\n" + JSON.stringify(respBody));
+        // if (res.status != 200 && res.status != 201) {
+        //   this.logger.error({ status: res.status, statusText: res.statusText, respBody });
+        //   throw new Error(
+        //     `Failed to configure Taps IAM Role (${IamRoleArn}) into BoilingData - ${res.status} ${res.statusText}: ${respBody?.ResponseText}; ${respBody?.RequestId}`,
+        //   );
+        // }
+    }
+    async setS3IamRoleWithPayload(IamRoleArn, payload) {
         // channel("undici:request:create").subscribe(console.log);
         const body = JSON.stringify({ IamRoleArn, ...payload });
         this.logger.debug({ body });
@@ -285,6 +303,29 @@ class BDAccount {
         if (resp)
             return resp;
         throw new Error(`Failed to get fresh TAP token from BD API`);
+    }
+    async getTapMasterSecret() {
+        if (this.bdTapMasterSecret)
+            return { bdTapMasterSecret: this.bdTapMasterSecret, cached: true };
+        const headers = await (0, boilingdata_api_js_1.getReqHeaders)(this.cognitoIdToken); // , { tokenLifetime, vendingSchedule, shareId });
+        const method = "POST";
+        const body = JSON.stringify({});
+        this.logger.debug({ method, tapMasterSecretUrl: boilingdata_api_js_1.tapMasterSecretUrl, headers, body });
+        const res = await fetch(boilingdata_api_js_1.tapMasterSecretUrl, { method, headers, body });
+        const resBody = await res.json();
+        this.logger.debug({ getTapToken: { body: resBody } });
+        if (!resBody.ResponseCode || !resBody.ResponseText) {
+            throw new Error("Malformed response from BD API");
+        }
+        if (resBody.ResponseCode != "00") {
+            (0, spinner_util_js_1.spinnerError)(resBody.ResponseText);
+            throw new Error(`Failed to fetch token: ${resBody.ResponseText}`);
+        }
+        if (!resBody.bdTapMasterSecret) {
+            throw new Error("Missing bdTapMasterSecret in BD API Response");
+        }
+        this.bdTapMasterSecret = resBody.bdTapMasterSecret;
+        return { bdTapMasterSecret: resBody.bdTapMasterSecret, cached: false };
     }
     async getStsToken(tokenLifetime, shareId) {
         if (this.bdStsToken && !shareId) {

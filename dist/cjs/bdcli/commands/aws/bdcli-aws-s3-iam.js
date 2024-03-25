@@ -30,12 +30,12 @@ const logger_util_js_1 = require("../../utils/logger_util.js");
 const spinner_util_js_1 = require("../../utils/spinner_util.js");
 const options_util_js_1 = require("../../utils/options_util.js");
 const auth_util_js_1 = require("../../utils/auth_util.js");
-const iam_roles_js_1 = require("../../../integration/aws/iam_roles.js");
+const iam_role_js_1 = require("../../../integration/aws/iam_role.js");
 const account_js_1 = require("../../../integration/boilingdata/account.js");
 const dataset_js_1 = require("../../../integration/boilingdata/dataset.js");
 const bdIntegration_js_1 = require("../../../integration/bdIntegration.js");
 const config_util_js_1 = require("../../utils/config_util.js");
-const logger = (0, logger_util_js_1.getLogger)("bdcli-aws");
+const logger = (0, logger_util_js_1.getLogger)("bdcli-aws-iam");
 logger.setLogLevel(logger_util_js_1.ELogLevel.WARN);
 async function iamrole(options, _command) {
     try {
@@ -49,30 +49,32 @@ async function iamrole(options, _command) {
         const { idToken: token, cached, region } = await (0, auth_util_js_1.getIdToken)(logger);
         (0, spinner_util_js_1.updateSpinnerText)(cached ? "Authenticating: cached" : "Authenticating: success");
         (0, spinner_util_js_1.spinnerSuccess)();
-        (0, spinner_util_js_1.updateSpinnerText)("Creating IAM Role");
+        (0, spinner_util_js_1.updateSpinnerText)("Creating S3 IAM Role");
         if (!region)
             throw new Error("Pass --region parameter or set AWS_REGION env");
         const bdAccount = new account_js_1.BDAccount({ logger, authToken: token });
         const bdDataSources = new dataset_js_1.BDDataSourceConfig({ logger });
         await bdDataSources.readConfig(options.config);
-        const bdRole = new iam_roles_js_1.BDIamRole({
+        const stsClient = new sts.STSClient({ region });
+        const bdRole = new iam_role_js_1.BDIamRole({
             ...options,
             logger,
+            roleType: iam_role_js_1.ERoleType.S3,
             iamClient: new iam.IAMClient({ region }),
-            stsClient: new sts.STSClient({ region }),
+            stsClient,
             username: await bdAccount.getUsername(),
             assumeAwsAccount: await bdAccount.getAssumeAwsAccount(),
             assumeCondExternalId: await bdAccount.getExtId(),
         });
-        const bdIntegration = new bdIntegration_js_1.BDIntegration({ logger, bdAccount, bdRole, bdDataSources });
-        const policyDocument = await bdIntegration.getPolicyDocument();
+        const bdIntegration = new bdIntegration_js_1.BDIntegration({ logger, bdAccount, bdRole, bdDataSources, stsClient });
+        const policyDocument = await bdIntegration.getS3PolicyDocument();
         const iamRoleArn = await bdRole.upsertRole(JSON.stringify(policyDocument));
-        (0, spinner_util_js_1.updateSpinnerText)(`Creating IAM Role: ${iamRoleArn}`);
+        (0, spinner_util_js_1.updateSpinnerText)(`Creating S3 IAM Role: ${iamRoleArn}`);
         (0, spinner_util_js_1.spinnerSuccess)();
         if (!options.createRoleOnly) {
-            (0, spinner_util_js_1.updateSpinnerText)(`Registering IAM Role: ${iamRoleArn}`);
+            (0, spinner_util_js_1.updateSpinnerText)(`Registering S3 IAM Role: ${iamRoleArn}`);
             const datasourcesConfig = bdDataSources.getDatasourcesConfig();
-            await bdAccount.setIamRoleWithPayload(iamRoleArn, { datasourcesConfig });
+            await bdAccount.setS3IamRoleWithPayload(iamRoleArn, { datasourcesConfig });
             (0, spinner_util_js_1.spinnerSuccess)();
         }
     }

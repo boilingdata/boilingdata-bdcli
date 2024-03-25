@@ -1,5 +1,5 @@
 import { ELogLevel, getLogger } from "../../bdcli/utils/logger_util.js";
-import { BDIamRole } from "./iam_roles.js";
+import { BDIamRole, ERoleType } from "./iam_role.js";
 import { CreatePolicyCommand, CreatePolicyVersionCommand, CreateRoleCommand, DeletePolicyVersionCommand, GetRoleCommand, IAMClient, ListPoliciesCommand, ListPolicyVersionsCommand, } from "@aws-sdk/client-iam";
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { mockClient } from "aws-sdk-client-mock";
@@ -10,6 +10,7 @@ logger.setLogLevel(ELogLevel.DEBUG);
 const region = "us-east-1";
 const roleParams = {
     logger,
+    roleType: ERoleType.S3,
     iamClient: new IAMClient({ region }),
     stsClient: new STSClient({ region }),
     region,
@@ -32,15 +33,15 @@ describe("iamRole", () => {
     });
     it("getIamRoleName", async () => {
         const role = new BDIamRole(roleParams);
-        expect(role.iamRoleName).toEqual("bd-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
+        expect(role.iamRoleName).toEqual("bd-use1-notmpl-aac5c1d9a0a94855b8960f3998b2f16b-s3");
     });
     it("getIamRoleName with own prefix", async () => {
         const role = new BDIamRole({ ...roleParams, roleNamePrefix: "my" });
-        expect(role.iamRoleName).toEqual("my-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
+        expect(role.iamRoleName).toEqual("my-use1-notmpl-aac5c1d9a0a94855b8960f3998b2f16b-s3");
     });
     it("getIamRoleName with own path and prefix", async () => {
         const role = new BDIamRole({ ...roleParams, roleNamePrefix: "my", path: "/bd-service/demo/" });
-        expect(role.iamRoleName).toEqual("my-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
+        expect(role.iamRoleName).toEqual("my-use1-notmpl-aac5c1d9a0a94855b8960f3998b2f16b-s3");
     });
     it("getRole", async () => {
         iamMock.on(GetRoleCommand).resolves({ Role: dummyRole });
@@ -53,8 +54,7 @@ describe("iamRole", () => {
             Policies: [
                 {
                     PolicyName: "bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-acff8dae429911f",
-                    Arn: "arn:aws:iam::123123123123:policy/" +
-                        "boilingdata/bd-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b-policy",
+                    Arn: "arn:aws:iam::123123123123:policy/" + "boilingdata/bd-use1-notmpl-aac5c1d9a0a94855b8960f3998b2f16b-s3",
                     Path: "/boilingdata/",
                     DefaultVersionId: "v123",
                     AttachmentCount: 1,
@@ -89,8 +89,7 @@ describe("iamRole", () => {
             Policies: [
                 {
                     PolicyName: "bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-acff8dae429911f",
-                    Arn: "arn:aws:iam::123123123123:policy/" +
-                        "boilingdata/bd-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b-policy",
+                    Arn: "arn:aws:iam::123123123123:policy/" + "boilingdata/bd-use1-notmpl-aac5c1d9a0a94855b8960f3998b2f16b-s3",
                     Path: "/boilingdata/",
                     DefaultVersionId: "v100",
                     AttachmentCount: 1,

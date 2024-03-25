@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BDIamRole = void 0;
+exports.BDIamRole = exports.ERoleType = void 0;
 const iam = __importStar(require("@aws-sdk/client-iam"));
 const sts = __importStar(require("@aws-sdk/client-sts"));
 const aws_region_js_1 = require("./aws-region.js");
@@ -32,6 +32,11 @@ var ENameType;
     ENameType["ROLE"] = "role";
     ENameType["POLICY"] = "policy";
 })(ENameType || (ENameType = {}));
+var ERoleType;
+(function (ERoleType) {
+    ERoleType["S3"] = "s3";
+    ERoleType["TAP"] = "tap";
+})(ERoleType || (exports.ERoleType = ERoleType = {}));
 class BDIamRole {
     params;
     iamClient;
@@ -41,6 +46,7 @@ class BDIamRole {
     _iamManagedPolicyName;
     boilingDataTags;
     path;
+    type;
     awsAccountId;
     policyArn;
     constructor(params) {
@@ -48,6 +54,7 @@ class BDIamRole {
         this.iamClient = this.params.iamClient;
         this.stsClient = this.params.stsClient;
         this.logger = this.params.logger;
+        this.type = this.params.roleType;
         this.path = this.params.path ?? "/boilingdata/";
         if (!this.path.startsWith("/") || !this.path.endsWith("/"))
             throw new Error("path must start and end with /");
@@ -56,9 +63,9 @@ class BDIamRole {
     getName(type) {
         const prefix = this.params.roleNamePrefix ?? "bd";
         const regionShort = (0, aws_region_js_1.getAwsRegionShortName)(this.params.region ?? process.env["AWS_REGION"] ?? "eu-west-1");
-        const tmplName = this.params.templateName ?? "notmplname";
+        const tmplName = this.params.templateName ?? "notmpl";
         const username = this.params.username.replaceAll("-", "");
-        const name = [prefix, regionShort, tmplName, username].join("-");
+        const name = [prefix, regionShort, tmplName, username, this.type].join("-");
         if (name.length > 64) {
             throw new Error(`${type} name (${name}) too long (${name.length}), reduce prefix/tmplname lengths (roomLeft ${64 - name.length})`);
         }

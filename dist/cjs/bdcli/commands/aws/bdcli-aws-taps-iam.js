@@ -29,15 +29,14 @@ const cmd = __importStar(require("commander"));
 const logger_util_js_1 = require("../../utils/logger_util.js");
 const spinner_util_js_1 = require("../../utils/spinner_util.js");
 const options_util_js_1 = require("../../utils/options_util.js");
-const config_util_js_1 = require("../../utils/config_util.js");
 const auth_util_js_1 = require("../../utils/auth_util.js");
-const sandbox_js_1 = require("../../../integration/boilingdata/sandbox.js");
 const iam_role_js_1 = require("../../../integration/aws/iam_role.js");
 const account_js_1 = require("../../../integration/boilingdata/account.js");
 const bdIntegration_js_1 = require("../../../integration/bdIntegration.js");
-const dataset_js_1 = require("../../../integration/boilingdata/dataset.js");
-const logger = (0, logger_util_js_1.getLogger)("bdcli-sandbox-create-role");
-async function show(options, _command) {
+const config_util_js_1 = require("../../utils/config_util.js");
+const logger = (0, logger_util_js_1.getLogger)("bdcli-aws-taps-iam");
+logger.setLogLevel(logger_util_js_1.ELogLevel.WARN);
+async function iamrole(options, _command) {
     try {
         options = await (0, config_util_js_1.combineOptsWithSettings)(options, logger);
         if (options.delete) {
@@ -45,53 +44,50 @@ async function show(options, _command) {
             (0, spinner_util_js_1.spinnerWarn)("Not implemented yet. Please delete the IAM Role from AWS Console");
             return;
         }
-        if (!(0, auth_util_js_1.authSpinnerWithConfigCheck)())
-            return;
-        const { idToken: token, cached: idCached } = await (0, auth_util_js_1.getIdToken)(logger);
-        (0, spinner_util_js_1.updateSpinnerText)(`Authenticating: ${idCached ? "cached" : "success"}`);
+        (0, spinner_util_js_1.updateSpinnerText)("Authenticating");
+        const { idToken: token, cached, region } = await (0, auth_util_js_1.getIdToken)(logger);
+        (0, spinner_util_js_1.updateSpinnerText)(cached ? "Authenticating: cached" : "Authenticating: success");
         (0, spinner_util_js_1.spinnerSuccess)();
-        (0, spinner_util_js_1.updateSpinnerText)("Creating sandbox IAM Role into *your* AWS Account");
-        const bdSandbox = new sandbox_js_1.BDSandbox({ logger, authToken: token }).withTemplate(options.template);
-        const region = bdSandbox.region;
+        (0, spinner_util_js_1.updateSpinnerText)("Creating TAPS IAM Role");
+        if (!region)
+            throw new Error("Pass --region parameter or set AWS_REGION env");
         const bdAccount = new account_js_1.BDAccount({ logger, authToken: token });
-        const bdDataSources = new dataset_js_1.BDDataSourceConfig({ logger });
-        bdDataSources.withConfig({ dataSource: bdSandbox.tmpl.resources.storage });
         const stsClient = new sts.STSClient({ region });
         const bdRole = new iam_role_js_1.BDIamRole({
             ...options,
             logger,
+            roleType: iam_role_js_1.ERoleType.TAP,
             iamClient: new iam.IAMClient({ region }),
             stsClient,
-            templateName: bdSandbox.tmpl.id,
             username: await bdAccount.getUsername(),
             assumeAwsAccount: await bdAccount.getAssumeAwsAccount(),
             assumeCondExternalId: await bdAccount.getExtId(),
         });
-        const bdIntegration = new bdIntegration_js_1.BDIntegration({ logger, bdAccount, bdRole, bdDataSources, stsClient });
-        const policyDocument = await bdIntegration.getS3PolicyDocument(options.listBucketsPermission);
-        if (options.dryRun) {
-            (0, spinner_util_js_1.updateSpinnerText)(`Creating IAM Role (dry-run)`);
-            (0, spinner_util_js_1.spinnerSuccess)();
-            return;
-        }
+        const bdIntegration = new bdIntegration_js_1.BDIntegration({ logger, bdAccount, bdRole, stsClient });
+        const policyDocument = await bdIntegration.getTapsPolicyDocument();
         const iamRoleArn = await bdRole.upsertRole(JSON.stringify(policyDocument));
+        (0, spinner_util_js_1.updateSpinnerText)(`Creating TAPS IAM Role: ${iamRoleArn}`);
         (0, spinner_util_js_1.spinnerSuccess)();
-        (0, spinner_util_js_1.updateSpinnerText)(`Registering S3 IAM Role: ${iamRoleArn}`);
-        const datasourcesConfig = bdDataSources.getDatasourcesConfig();
-        await bdAccount.setS3IamRoleWithPayload(iamRoleArn, { datasourcesConfig });
-        (0, spinner_util_js_1.spinnerSuccess)();
+        if (!options.createRoleOnly) {
+            (0, spinner_util_js_1.updateSpinnerText)(`Registering TAPS IAM Role: ${iamRoleArn}`);
+            await bdAccount.setTapsIamRoleWithPayload(iamRoleArn);
+            (0, spinner_util_js_1.spinnerSuccess)();
+        }
     }
     catch (err) {
-        // try to decode the message
-        (0, spinner_util_js_1.spinnerError)(err?.message, false);
+        (0, spinner_util_js_1.spinnerError)(err?.message);
     }
 }
-const program = new cmd.Command("bdcli sandbox create-role")
-    .addOption(new cmd.Option("--template <templateFile>", "sandbox IaC file").makeOptionMandatory())
-    .addOption(new cmd.Option("--delete", "Delete the sandbox IAM role from *your* AWS Account"))
-    .addOption(new cmd.Option("--no-list-buckets-permission", "Do NOT add s3:ListAllMyBuckets policy entry"))
-    .addOption(new cmd.Option("--dry-run", "Dry run, do not actually create the IAM role"))
-    .action(async (options, command) => await show(options, command));
+const program = new cmd.Command("bdcli aws taps-iam")
+    .addHelpText("beforeAll", "If you have an AWS account, you can use this command to create BoilingData assumable AWS IAM Role into " +
+    "your AWS account. It is fully owned and controlled by you. The IAM Policy allows deploying Data Taps " +
+    "(Lambda Functions with URL) into your account and creating the needed IAM Role for the Data Tap itself" +
+    " (service role). \n\nSee the README.md in https://github.com/boilingdata/boilingdata-bdcli " +
+    "for more information.\n")
+    .addOption(new cmd.Option("-r, --region <region>", "AWS region"))
+    .addOption(new cmd.Option("--delete", "Delete the IAM role"))
+    .addOption(new cmd.Option("--create-role-only", "Create the IAM role only and do not update BoilingData"))
+    .action(async (options, command) => await iamrole(options, command));
 (async () => {
     await (0, options_util_js_1.addGlobalOptions)(program, logger);
     await program.parseAsync(process.argv);

@@ -17,6 +17,7 @@ export declare class BDAccount {
     private cognitoIdToken;
     private bdStsToken;
     private bdTapToken;
+    private bdTapMasterSecret;
     private sharedTokens;
     private selectedToken;
     private decodedToken;
@@ -24,7 +25,8 @@ export declare class BDAccount {
     private logger;
     private accountDetails;
     constructor(params: IBDConfig);
-    setIamRoleWithPayload(IamRoleArn: string, payload: any): Promise<void>;
+    setTapsIamRoleWithPayload(_IamRoleArn: string): Promise<any>;
+    setS3IamRoleWithPayload(IamRoleArn: string, payload: any): Promise<void>;
     private _getAccountDetails;
     getUsername(): Promise<string>;
     getAssumeAwsAccount(): Promise<string>;
@@ -45,6 +47,10 @@ export declare class BDAccount {
     private getTokenResp;
     getTapToken(tokenLifetime: string, sharingUser?: string): Promise<{
         bdTapToken: string;
+        cached: boolean;
+    }>;
+    getTapMasterSecret(): Promise<{
+        bdTapMasterSecret: string;
         cached: boolean;
     }>;
     getStsToken(tokenLifetime: string, shareId?: string): Promise<{

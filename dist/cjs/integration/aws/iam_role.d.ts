@@ -5,12 +5,17 @@ export interface Tag {
     Key: string;
     Value: string;
 }
+export declare enum ERoleType {
+    S3 = "s3",
+    TAP = "tap"
+}
 export interface IBDIamRole {
     logger: ILogger;
     iamClient: iam.IAMClient;
     stsClient: sts.STSClient;
     region: string;
     username: string;
+    roleType: ERoleType;
     templateName?: string;
     assumeCondExternalId: string;
     assumeAwsAccount: string;
@@ -28,6 +33,7 @@ export declare class BDIamRole {
     private _iamManagedPolicyName?;
     private boilingDataTags;
     private path;
+    private type;
     private awsAccountId?;
     private policyArn?;
     constructor(params: IBDIamRole);

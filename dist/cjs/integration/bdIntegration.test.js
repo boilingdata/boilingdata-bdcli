@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const auth_util_js_1 = require("../bdcli/utils/auth_util.js");
 const logger_util_js_1 = require("../bdcli/utils/logger_util.js");
-const iam_roles_js_1 = require("./aws/iam_roles.js");
+const iam_role_js_1 = require("./aws/iam_role.js");
 const bdIntegration_js_1 = require("./bdIntegration.js");
 const account_js_1 = require("./boilingdata/account.js");
 const dataset_js_1 = require("./boilingdata/dataset.js");
@@ -35,16 +35,23 @@ describe("BDIntegration", () => {
         const assumeCondExternalId = await bdAccount.getExtId(); // FIXME: This calls real API
         const assumeAwsAccount = await bdAccount.getAssumeAwsAccount();
         const username = await bdAccount.getUsername();
-        const bdRole = new iam_roles_js_1.BDIamRole({
+        const bdRole = new iam_role_js_1.BDIamRole({
             logger: roleLogger,
             region,
+            roleType: iam_role_js_1.ERoleType.S3,
             iamClient,
             stsClient,
             username,
             assumeAwsAccount,
             assumeCondExternalId,
         });
-        const bdIntegration = new bdIntegration_js_1.BDIntegration({ logger: accessLogger, bdAccount, bdDataSources: bdDataSets, bdRole });
+        const bdIntegration = new bdIntegration_js_1.BDIntegration({
+            logger: accessLogger,
+            bdAccount,
+            bdDataSources: bdDataSets,
+            bdRole,
+            stsClient,
+        });
         stsMock.on(client_sts_1.GetCallerIdentityCommand).resolves({ Account: "123123123123" });
         expect(bdIntegration.getGroupedBuckets()).toMatchInlineSnapshot(`
       {
@@ -80,18 +87,25 @@ describe("BDIntegration", () => {
         const assumeCondExternalId = await bdAccount.getExtId(); // FIXME: This calls real API
         const assumeAwsAccount = await bdAccount.getAssumeAwsAccount();
         const username = await bdAccount.getUsername();
-        const bdRole = new iam_roles_js_1.BDIamRole({
+        const bdRole = new iam_role_js_1.BDIamRole({
             logger: roleLogger,
             region,
+            roleType: iam_role_js_1.ERoleType.S3,
             iamClient,
             stsClient,
             username,
             assumeAwsAccount,
             assumeCondExternalId,
         });
-        const bdIntegration = new bdIntegration_js_1.BDIntegration({ logger: accessLogger, bdAccount, bdDataSources: bdDataSets, bdRole });
+        const bdIntegration = new bdIntegration_js_1.BDIntegration({
+            logger: accessLogger,
+            bdAccount,
+            bdDataSources: bdDataSets,
+            bdRole,
+            stsClient,
+        });
         stsMock.on(client_sts_1.GetCallerIdentityCommand).resolves({ Account: "123123123123" });
-        const res = await bdIntegration.getPolicyDocument();
+        const res = await bdIntegration.getS3PolicyDocument();
         expect(res).toMatchInlineSnapshot(`
       {
         "Statement": [

@@ -6,7 +6,7 @@ import { authSpinnerWithConfigCheck, getIdToken, validateTokenLifetime } from ".
 import { BDAccount } from "../../../integration/boilingdata/account.js";
 import { combineOptsWithSettings } from "../../utils/config_util.js";
 import { outputResults } from "../../utils/output_util.js";
-const logger = getLogger("bdcli-account-token");
+const logger = getLogger("bdcli-account-tap-master-secret");
 async function show(options, _command) {
     try {
         options = await combineOptsWithSettings(options, logger);
@@ -17,21 +17,20 @@ async function show(options, _command) {
         const { idToken: token, cached: idCached, region } = await getIdToken(logger);
         updateSpinnerText(`Authenticating: ${idCached ? "cached" : "success"}`);
         spinnerSuccess();
-        updateSpinnerText(`Getting BoilingData TAP token`);
+        updateSpinnerText(`Getting BoilingData Master TAP secret`);
         if (!region)
             throw new Error("Pass --region parameter or set AWS_REGION env");
         const bdAccount = new BDAccount({ logger, authToken: token });
-        const { bdTapToken, cached: tapCached, ...rest } = await bdAccount.getTapToken(options.lifetime ?? "24h", options.sharingUser);
-        updateSpinnerText(`Getting BoilingData TAP token: ${tapCached ? "cached" : "success"}`);
+        const { bdTapMasterSecret, cached: tapCached, ...rest } = await bdAccount.getTapMasterSecret();
+        updateSpinnerText(`Getting BoilingData Master TAP secret: ${tapCached ? "cached" : "success"}`);
         spinnerSuccess();
-        await outputResults({ bdTapToken, cached: tapCached, ...rest }, options.disableSpinner);
+        await outputResults({ bdTapMasterSecret, cached: tapCached, ...rest }, options.disableSpinner);
     }
     catch (err) {
         spinnerError(err?.message);
     }
 }
-const program = new cmd.Command("bdcli account tap-token")
-    .addOption(new cmd.Option("--lifetime <lifetime>", "Expiration lifetime for the token, in string format, like '1h' (see https://github.com/vercel/ms)"))
+const program = new cmd.Command("bdcli account tap-master-secret")
     .addOption(new cmd.Option("--sharing-user <emailOfTapSharingUser>", "A user has shared Tap for you so that you can write to it."))
     .action(async (options, command) => await show(options, command));
 (async () => {

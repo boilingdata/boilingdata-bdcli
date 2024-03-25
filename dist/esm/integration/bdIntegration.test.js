@@ -1,6 +1,6 @@
 import { getIdToken } from "../bdcli/utils/auth_util.js";
 import { ELogLevel, getLogger } from "../bdcli/utils/logger_util.js";
-import { BDIamRole } from "./aws/iam_roles.js";
+import { BDIamRole, ERoleType } from "./aws/iam_role.js";
 import { BDIntegration } from "./bdIntegration.js";
 import { BDAccount } from "./boilingdata/account.js";
 import { BDDataSourceConfig } from "./boilingdata/dataset.js";
@@ -36,13 +36,20 @@ describe("BDIntegration", () => {
         const bdRole = new BDIamRole({
             logger: roleLogger,
             region,
+            roleType: ERoleType.S3,
             iamClient,
             stsClient,
             username,
             assumeAwsAccount,
             assumeCondExternalId,
         });
-        const bdIntegration = new BDIntegration({ logger: accessLogger, bdAccount, bdDataSources: bdDataSets, bdRole });
+        const bdIntegration = new BDIntegration({
+            logger: accessLogger,
+            bdAccount,
+            bdDataSources: bdDataSets,
+            bdRole,
+            stsClient,
+        });
         stsMock.on(GetCallerIdentityCommand).resolves({ Account: "123123123123" });
         expect(bdIntegration.getGroupedBuckets()).toMatchInlineSnapshot(`
       {
@@ -81,15 +88,22 @@ describe("BDIntegration", () => {
         const bdRole = new BDIamRole({
             logger: roleLogger,
             region,
+            roleType: ERoleType.S3,
             iamClient,
             stsClient,
             username,
             assumeAwsAccount,
             assumeCondExternalId,
         });
-        const bdIntegration = new BDIntegration({ logger: accessLogger, bdAccount, bdDataSources: bdDataSets, bdRole });
+        const bdIntegration = new BDIntegration({
+            logger: accessLogger,
+            bdAccount,
+            bdDataSources: bdDataSets,
+            bdRole,
+            stsClient,
+        });
         stsMock.on(GetCallerIdentityCommand).resolves({ Account: "123123123123" });
-        const res = await bdIntegration.getPolicyDocument();
+        const res = await bdIntegration.getS3PolicyDocument();
         expect(res).toMatchInlineSnapshot(`
       {
         "Statement": [

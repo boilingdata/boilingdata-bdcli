@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const logger_util_js_1 = require("../../bdcli/utils/logger_util.js");
-const iam_roles_js_1 = require("./iam_roles.js");
+const iam_role_js_1 = require("./iam_role.js");
 const client_iam_1 = require("@aws-sdk/client-iam");
 const client_sts_1 = require("@aws-sdk/client-sts");
 const aws_sdk_client_mock_1 = require("aws-sdk-client-mock");
@@ -12,6 +12,7 @@ logger.setLogLevel(logger_util_js_1.ELogLevel.DEBUG);
 const region = "us-east-1";
 const roleParams = {
     logger,
+    roleType: iam_role_js_1.ERoleType.S3,
     iamClient: new client_iam_1.IAMClient({ region }),
     stsClient: new client_sts_1.STSClient({ region }),
     region,
@@ -33,20 +34,20 @@ describe("iamRole", () => {
         stsMock.reset();
     });
     it("getIamRoleName", async () => {
-        const role = new iam_roles_js_1.BDIamRole(roleParams);
-        expect(role.iamRoleName).toEqual("bd-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
+        const role = new iam_role_js_1.BDIamRole(roleParams);
+        expect(role.iamRoleName).toEqual("bd-use1-notmpl-aac5c1d9a0a94855b8960f3998b2f16b-s3");
     });
     it("getIamRoleName with own prefix", async () => {
-        const role = new iam_roles_js_1.BDIamRole({ ...roleParams, roleNamePrefix: "my" });
-        expect(role.iamRoleName).toEqual("my-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
+        const role = new iam_role_js_1.BDIamRole({ ...roleParams, roleNamePrefix: "my" });
+        expect(role.iamRoleName).toEqual("my-use1-notmpl-aac5c1d9a0a94855b8960f3998b2f16b-s3");
     });
     it("getIamRoleName with own path and prefix", async () => {
-        const role = new iam_roles_js_1.BDIamRole({ ...roleParams, roleNamePrefix: "my", path: "/bd-service/demo/" });
-        expect(role.iamRoleName).toEqual("my-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b");
+        const role = new iam_role_js_1.BDIamRole({ ...roleParams, roleNamePrefix: "my", path: "/bd-service/demo/" });
+        expect(role.iamRoleName).toEqual("my-use1-notmpl-aac5c1d9a0a94855b8960f3998b2f16b-s3");
     });
     it("getRole", async () => {
         iamMock.on(client_iam_1.GetRoleCommand).resolves({ Role: dummyRole });
-        const role = new iam_roles_js_1.BDIamRole(roleParams);
+        const role = new iam_role_js_1.BDIamRole(roleParams);
         expect(await role.getRole()).toEqual(dummyRole);
     });
     it("createRole - a role and policy already exists", async () => {
@@ -55,8 +56,7 @@ describe("iamRole", () => {
             Policies: [
                 {
                     PolicyName: "bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-acff8dae429911f",
-                    Arn: "arn:aws:iam::123123123123:policy/" +
-                        "boilingdata/bd-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b-policy",
+                    Arn: "arn:aws:iam::123123123123:policy/" + "boilingdata/bd-use1-notmpl-aac5c1d9a0a94855b8960f3998b2f16b-s3",
                     Path: "/boilingdata/",
                     DefaultVersionId: "v123",
                     AttachmentCount: 1,
@@ -67,7 +67,7 @@ describe("iamRole", () => {
         iamMock.on(client_iam_1.CreatePolicyVersionCommand).resolves({ PolicyVersion: { VersionId: "dummyVersionX" } });
         iamMock.on(client_iam_1.GetRoleCommand).resolves({ Role: dummyRole });
         iamMock.on(client_iam_1.CreateRoleCommand).resolves({ Role: dummyRole });
-        const role = new iam_roles_js_1.BDIamRole(roleParams);
+        const role = new iam_role_js_1.BDIamRole(roleParams);
         expect(await role.upsertRole(dummyPolicy)).toEqual("dummyArn");
     });
     it("createRole - role already exists, no policy", async () => {
@@ -82,7 +82,7 @@ describe("iamRole", () => {
         });
         iamMock.on(client_iam_1.GetRoleCommand).resolves({ Role: dummyRole });
         iamMock.on(client_iam_1.CreateRoleCommand).resolves({ Role: dummyRole });
-        const role = new iam_roles_js_1.BDIamRole(roleParams);
+        const role = new iam_role_js_1.BDIamRole(roleParams);
         expect(await role.upsertRole(dummyPolicy)).toEqual("dummyArn");
     });
     it("createRole - role already exists, 5 policy versions already", async () => {
@@ -91,8 +91,7 @@ describe("iamRole", () => {
             Policies: [
                 {
                     PolicyName: "bd-ue1-boilingdata-demo-isecurefi-dev-and-all-th-acff8dae429911f",
-                    Arn: "arn:aws:iam::123123123123:policy/" +
-                        "boilingdata/bd-use1-notmplname-aac5c1d9a0a94855b8960f3998b2f16b-policy",
+                    Arn: "arn:aws:iam::123123123123:policy/" + "boilingdata/bd-use1-notmpl-aac5c1d9a0a94855b8960f3998b2f16b-s3",
                     Path: "/boilingdata/",
                     DefaultVersionId: "v100",
                     AttachmentCount: 1,
@@ -127,7 +126,7 @@ describe("iamRole", () => {
         iamMock.on(client_iam_1.CreatePolicyVersionCommand).resolves({ PolicyVersion: { VersionId: "dummyVersionX" } });
         iamMock.on(client_iam_1.GetRoleCommand).resolves({ Role: dummyRole });
         iamMock.on(client_iam_1.CreateRoleCommand).resolves({ Role: dummyRole });
-        const role = new iam_roles_js_1.BDIamRole(roleParams);
+        const role = new iam_role_js_1.BDIamRole(roleParams);
         expect(await role.upsertRole(dummyPolicy)).toEqual("dummyArn");
     });
     it("createRole - does not yet exist", async () => {
@@ -140,13 +139,13 @@ describe("iamRole", () => {
             },
         });
         iamMock.on(client_iam_1.CreateRoleCommand).resolves({ Role: dummyRole });
-        const role = new iam_roles_js_1.BDIamRole(roleParams);
+        const role = new iam_role_js_1.BDIamRole(roleParams);
         expect(await role.upsertRole(dummyPolicy)).toEqual("dummyArn");
     });
 });
 describe("policies", () => {
     it("getAssumeRolePolicyDocument", () => {
-        const role = new iam_roles_js_1.BDIamRole(roleParams);
+        const role = new iam_role_js_1.BDIamRole(roleParams);
         expect(role.getAssumeRolePolicyDocument()).toEqual({
             Version: "2012-10-17",
             Statement: [
