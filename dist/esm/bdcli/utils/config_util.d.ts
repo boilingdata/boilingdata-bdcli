@@ -33,6 +33,7 @@ export interface IConfig {
 }
 export declare function hasValidConfig(logger?: ILogger): Promise<boolean>;
 export declare function listConfigProfiles(logger?: ILogger): Promise<string[]>;
+export declare function dumpConfigProfile(profile: string, logger?: ILogger): Promise<any>;
 export declare function updateConfig(updates: IConfig, logger?: ILogger): Promise<void>;
 export declare function setProfile(profileName: string, logger?: ILogger): void;
 export declare function getConfig(logger?: ILogger): Promise<IConfig | undefined>;

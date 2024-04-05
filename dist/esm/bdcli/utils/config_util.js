@@ -36,6 +36,14 @@ export async function listConfigProfiles(logger) {
         throw err;
     }
 }
+export async function dumpConfigProfile(profile, logger) {
+    logger?.debug({ profile });
+    const config = yaml.load(await fs.readFile(configFile, "utf8"));
+    const dump = config?.credentials ? config : config?.[profile != "true" ? profile : "default"];
+    if (!dump)
+        return;
+    return dump;
+}
 export async function updateConfig(updates, logger) {
     let config = {};
     try {

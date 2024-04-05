@@ -44,6 +44,16 @@ async function show(options, _command) {
             console.log(JSON.stringify(list));
             return;
         }
+        if (options.dump) {
+            (0, spinner_util_js_1.updateSpinnerText)(`Dumping profile in ${config_util_js_1.BDCONF}: ${options.dump}`);
+            const profileName = options.dump === true ? "default" : options.dump;
+            const profile = await (0, config_util_js_1.dumpConfigProfile)(profileName, logger);
+            if (!profile)
+                return (0, spinner_util_js_1.spinnerError)(`Profile not found: ${profileName}`);
+            (0, spinner_util_js_1.spinnerSuccess)();
+            console.log(JSON.stringify(profile));
+            return;
+        }
         if (options.clear) {
             (0, spinner_util_js_1.updateSpinnerText)(`Deleting session tokens from ${config_util_js_1.BDCONF}`);
             await (0, config_util_js_1.updateConfig)({
@@ -104,6 +114,7 @@ const program = new cmd.Command("bdcli account config")
     .addOption(new cmd.Option("--clear", "delete all session tokens (for opt. selected profile)"))
     .addOption(new cmd.Option("--region <awsRegion>", "Sign-in AWS region").default("eu-west-1"))
     .addOption(new cmd.Option("--list", `List all config profiles (see ${config_util_js_1.BDCONF})`))
+    .addOption(new cmd.Option("--dump [profile]", `Dump selected config profile (see ${config_util_js_1.BDCONF})`))
     .action(async (options, command) => await show(options, command));
 (async () => {
     await (0, options_util_js_1.addGlobalOptions)(program, logger);

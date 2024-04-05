@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getConfigCredentials = exports.getCachedTokenSessions = exports.serialiseTokensList = exports.combineOptsWithSettings = exports.applyGlobalConfigHooks = exports.getEnvSettings = exports.getConfigSettings = exports.getConfig = exports.setProfile = exports.updateConfig = exports.listConfigProfiles = exports.hasValidConfig = exports.profile = exports.BDCONF = void 0;
+exports.getConfigCredentials = exports.getCachedTokenSessions = exports.serialiseTokensList = exports.combineOptsWithSettings = exports.applyGlobalConfigHooks = exports.getEnvSettings = exports.getConfigSettings = exports.getConfig = exports.setProfile = exports.updateConfig = exports.dumpConfigProfile = exports.listConfigProfiles = exports.hasValidConfig = exports.profile = exports.BDCONF = void 0;
 const fs = __importStar(require("fs/promises"));
 const yaml = __importStar(require("js-yaml"));
 const os = __importStar(require("os"));
@@ -67,6 +67,15 @@ async function listConfigProfiles(logger) {
     }
 }
 exports.listConfigProfiles = listConfigProfiles;
+async function dumpConfigProfile(profile, logger) {
+    logger?.debug({ profile });
+    const config = yaml.load(await fs.readFile(configFile, "utf8"));
+    const dump = config?.credentials ? config : config?.[profile != "true" ? profile : "default"];
+    if (!dump)
+        return;
+    return dump;
+}
+exports.dumpConfigProfile = dumpConfigProfile;
 async function updateConfig(updates, logger) {
     let config = {};
     try {
