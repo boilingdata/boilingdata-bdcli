@@ -66,6 +66,14 @@ export async function listConfigProfiles(logger?: ILogger): Promise<string[]> {
   }
 }
 
+export async function dumpConfigProfile(profile: string, logger?: ILogger): Promise<any> {
+  logger?.debug({ profile });
+  const config = <any>yaml.load(await fs.readFile(configFile, "utf8"));
+  const dump = config?.credentials ? config : config?.[profile != "true" ? profile : "default"];
+  if (!dump) return;
+  return dump;
+}
+
 export async function updateConfig(updates: IConfig, logger?: ILogger): Promise<void> {
   let config: any = {};
   try {
