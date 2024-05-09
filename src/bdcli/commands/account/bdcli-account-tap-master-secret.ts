@@ -22,7 +22,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     updateSpinnerText(`Getting BoilingData Master TAP secret`);
     if (!region) throw new Error("Pass --region parameter or set AWS_REGION env");
     const bdAccount = new BDAccount({ logger, authToken: token });
-    const { bdTapMasterSecret, cached: tapCached, ...rest } = await bdAccount.getTapMasterSecret();
+    const { bdTapMasterSecret, cached: tapCached, ...rest } = await bdAccount.getTapMasterSecret(options?.application);
     updateSpinnerText(`Getting BoilingData Master TAP secret: ${tapCached ? "cached" : "success"}`);
     spinnerSuccess();
     await outputResults({ bdTapMasterSecret, cached: tapCached, ...rest }, options.disableSpinner);
@@ -38,6 +38,7 @@ const program = new cmd.Command("bdcli account tap-master-secret")
       "A user has shared Tap for you so that you can write to it.",
     ),
   )
+  .addOption(new cmd.Option("--application <application>", "Data Taps supported application name, like 'github'"))
   .action(async (options, command) => await show(options, command));
 
 (async () => {

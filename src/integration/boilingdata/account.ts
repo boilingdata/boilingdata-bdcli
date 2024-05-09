@@ -46,6 +46,7 @@ export class BDAccount {
   private bdStsToken: string | undefined;
   private bdTapToken: string | undefined;
   private bdTapMasterSecret: string | undefined;
+  private bdTapMasterSecretApplication: string | undefined;
   private sharedTokens: IDecodedSession[];
   private selectedToken: string | undefined;
   private decodedToken!: jwt.JwtPayload | null;
@@ -335,11 +336,15 @@ export class BDAccount {
     throw new Error(`Failed to get fresh TAP token from BD API`);
   }
 
-  public async getTapMasterSecret(): Promise<{ bdTapMasterSecret: string; cached: boolean }> {
-    if (this.bdTapMasterSecret) return { bdTapMasterSecret: this.bdTapMasterSecret, cached: true };
+  public async getTapMasterSecret(
+    application = "default",
+  ): Promise<{ bdTapMasterSecret: string; cached: boolean; application: string }> {
+    if (this.bdTapMasterSecret && this.bdTapMasterSecretApplication === application) {
+      return { bdTapMasterSecret: this.bdTapMasterSecret, cached: true, application };
+    }
     const headers = await getReqHeaders(this.cognitoIdToken); // , { tokenLifetime, vendingSchedule, shareId });
     const method = "POST";
-    const body = JSON.stringify({});
+    const body = JSON.stringify({ application });
     this.logger.debug({ method, tapMasterSecretUrl, headers, body });
     const res = await fetch(tapMasterSecretUrl, { method, headers, body });
     const resBody = await res.json();
@@ -355,7 +360,12 @@ export class BDAccount {
       throw new Error("Missing bdTapMasterSecret in BD API Response");
     }
     this.bdTapMasterSecret = resBody.bdTapMasterSecret;
-    return { bdTapMasterSecret: resBody.bdTapMasterSecret, cached: false };
+    this.bdTapMasterSecretApplication = resBody?.application ?? "default";
+    return {
+      bdTapMasterSecret: resBody.bdTapMasterSecret,
+      cached: false,
+      application: resBody?.application ?? "default",
+    };
   }
 
   public async getStsToken(tokenLifetime: string, shareId?: string): Promise<{ bdStsToken: string; cached: boolean }> {
