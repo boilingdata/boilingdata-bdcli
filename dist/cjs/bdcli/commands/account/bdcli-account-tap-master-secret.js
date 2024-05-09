@@ -46,7 +46,7 @@ async function show(options, _command) {
         if (!region)
             throw new Error("Pass --region parameter or set AWS_REGION env");
         const bdAccount = new account_js_1.BDAccount({ logger, authToken: token });
-        const { bdTapMasterSecret, cached: tapCached, ...rest } = await bdAccount.getTapMasterSecret();
+        const { bdTapMasterSecret, cached: tapCached, ...rest } = await bdAccount.getTapMasterSecret(options?.application);
         (0, spinner_util_js_1.updateSpinnerText)(`Getting BoilingData Master TAP secret: ${tapCached ? "cached" : "success"}`);
         (0, spinner_util_js_1.spinnerSuccess)();
         await (0, output_util_js_1.outputResults)({ bdTapMasterSecret, cached: tapCached, ...rest }, options.disableSpinner);
@@ -57,6 +57,7 @@ async function show(options, _command) {
 }
 const program = new cmd.Command("bdcli account tap-master-secret")
     .addOption(new cmd.Option("--sharing-user <emailOfTapSharingUser>", "A user has shared Tap for you so that you can write to it."))
+    .addOption(new cmd.Option("--application <application>", "Data Taps supported application name, like 'github'"))
     .action(async (options, command) => await show(options, command));
 (async () => {
     await (0, options_util_js_1.addGlobalOptions)(program, logger);

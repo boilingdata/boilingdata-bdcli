@@ -49,10 +49,10 @@ exports.authSpinnerWithConfigCheck = authSpinnerWithConfigCheck;
 async function validateTokenLifetime(lifetime, logger) {
     const lifetimeInMs = (0, ms_1.default)(`${lifetime}`);
     logger?.debug({ lifetimeInMs });
-    if (!lifetimeInMs || lifetimeInMs < (0, ms_1.default)("10min") || lifetimeInMs > (0, ms_1.default)("24h")) {
+    if (!lifetimeInMs || lifetimeInMs < (0, ms_1.default)("10min")) {
         throw new Error("Invalid token expiration time span, " +
             "please see https://github.com/vercel/ms for the format of the period. " +
-            "Lifetime must be between 10min - 24h");
+            "Lifetime must be at min. 10min. Free tier max is 24h.");
     }
 }
 exports.validateTokenLifetime = validateTokenLifetime;

@@ -18,6 +18,7 @@ export declare class BDAccount {
     private bdStsToken;
     private bdTapToken;
     private bdTapMasterSecret;
+    private bdTapMasterSecretApplication;
     private sharedTokens;
     private selectedToken;
     private decodedToken;
@@ -49,9 +50,10 @@ export declare class BDAccount {
         bdTapToken: string;
         cached: boolean;
     }>;
-    getTapMasterSecret(): Promise<{
+    getTapMasterSecret(application?: string): Promise<{
         bdTapMasterSecret: string;
         cached: boolean;
+        application: string;
     }>;
     getStsToken(tokenLifetime: string, shareId?: string): Promise<{
         bdStsToken: string;

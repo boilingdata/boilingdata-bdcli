@@ -34,6 +34,7 @@ class BDAccount {
     bdStsToken;
     bdTapToken;
     bdTapMasterSecret;
+    bdTapMasterSecretApplication;
     sharedTokens;
     selectedToken;
     decodedToken;
@@ -304,12 +305,13 @@ class BDAccount {
             return resp;
         throw new Error(`Failed to get fresh TAP token from BD API`);
     }
-    async getTapMasterSecret() {
-        if (this.bdTapMasterSecret)
-            return { bdTapMasterSecret: this.bdTapMasterSecret, cached: true };
+    async getTapMasterSecret(application = "default") {
+        if (this.bdTapMasterSecret && this.bdTapMasterSecretApplication === application) {
+            return { bdTapMasterSecret: this.bdTapMasterSecret, cached: true, application };
+        }
         const headers = await (0, boilingdata_api_js_1.getReqHeaders)(this.cognitoIdToken); // , { tokenLifetime, vendingSchedule, shareId });
         const method = "POST";
-        const body = JSON.stringify({});
+        const body = JSON.stringify({ application });
         this.logger.debug({ method, tapMasterSecretUrl: boilingdata_api_js_1.tapMasterSecretUrl, headers, body });
         const res = await fetch(boilingdata_api_js_1.tapMasterSecretUrl, { method, headers, body });
         const resBody = await res.json();
@@ -325,7 +327,12 @@ class BDAccount {
             throw new Error("Missing bdTapMasterSecret in BD API Response");
         }
         this.bdTapMasterSecret = resBody.bdTapMasterSecret;
-        return { bdTapMasterSecret: resBody.bdTapMasterSecret, cached: false };
+        this.bdTapMasterSecretApplication = resBody?.application ?? "default";
+        return {
+            bdTapMasterSecret: resBody.bdTapMasterSecret,
+            cached: false,
+            application: resBody?.application ?? "default",
+        };
     }
     async getStsToken(tokenLifetime, shareId) {
         if (this.bdStsToken && !shareId) {
