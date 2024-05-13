@@ -1,6 +1,5 @@
 import { getIdToken } from "../bdcli/utils/auth_util.js";
 import { ELogLevel, getLogger } from "../bdcli/utils/logger_util.js";
-import { BDIamRole, ERoleType } from "./aws/iam_role.js";
 import { BDIntegration } from "./bdIntegration.js";
 import { BDAccount } from "./boilingdata/account.js";
 import { BDDataSourceConfig } from "./boilingdata/dataset.js";
@@ -14,15 +13,12 @@ iamMock.resolves({});
 
 const accountLogger = getLogger("bd-account");
 const dssLogger = getLogger("bd-datasets");
-const roleLogger = getLogger("bd-role");
 const accessLogger = getLogger("bd-access");
 accountLogger.setLogLevel(ELogLevel.DEBUG);
 // dssLogger.setLogLevel(ELogLevel.DEBUG);
-// roleLogger.setLogLevel(ELogLevel.DEBUG);
 accessLogger.setLogLevel(ELogLevel.DEBUG);
 
 const region = "eu-west-1";
-const iamClient = new IAMClient({ region });
 const stsClient = new STSClient({ region });
 const bdDataSets = new BDDataSourceConfig({ logger: dssLogger });
 let bdAccount: BDAccount;
@@ -35,24 +31,10 @@ describe("BDIntegration", () => {
 
   it.skip("getGroupedBuckets", async () => {
     bdDataSets.readConfig("./example_datasource_config.yaml");
-    const assumeCondExternalId = await bdAccount.getExtId(); // FIXME: This calls real API
-    const assumeAwsAccount = await bdAccount.getAssumeAwsAccount();
-    const username = await bdAccount.getUsername();
-    const bdRole = new BDIamRole({
-      logger: roleLogger,
-      region,
-      roleType: ERoleType.S3,
-      iamClient,
-      stsClient,
-      username,
-      assumeAwsAccount,
-      assumeCondExternalId,
-    });
     const bdIntegration = new BDIntegration({
       logger: accessLogger,
       bdAccount,
       bdDataSources: bdDataSets,
-      bdRole,
       stsClient,
     });
     stsMock.on(GetCallerIdentityCommand).resolves({ Account: "123123123123" });
@@ -88,24 +70,10 @@ describe("BDIntegration", () => {
 
   it.skip("PolicyDocument", async () => {
     bdDataSets.readConfig("./example_datasource_config.yaml");
-    const assumeCondExternalId = await bdAccount.getExtId(); // FIXME: This calls real API
-    const assumeAwsAccount = await bdAccount.getAssumeAwsAccount();
-    const username = await bdAccount.getUsername();
-    const bdRole = new BDIamRole({
-      logger: roleLogger,
-      region,
-      roleType: ERoleType.S3,
-      iamClient,
-      stsClient,
-      username,
-      assumeAwsAccount,
-      assumeCondExternalId,
-    });
     const bdIntegration = new BDIntegration({
       logger: accessLogger,
       bdAccount,
       bdDataSources: bdDataSets,
-      bdRole,
       stsClient,
     });
     stsMock.on(GetCallerIdentityCommand).resolves({ Account: "123123123123" });

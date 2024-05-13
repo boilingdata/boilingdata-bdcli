@@ -46,7 +46,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
       assumeAwsAccount: await bdAccount.getAssumeAwsAccount(),
       assumeCondExternalId: await bdAccount.getExtId(),
     });
-    const bdIntegration = new BDIntegration({ logger, bdAccount, bdRole, bdDataSources, stsClient });
+    const bdIntegration = new BDIntegration({ logger, bdAccount, bdDataSources, stsClient });
     const policyDocument = await bdIntegration.getS3PolicyDocument(options.listBucketsPermission);
     if (options.dryRun) {
       updateSpinnerText(`Creating IAM Role (dry-run)`);
