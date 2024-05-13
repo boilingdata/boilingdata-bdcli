@@ -42,7 +42,7 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
       assumeAwsAccount: await bdAccount.getAssumeAwsAccount(),
       assumeCondExternalId: await bdAccount.getExtId(),
     });
-    const bdIntegration = new BDIntegration({ logger, bdAccount, bdRole, stsClient });
+    const bdIntegration = new BDIntegration({ logger, bdAccount, stsClient });
     const policyDocument = await bdIntegration.getTapsPolicyDocument();
     const iamRoleArn = await bdRole.upsertRole(JSON.stringify(policyDocument));
     updateSpinnerText(`Creating TAPS IAM Role: ${iamRoleArn}`);

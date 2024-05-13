@@ -1,6 +1,5 @@
 import { GetCallerIdentityCommand, STSClient } from "@aws-sdk/client-sts";
 import { ILogger } from "../bdcli/utils/logger_util.js";
-import { BDIamRole } from "./aws/iam_role.js";
 import { BDAccount } from "./boilingdata/account.js";
 import { GRANT_PERMISSION, IStatement, IStatementExt } from "./boilingdata/dataset.interface.js";
 import { BDDataSourceConfig } from "./boilingdata/dataset.js";
@@ -19,7 +18,6 @@ export interface IBDIntegration {
   logger: ILogger;
   stsClient: STSClient;
   bdAccount: BDAccount;
-  bdRole: BDIamRole;
   bdDataSources?: BDDataSourceConfig;
 }
 

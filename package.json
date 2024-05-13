@@ -60,6 +60,7 @@
     "@aws-sdk/client-cognito-identity": "^3.533.0",
     "@aws-sdk/client-iam": "^3.533.0",
     "@aws-sdk/client-sts": "^3.533.0",
+    "@aws-sdk/client-lambda": "^3.533.0",
     "@aws-sdk/credential-provider-cognito-identity": "^3.533.0",
     "@boilingdata/node-boilingdata": "^1.0.20",
     "amazon-cognito-identity-js": "^6.3.4",
