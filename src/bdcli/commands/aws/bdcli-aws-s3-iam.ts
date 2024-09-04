@@ -45,7 +45,7 @@ async function iamrole(options: any, _command: cmd.Command): Promise<void> {
       assumeAwsAccount: await bdAccount.getAssumeAwsAccount(),
       assumeCondExternalId: await bdAccount.getExtId(),
     });
-    const bdIntegration = new BDIntegration({ logger, bdAccount, bdRole, bdDataSources, stsClient });
+    const bdIntegration = new BDIntegration({ logger, bdAccount, bdDataSources, stsClient });
     const policyDocument = await bdIntegration.getS3PolicyDocument();
     const iamRoleArn = await bdRole.upsertRole(JSON.stringify(policyDocument));
     updateSpinnerText(`Creating S3 IAM Role: ${iamRoleArn}`);

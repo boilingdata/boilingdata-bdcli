@@ -1,8 +1,15 @@
 import { BoilingData } from "@boilingdata/node-boilingdata";
 import { ILogger } from "../../bdcli/utils/logger_util.js";
 import { BDAWSRegion } from "@boilingdata/node-boilingdata/dist/cjs/boilingdata/boilingdata.js";
+import { updateSpinnerText } from "../../bdcli/utils/spinner_util.js";
 
-export async function runBoilingQuery(sql: string, idToken: string, region: string, logger: ILogger): Promise<any[]> {
+export async function runBoilingQuery(
+  sql: string,
+  idToken: string,
+  region: string,
+  logger: ILogger,
+  spinnerText?: string,
+): Promise<any[]> {
   try {
     logger.debug({ sql, idToken, region });
     const bdInstance = new BoilingData({
@@ -17,7 +24,8 @@ export async function runBoilingQuery(sql: string, idToken: string, region: stri
     const stop = Date.now();
     const parsedRows = JSON.parse(JSON.stringify(rows));
     logger.debug(JSON.parse(JSON.stringify(rows)));
-    logger.debug("Query time measured e2e (ms):", stop - start);
+    logger.debug(`Query time measured e2e: ${stop - start}ms`);
+    if (spinnerText) updateSpinnerText(`${spinnerText}: ${stop - start}ms`);
     await bdInstance.close();
     return parsedRows;
   } catch (err) {

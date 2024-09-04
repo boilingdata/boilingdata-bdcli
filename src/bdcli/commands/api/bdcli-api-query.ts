@@ -20,7 +20,8 @@ async function query(options: any, _command: cmd.Command): Promise<void> {
     spinnerSuccess();
 
     updateSpinnerText("Sending Query to Boiling API");
-    const results = await runBoilingQuery(options.sql, token, region, logger);
+    const spinnerText = "Query run through Boiling API";
+    const results = await runBoilingQuery(options.sql, token, region, logger, spinnerText);
     spinnerSuccess();
     await outputResults(results, options.disableSpinner);
   } catch (err: any) {

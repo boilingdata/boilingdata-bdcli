@@ -27,6 +27,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
       await registerToBoilingData(region, environment, email, password, logger);
     }
     if (!(await hasValidConfig())) return spinnerError("No valid config, was registration successful?");
+    updateSpinnerText("Registering to BoilingData. Check your email for confirmation code and use --confirm <code>.");
     spinnerSuccess();
   } catch (err: any) {
     spinnerError(err?.message);
