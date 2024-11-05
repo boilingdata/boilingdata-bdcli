@@ -16,7 +16,7 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
 
     let fileAlreadyExists = false;
     try {
-      if (await fs.lstat(filename)) {
+      if (!options.stdout && (await fs.lstat(filename))) {
         fileAlreadyExists = true;
       }
     } catch (err) {
@@ -34,7 +34,8 @@ async function show(options: any, _command: cmd.Command): Promise<void> {
     updateSpinnerText(`Downloading sandbox IaC template of ${options.name}`);
     const bdSandbox = new BDSandbox({ logger, authToken: token });
     const template = await bdSandbox.downloadTemplate(options.name, options.version, options?.status ?? "uploaded");
-    await fs.writeFile(filename, template);
+    if (options.stdout) console.log(template);
+    else await fs.writeFile(filename, template);
     spinnerSuccess();
   } catch (err: any) {
     spinnerError(err?.message);
@@ -45,6 +46,7 @@ const program = new cmd.Command("bdcli sandbox download")
   .addOption(new cmd.Option("--name <templateName>", "template name from listing").makeOptionMandatory())
   .addOption(new cmd.Option("--status <status>", "Download 'uploaded' (default) or 'deployed' template"))
   .addOption(new cmd.Option("--version <version>", "Download specific version from listing"))
+  .addOption(new cmd.Option("--stdout", "Spill out the template to stdout instead of writing to file"))
   .action(async (options, command) => await show(options, command));
 
 (async () => {
