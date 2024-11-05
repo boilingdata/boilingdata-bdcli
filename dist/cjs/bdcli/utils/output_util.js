@@ -23,11 +23,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.outputResults = void 0;
+exports.outputResults = outputResults;
 const util = __importStar(require("node:util"));
 async function outputResults(results, flat = false) {
     if (!results)
         return;
     console.log(flat ? JSON.stringify(results) : util.inspect(results, false, 20, true));
 }
-exports.outputResults = outputResults;

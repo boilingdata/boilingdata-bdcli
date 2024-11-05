@@ -23,7 +23,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getReqHeaders = exports.getApiKey = exports.apiKey = exports.Pool = exports.poolData = exports.UserPoolId = exports.bdAWSAccount = exports.sandboxUrl = exports.tokenShareUrl = exports.tapMasterSecretUrl = exports.tapTokenUrl = exports.stsTokenUrl = exports.accountUrl = exports.dataSetsUrl = exports.sandboxPath = exports.sharePath = exports.tapMasterSecret = exports.tapTokenPath = exports.stsTokenPath = exports.accountPath = exports.dataSetsPath = exports.baseApiUrl = void 0;
+exports.apiKey = exports.Pool = exports.poolData = exports.UserPoolId = exports.bdAWSAccount = exports.sandboxUrl = exports.tokenShareUrl = exports.tapMasterSecretUrl = exports.tapTokenUrl = exports.stsTokenUrl = exports.accountUrl = exports.dataSetsUrl = exports.sandboxPath = exports.sharePath = exports.tapMasterSecret = exports.tapTokenPath = exports.stsTokenPath = exports.accountPath = exports.dataSetsPath = exports.baseApiUrl = void 0;
+exports.getApiKey = getApiKey;
+exports.getReqHeaders = getReqHeaders;
 const id = __importStar(require("amazon-cognito-identity-js"));
 // FIXME: switch to prod as default
 exports.baseApiUrl = "https://rest.api.test.boilingdata.com";
@@ -51,7 +53,6 @@ exports.apiKey = "Ak7itOEG1N1I7XpFfmYO97NWHRZwEYDmYBL4y0lb";
 function getApiKey() {
     return Promise.resolve(exports.apiKey); // FIXME: Get API key..
 }
-exports.getApiKey = getApiKey;
 async function getReqHeaders(token) {
     const apikey = await getApiKey();
     return {
@@ -61,4 +62,3 @@ async function getReqHeaders(token) {
         Accept: "application/json",
     };
 }
-exports.getReqHeaders = getReqHeaders;

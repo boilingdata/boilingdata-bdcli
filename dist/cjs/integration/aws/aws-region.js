@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAwsRegionShortName = void 0;
+exports.getAwsRegionShortName = getAwsRegionShortName;
 function getAwsRegionShortName(region) {
     // a bit hacky
     const splits = region
@@ -16,4 +16,3 @@ function getAwsRegionShortName(region) {
     }
     return `${splits[0]}${splits[1]?.[0]}${splits[2]}`;
 }
-exports.getAwsRegionShortName = getAwsRegionShortName;

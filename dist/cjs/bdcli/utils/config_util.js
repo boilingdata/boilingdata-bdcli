@@ -26,7 +26,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getConfigCredentials = exports.getCachedTokenSessions = exports.serialiseTokensList = exports.combineOptsWithSettings = exports.applyGlobalConfigHooks = exports.getEnvSettings = exports.getConfigSettings = exports.getConfig = exports.setProfile = exports.updateConfig = exports.dumpConfigProfile = exports.listConfigProfiles = exports.hasValidConfig = exports.profile = exports.BDCONF = void 0;
+exports.profile = exports.BDCONF = void 0;
+exports.hasValidConfig = hasValidConfig;
+exports.listConfigProfiles = listConfigProfiles;
+exports.dumpConfigProfile = dumpConfigProfile;
+exports.updateConfig = updateConfig;
+exports.setProfile = setProfile;
+exports.getConfig = getConfig;
+exports.getConfigSettings = getConfigSettings;
+exports.getEnvSettings = getEnvSettings;
+exports.applyGlobalConfigHooks = applyGlobalConfigHooks;
+exports.combineOptsWithSettings = combineOptsWithSettings;
+exports.serialiseTokensList = serialiseTokensList;
+exports.getCachedTokenSessions = getCachedTokenSessions;
+exports.getConfigCredentials = getConfigCredentials;
 const fs = __importStar(require("fs/promises"));
 const yaml = __importStar(require("js-yaml"));
 const os = __importStar(require("os"));
@@ -53,7 +66,6 @@ async function hasValidConfig(logger) {
         return false;
     }
 }
-exports.hasValidConfig = hasValidConfig;
 async function listConfigProfiles(logger) {
     try {
         const config = yaml.load(await fs.readFile(configFile, "utf8"));
@@ -66,7 +78,6 @@ async function listConfigProfiles(logger) {
         throw err;
     }
 }
-exports.listConfigProfiles = listConfigProfiles;
 async function dumpConfigProfile(profile, logger) {
     logger?.debug({ profile });
     const config = yaml.load(await fs.readFile(configFile, "utf8"));
@@ -75,7 +86,6 @@ async function dumpConfigProfile(profile, logger) {
         return;
     return dump;
 }
-exports.dumpConfigProfile = dumpConfigProfile;
 async function updateConfig(updates, logger) {
     let config = {};
     try {
@@ -100,12 +110,10 @@ async function updateConfig(updates, logger) {
         mode: 0o600,
     });
 }
-exports.updateConfig = updateConfig;
 function setProfile(profileName, logger) {
     exports.profile = profileName;
     logger?.debug({ profile: exports.profile });
 }
-exports.setProfile = setProfile;
 async function getConfig(logger) {
     try {
         const configFileData = await fs.readFile(configFile, "utf8");
@@ -122,14 +130,12 @@ async function getConfig(logger) {
     }
     return;
 }
-exports.getConfig = getConfig;
 async function getConfigSettings(logger) {
     const conf = await getConfig(logger);
     const settings = conf?.settings ?? {};
     logger?.debug({ settings });
     return settings;
 }
-exports.getConfigSettings = getConfigSettings;
 function camalize(str) {
     return str.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (_m, chr) => chr.toUpperCase());
 }
@@ -141,7 +147,6 @@ function getEnvSettings(logger) {
     logger?.debug({ bdEnvs });
     return bdEnvs;
 }
-exports.getEnvSettings = getEnvSettings;
 function applyGlobalConfigHooks(opts, logger) {
     // global opts handling due to the Commander short comings
     if (opts["profile"])
@@ -153,7 +158,6 @@ function applyGlobalConfigHooks(opts, logger) {
     if (opts["disableSpinner"])
         (0, spinner_util_js_1.disableSpinner)();
 }
-exports.applyGlobalConfigHooks = applyGlobalConfigHooks;
 async function combineOptsWithSettings(opts, logger) {
     const envSettings = getEnvSettings(logger);
     // we get e.g. BD_PROFILE, so we can get settings
@@ -164,11 +168,9 @@ async function combineOptsWithSettings(opts, logger) {
     logger?.debug({ options: { ...options, password: options["password"] ? "**" : undefined } });
     return options;
 }
-exports.combineOptsWithSettings = combineOptsWithSettings;
 function serialiseTokensList(sharedTokens) {
     return sharedTokens.map(entry => `${entry.shareId}:${entry.bdStsToken}`);
 }
-exports.serialiseTokensList = serialiseTokensList;
 async function getCachedTokenSessions(logger, showExpired = false) {
     const conf = await getConfig();
     const decodedList = (conf?.credentials?.sharedTokens ?? [])
@@ -196,7 +198,6 @@ async function getCachedTokenSessions(logger, showExpired = false) {
         .filter(e => !!e);
     return decodedList ?? [];
 }
-exports.getCachedTokenSessions = getCachedTokenSessions;
 async function getConfigCredentials(logger) {
     if (currentCreds)
         return currentCreds; // cached in mem, so you can call this method multiple times
@@ -214,4 +215,3 @@ async function getConfigCredentials(logger) {
     logger?.debug({ ...currentCreds, password: currentCreds?.password ? "**" : undefined });
     return currentCreds;
 }
-exports.getConfigCredentials = getConfigCredentials;

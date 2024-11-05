@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSignedWssUrl = void 0;
+exports.getSignedWssUrl = getSignedWssUrl;
 const client_cognito_identity_1 = require("@aws-sdk/client-cognito-identity");
 const credential_provider_cognito_identity_1 = require("@aws-sdk/credential-provider-cognito-identity");
 const boilingdata_api_js_1 = require("../boilingdata/boilingdata_api.js");
@@ -31,4 +31,3 @@ async function getSignedWssUrl(_logger, token, region) {
     });
     return signedWsUrl;
 }
-exports.getSignedWssUrl = getSignedWssUrl;

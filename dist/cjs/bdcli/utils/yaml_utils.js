@@ -26,7 +26,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateBoilingToken = exports.updateNestedKeys = void 0;
+exports.updateNestedKeys = updateNestedKeys;
+exports.updateBoilingToken = updateBoilingToken;
 const deepmerge_1 = __importDefault(require("deepmerge"));
 const fs = __importStar(require("fs/promises"));
 const yaml = __importStar(require("js-yaml"));
@@ -39,7 +40,6 @@ function updateNestedKeys(obj, newKeyValue, siblingToFind = "module", siblingVal
     }
     Object.keys(obj).forEach(k => updateNestedKeys(obj[k], newKeyValue, siblingToFind, siblingValue, keyToUpdate));
 }
-exports.updateNestedKeys = updateNestedKeys;
 async function updateBoilingToken(filePath, newKeyValue, keyToUpdate = "config", siblingToFind = "module", siblingValue = "boilingdata") {
     const fileContents = await fs.readFile(filePath, "utf-8");
     const yamlObject = yaml.load(fileContents);
@@ -47,4 +47,3 @@ async function updateBoilingToken(filePath, newKeyValue, keyToUpdate = "config",
     const updatedYaml = yaml.dump(yamlObject);
     await fs.writeFile(filePath, updatedYaml, "utf-8");
 }
-exports.updateBoilingToken = updateBoilingToken;

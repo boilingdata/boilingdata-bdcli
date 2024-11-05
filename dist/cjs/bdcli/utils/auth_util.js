@@ -26,7 +26,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getIdToken = exports.setupMfa = exports.recoverPassword = exports.updatePassword = exports.registerToBoilingData = exports.confirmEmailToBoilingData = exports.getPw = exports.getEmail = exports.validateTokenLifetime = exports.authSpinnerWithConfigCheck = exports.clientId = exports.userPoolId = void 0;
+exports.clientId = exports.userPoolId = void 0;
+exports.authSpinnerWithConfigCheck = authSpinnerWithConfigCheck;
+exports.validateTokenLifetime = validateTokenLifetime;
+exports.getEmail = getEmail;
+exports.getPw = getPw;
+exports.confirmEmailToBoilingData = confirmEmailToBoilingData;
+exports.registerToBoilingData = registerToBoilingData;
+exports.updatePassword = updatePassword;
+exports.recoverPassword = recoverPassword;
+exports.setupMfa = setupMfa;
+exports.getIdToken = getIdToken;
 const id = __importStar(require("amazon-cognito-identity-js"));
 const config_util_js_1 = require("./config_util.js");
 const boilingdata_api_js_1 = require("../../integration/boilingdata/boilingdata_api.js");
@@ -45,7 +55,6 @@ async function authSpinnerWithConfigCheck() {
     }
     return true;
 }
-exports.authSpinnerWithConfigCheck = authSpinnerWithConfigCheck;
 async function validateTokenLifetime(lifetime, logger) {
     const lifetimeInMs = (0, ms_1.default)(`${lifetime}`);
     logger?.debug({ lifetimeInMs });
@@ -55,7 +64,6 @@ async function validateTokenLifetime(lifetime, logger) {
             "Lifetime must be at min. 10min. Free tier max is 24h.");
     }
 }
-exports.validateTokenLifetime = validateTokenLifetime;
 async function getEmail() {
     (0, spinner_util_js_1.stopSpinner)();
     const inp = await (0, prompts_1.default)({
@@ -72,7 +80,6 @@ async function getEmail() {
     (0, spinner_util_js_1.resumeSpinner)();
     return inp["email"];
 }
-exports.getEmail = getEmail;
 async function getPw(message) {
     (0, spinner_util_js_1.stopSpinner)();
     const inp = await (0, prompts_1.default)({
@@ -87,7 +94,6 @@ async function getPw(message) {
     (0, spinner_util_js_1.resumeSpinner)();
     return inp["pw"];
 }
-exports.getPw = getPw;
 async function getCognitoUser(_logger, Username) {
     if (!Username) {
         const creds = await (0, config_util_js_1.getConfigCredentials)();
@@ -123,7 +129,6 @@ async function confirmEmailToBoilingData(confirm, logger) {
         });
     });
 }
-exports.confirmEmailToBoilingData = confirmEmailToBoilingData;
 async function registerToBoilingData(optsRegion, optsEnvironment, optsEmail, optsPassword, logger) {
     logger?.debug({ status: "registerToBoilingData" });
     const creds = await (0, config_util_js_1.getConfigCredentials)(logger);
@@ -164,7 +169,6 @@ async function registerToBoilingData(optsRegion, optsEnvironment, optsEmail, opt
         });
     });
 }
-exports.registerToBoilingData = registerToBoilingData;
 async function updatePassword(_logger) {
     const cognitoUser = await getCognitoUserSession();
     const oldPassword = (await (0, config_util_js_1.getConfigCredentials)()).password;
@@ -181,7 +185,6 @@ async function updatePassword(_logger) {
         });
     });
 }
-exports.updatePassword = updatePassword;
 async function recoverPassword(logger) {
     const cognitoUser = await getCognitoUser(logger);
     return new Promise((resolve, reject) => {
@@ -231,7 +234,6 @@ async function recoverPassword(logger) {
         });
     });
 }
-exports.recoverPassword = recoverPassword;
 async function setupMfa(logger) {
     const cognitoUser = await getCognitoUserSession(logger);
     const mfaSettings = { PreferredMfa: true, Enabled: true };
@@ -286,7 +288,6 @@ async function setupMfa(logger) {
         });
     });
 }
-exports.setupMfa = setupMfa;
 // NOTE: "accesstoken" does not work, it has to be "idtoken".
 async function getIdToken(logger) {
     const creds = await (0, config_util_js_1.getConfigCredentials)(logger);
@@ -378,4 +379,3 @@ async function getIdToken(logger) {
         });
     });
 }
-exports.getIdToken = getIdToken;

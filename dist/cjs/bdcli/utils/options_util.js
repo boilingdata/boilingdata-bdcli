@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.addGlobalOptions = void 0;
+exports.addGlobalOptions = addGlobalOptions;
 const cmd = __importStar(require("commander"));
 const logger_util_js_1 = require("./logger_util.js");
 const spinner_util_js_1 = require("./spinner_util.js");
@@ -40,4 +40,3 @@ async function addGlobalOptions(program, logger) {
         .on("option:debug", () => logger.setLogLevel(logger_util_js_1.ELogLevel.DEBUG))
         .on("option:disable-spinner", () => (0, spinner_util_js_1.disableSpinner)());
 }
-exports.addGlobalOptions = addGlobalOptions;

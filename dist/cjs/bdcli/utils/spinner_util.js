@@ -3,7 +3,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.spinnerInfo = exports.spinnerSuccess = exports.spinnerError = exports.spinnerWarn = exports.stopSpinner = exports.resumeSpinner = exports.updateSpinnerText = exports.enableSpinner = exports.disableSpinner = void 0;
+exports.disableSpinner = disableSpinner;
+exports.enableSpinner = enableSpinner;
+exports.updateSpinnerText = updateSpinnerText;
+exports.resumeSpinner = resumeSpinner;
+exports.stopSpinner = stopSpinner;
+exports.spinnerWarn = spinnerWarn;
+exports.spinnerError = spinnerError;
+exports.spinnerSuccess = spinnerSuccess;
+exports.spinnerInfo = spinnerInfo;
 const ora_1 = __importDefault(require("ora"));
 const chalk_1 = __importDefault(require("chalk"));
 const error = chalk_1.default.bold.red;
@@ -15,11 +23,9 @@ let isEnabled = true;
 function disableSpinner() {
     isEnabled = false;
 }
-exports.disableSpinner = disableSpinner;
 function enableSpinner() {
     isEnabled = true;
 }
-exports.enableSpinner = enableSpinner;
 function updateSpinnerText(message) {
     if (!isEnabled)
         return;
@@ -28,7 +34,6 @@ function updateSpinnerText(message) {
         return;
     spinner.start();
 }
-exports.updateSpinnerText = updateSpinnerText;
 function resumeSpinner() {
     if (!isEnabled)
         return;
@@ -36,36 +41,30 @@ function resumeSpinner() {
         return; // error?
     spinner.start();
 }
-exports.resumeSpinner = resumeSpinner;
 function stopSpinner() {
     if (!isEnabled)
         return;
     if (spinner.isSpinning)
         spinner.stop();
 }
-exports.stopSpinner = stopSpinner;
 function spinnerWarn(message) {
     if (!isEnabled)
         return;
     spinner.warn(message ? warning(message) : warning(spinner.text));
 }
-exports.spinnerWarn = spinnerWarn;
 function spinnerError(message, forceExit = true) {
     // We show errors regardless whether the spinner is disabled
     spinner.fail(message ? error(message) : undefined);
     if (forceExit)
         process.exit(1); // error
 }
-exports.spinnerError = spinnerError;
 function spinnerSuccess(message) {
     if (!isEnabled)
         return;
     spinner.succeed(message ? success(message) : undefined);
 }
-exports.spinnerSuccess = spinnerSuccess;
 function spinnerInfo(message) {
     if (!isEnabled)
         return;
     spinner.info(blue(message));
 }
-exports.spinnerInfo = spinnerInfo;

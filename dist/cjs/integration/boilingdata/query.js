@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.runBoilingQuery = void 0;
+exports.runBoilingQuery = runBoilingQuery;
 const node_boilingdata_1 = require("@boilingdata/node-boilingdata");
 async function runBoilingQuery(sql, idToken, region, logger) {
     try {
@@ -26,4 +26,3 @@ async function runBoilingQuery(sql, idToken, region, logger) {
     }
     return [];
 }
-exports.runBoilingQuery = runBoilingQuery;

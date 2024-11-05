@@ -125,7 +125,7 @@ class BDIamRole {
             const commandParams = {
                 Path: this.path,
                 RoleName: this.iamRoleName,
-                MaxSessionDuration: 12 * 60 * 60,
+                MaxSessionDuration: 12 * 60 * 60, // 12h in seconds, the max!
                 AssumeRolePolicyDocument: JSON.stringify(this.getAssumeRolePolicyDocument()),
                 Tags: [...this.boilingDataTags, ...(this.params.tags ?? [])],
             };
@@ -155,8 +155,7 @@ class BDIamRole {
         this.logger.debug({ allBoilingDataPolicies });
         if (!allBoilingDataPolicies)
             return;
-        this.policyArn = allBoilingDataPolicies.find(policy => policy.Arn?.includes(this.path + this.iamManagedPolicyName))
-            ?.Arn;
+        this.policyArn = allBoilingDataPolicies.find(policy => policy.Arn?.includes(this.path + this.iamManagedPolicyName))?.Arn;
         return this.policyArn;
     }
     async GetPolicyVersions(PolicyArn) {

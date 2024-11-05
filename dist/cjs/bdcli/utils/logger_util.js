@@ -23,7 +23,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getLogger = exports.ELogLevel = void 0;
+exports.ELogLevel = void 0;
+exports.getLogger = getLogger;
 const util = __importStar(require("node:util"));
 const winston = __importStar(require("winston"));
 var ELogLevel;
@@ -64,4 +65,3 @@ function getLogger(service) {
         setLogLevel: (level) => (logger.level = level),
     };
 }
-exports.getLogger = getLogger;

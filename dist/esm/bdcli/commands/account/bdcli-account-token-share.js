@@ -36,7 +36,7 @@ async function show(options, _command) {
         if (!region)
             throw new Error("Pass --region parameter or set AWS_REGION env");
         const bdAccount = new BDAccount({ logger, authToken: token });
-        await bdAccount.shareToken(`${options.lifetime}` ?? "1h", options.vendingSchedule, users, options.name, options.sql);
+        await bdAccount.shareToken(`${options.lifetime ?? "1h"}`, options.vendingSchedule, users, options.name, options.sql);
         spinnerSuccess();
     }
     catch (err) {
